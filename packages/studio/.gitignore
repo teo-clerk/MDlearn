@@ -1,0 +1,4 @@
+e2e/.root
+e2e/.ollama-port
+test-results/
+playwright-report/

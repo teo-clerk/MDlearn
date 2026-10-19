@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "mdlearn": {
+      "command": "node",
+      "args": ["/home/cl3rk/CODING/MDlearn/packages/mcp/dist/index.js"],
+      "env": { "MDLEARN_ROOT": "/home/cl3rk/CODING/ESA-PROJECTS" }
+    }
+  }
+}

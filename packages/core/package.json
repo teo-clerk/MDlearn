@@ -1,0 +1,52 @@
+{
+  "name": "@mdlearn/core",
+  "version": "0.2.0",
+  "description": "MDlearn compiler, importer, answer checkers and learning models (DOM-free).",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./node": {
+      "types": "./dist/node.d.ts",
+      "import": "./dist/node.js"
+    },
+    "./tex": {
+      "types": "./dist/tex.d.ts",
+      "import": "./dist/tex.js"
+    },
+    "./eval": {
+      "types": "./dist/mathfn.d.ts",
+      "import": "./dist/mathfn.js"
+    },
+    "./paths": {
+      "types": "./dist/paths.d.ts",
+      "import": "./dist/paths.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p ."
+  },
+  "dependencies": {
+    "@cortex-js/compute-engine": "0.142.0",
+    "github-slugger": "^2.0.0",
+    "katex": "^0.18.10",
+    "mdast-util-directive": "^3.1.0",
+    "mdast-util-to-string": "^4.0.0",
+    "micromark-extension-directive": "^4.0.0",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0",
+    "remark-parse": "^11.0.0",
+    "ts-fsrs": "5.4.2",
+    "unified": "^11.0.5",
+    "yaml": "^2.9.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/mdast": "^4.0.4"
+  }
+}

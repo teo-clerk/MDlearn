@@ -1,0 +1,24 @@
+{
+  "name": "mdlearn",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @mdlearn/core && npm run build -w @mdlearn/studio && npm run build -w @mdlearn/cli && npm run build -w @mdlearn/mcp",
+    "test": "vitest run",
+    "typecheck": "tsc -p packages/core --noEmit && tsc -p packages/cli --noEmit && tsc -p packages/mcp --noEmit && tsc -p packages/studio/tsconfig.server.json --noEmit && tsc -p packages/studio/tsconfig.web.json",
+    "check-docs": "tsx scripts/check-docs.ts docs/*.md",
+    "gen-codes": "tsx scripts/gen-codes.ts",
+    "check-corpus": "tsx scripts/check-corpus.ts",
+    "dev": "tsx packages/cli/src/index.ts studio --dev"
+  },
+  "devDependencies": {
+    "@types/node": "^26.0.0",
+    "@vitest/coverage-v8": "^5.0.3",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.3"
+  }
+}

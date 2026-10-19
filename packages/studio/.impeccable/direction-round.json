@@ -1,0 +1,97 @@
+{
+  "title": "MDlearn Studio · choose the visual world",
+  "question": "Within your Scientific notebook direction, the roll assigned the Lecture-notes Volume. Keep it, take the alternate, or re-roll.",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "The Lecture-notes Volume",
+      "kicker": "THE ROLL",
+      "lineage": "physics lecture-note volumes (the red, green and blue books)",
+      "thesis": "Every folder is a numbered volume, every document a chapter, and the wide margin is where you and the AI write back.",
+      "palette": ["#fcfcfa", "#1a1c20", "#c4432b", "#24705e", "#2f4f9e", "#6b7079"],
+      "materials": ["bright coated paper", "printed hairlines", "cloth-bound spines", "graphite marginalia"],
+      "viewport": "Chapter opener: a large chapter numeral in the volume colour, the title, the numbered section list (4–1 … 4–6); spines of your volumes on the left shelf; the margin column on the right holds notes and AI answers aligned to their paragraph.",
+      "risk": "Textbook grammar can drift into the cream-and-italic academic default; kept off by bright paper and saturated volume colour.",
+      "raised": [
+        { "from": "Factory records catalog", "raise": "Numbers are the headlines: chapter, section and equation numbers are the primary navigation and identity, not decoration." },
+        { "from": "Cutting-bench select rail", "raise": "State is a mark, not a hue: studied tick, shaky half-mark, a flag where you stopped reading, a struck corner for a broken widget." },
+        { "from": "Japanese high-density web", "raise": "The library rail is a hairline-ruled dense index with tabular counts, not airy cards." },
+        { "from": "Datamatics field", "raise": "All study data in tabular numerals in one disciplined mono, aligned in columns." }
+      ]
+    },
+    {
+      "id": "model-pick",
+      "label": "The Mission Technical Note",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "space-mission technical notes and document control",
+      "thesis": "Every document is an issued technical note: document number, issue and revision, numbered requirements, change bars where the AI edited.",
+      "palette": ["#ffffff", "#111418", "#1f4fd1", "#d23a2a", "#8a9099"],
+      "materials": ["document control block", "ruled tables", "change bars", "issue stamps"],
+      "viewport": "A document control block (Doc No., Issue/Rev, Date, Lessons) heads the page; sections carry requirement-style tags; red change bars mark AI edits in the margin.",
+      "risk": "Also the closest to what a space-engineering student already reads at work; can feel bureaucratic, and must never imitate a real agency's branding."
+    },
+    {
+      "id": "challenger-saville",
+      "label": "Factory records catalog",
+      "verdict": "declined",
+      "lineage": "catalog-number sleeve identity",
+      "thesis": "Every artifact is a catalog entry identified only by its number.",
+      "palette": ["#0b0b0b", "#f4f4f2", "#e84a2f", "#2b6cb0"],
+      "materials": ["matte black sleeve", "white hairline plot"],
+      "viewport": "A black field with one plot and a catalog number.",
+      "case": "Fuses poorly: a learner needs titles and prose, not codes to decode.",
+      "kept": "Numbers as the headline device.",
+      "risk": "Hostile to long reading."
+    },
+    {
+      "id": "challenger-cutting-bench",
+      "label": "Cutting-bench select rail",
+      "verdict": "declined",
+      "lineage": "film editing bench",
+      "thesis": "Progress as a perforated rail of frames with marks where you stopped.",
+      "palette": ["#0a0a0a", "#ff6a13", "#ffffff"],
+      "materials": ["film grain", "tape flags"],
+      "viewport": "A rail of frames across an orange field.",
+      "case": "Fuses partly on study state, loses on reading comfort and audience.",
+      "kept": "State as marks, never hue alone.",
+      "risk": "Orange field fights math-heavy reading."
+    },
+    {
+      "id": "challenger-japanese-density",
+      "label": "Japanese high-density web",
+      "verdict": "declined",
+      "lineage": "dense portal mosaics",
+      "thesis": "Pack the library into ruled modules.",
+      "palette": ["#ffffff", "#111111", "#e60012", "#d9d9d9"],
+      "materials": ["hairline modules", "small tabs"],
+      "viewport": "A mosaic of ruled modules.",
+      "case": "Wins density for the library, loses calm reading.",
+      "kept": "Hairline-ruled dense index for the library rail.",
+      "risk": "Noisy beside long text."
+    },
+    {
+      "id": "challenger-datamatics",
+      "label": "Datamatics field",
+      "verdict": "declined",
+      "lineage": "data-sublime installations",
+      "thesis": "The data itself as the image.",
+      "palette": ["#000000", "#ffffff"],
+      "materials": ["barcode bars", "monospace columns"],
+      "viewport": "Black-and-white bar fields.",
+      "case": "Fuses poorly with prose and notes.",
+      "kept": "Tabular mono numerals for all data.",
+      "risk": "Strobing and harsh for study."
+    }
+  ],
+  "reroll": { "registers": ["safer", "bolder"] },
+  "canon": true,
+  "canonCard": {
+    "label": "The notes-app standard",
+    "thesis": "The familiar knowledge-base app: file tree, centred page, side panel.",
+    "palette": ["#ffffff", "#1f2328", "#6d5dfc", "#f6f8fa"],
+    "materials": ["flat panels", "sans-serif UI"],
+    "viewport": "Sidebar tree, centred Markdown page, collapsible right panel for AI.",
+    "risk": "Indistinguishable from every notes app by design."
+  },
+  "steer": true
+}

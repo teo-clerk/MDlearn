@@ -1,0 +1,112 @@
+// Single source of truth for diagnostics. DSL_SPECIFICATION §12 is generated from this table.
+export type Severity = 'error' | 'warning' | 'info'
+export interface CodeDef { code: string; rule: string; summary: string; fix?: string }
+
+export const CODES = {
+  // E1xx structure & frontmatter
+  E101: { rule: 'frontmatter-invalid', summary: 'Frontmatter is not valid YAML, or a key has the wrong type (that key is ignored).' },
+  E102: { rule: 'title-missing', summary: 'No `title` in frontmatter and no leading `#` heading.' },
+  E103: { rule: 'unknown-container', summary: 'Unknown `:::name`; block is locked (fail-closed).', fix: 'Use quiz|cloze|order|explain|steps|code (questions), plot|formula|animate|sim (visuals), note|tip|important|warning (callouts).' },
+  E104: { rule: 'unknown-leaf', summary: 'Unknown `::name` leaf directive (only `::hint` exists); dropped.' },
+  E105: { rule: 'unclosed-container', summary: 'Container not closed; auto-closed at the next `##` or end of file.' },
+  E106: { rule: 'nested-widget', summary: 'A widget inside another widget; the inner one is locked.' },
+  E107: { rule: 'raw-html', summary: 'Raw HTML is not rendered (comments are allowed as annotations).', fix: 'Use Markdown/LaTeX, e.g. `$10^{-3}$` instead of `10<sup>-3</sup>`.' },
+  E108: { rule: 'unclosed-comment', summary: '`<!--` without `-->`; comment ended at end of line.' },
+  E109: { rule: 'eof-inside-block', summary: 'File ends inside a code fence or display math (truncated output?).' },
+  E111: { rule: 'read-unresolved', summary: '`::read[§…]` points to a section that does not exist in the source document.' },
+  W112: { rule: 'read-no-source', summary: '`::read` needs a `source:` in frontmatter or a document path in its label.' },
+  W113: { rule: 'read-in-widget', summary: '`::read` belongs at card level; inside a widget it is ignored.' },
+  // E2xx quiz & order
+  E201: { rule: 'quiz-no-options', summary: 'Quiz has no task list (`- [x]` / `- [ ]`).' },
+  E202: { rule: 'quiz-no-correct', summary: 'No option is marked `[x]`.' },
+  E203: { rule: 'quiz-too-few-options', summary: 'Quiz needs at least 2 options.' },
+  W204: { rule: 'quiz-too-many-options', summary: 'More than 5 options; 3 is the evidence-based default.' },
+  W205: { rule: 'distractor-without-feedback', summary: 'A wrong option has no `  > feedback` explaining the misconception.' },
+  W206: { rule: 'longest-option-correct', summary: 'Item-writing flaw: the correct option is much longer than every distractor.' },
+  W207: { rule: 'all-none-of-the-above', summary: 'Item-writing flaw: "all/none of the above" option.' },
+  W208: { rule: 'answer-marker', summary: 'Correctness marker (✅, "(correct)") converted to `[x]`.' },
+  I209: { rule: 'quiz-split', summary: 'A quiz with several questions was split into one widget per question.' },
+  E210: { rule: 'order-too-few', summary: '`order` needs an ordered list with at least 3 items.' },
+  // E3xx cloze & blanks
+  E301: { rule: 'cloze-no-blanks', summary: 'A cloze has no `{{…}}` blank.' },
+  E302: { rule: 'blank-empty', summary: 'Empty or unbalanced `{{…}}`.' },
+  W303: { rule: 'too-many-blanks', summary: 'More than 4 blanks in one widget.' },
+  W304: { rule: 'trivial-blank', summary: 'Every alternative of the blank is a function word or a 1–2 letter token.' },
+  W305: { rule: 'stray-blank', summary: '`{{…}}` outside cloze/steps; rendered as an empty line, answer hidden.' },
+  I306: { rule: 'anki-cloze', summary: 'Anki form `{{c1::…}}` normalised.' },
+  // E4xx explain & steps
+  E401: { rule: 'explain-no-answer', summary: '`explain` needs a trailing `>` model answer.' },
+  W402: { rule: 'explain-not-idea-units', summary: 'Model answer should be a `> - idea unit` list.' },
+  E403: { rule: 'steps-no-list', summary: '`steps` needs an ordered list of steps.' },
+  E404: { rule: 'steps-too-few', summary: '`steps` needs at least 2 steps.' },
+  I405: { rule: 'steps-merged', summary: 'Ordered lists split by unindented blocks were merged into one step list.' },
+  // E5xx code
+  E501: { rule: 'code-no-fence', summary: '`code` needs at least one code fence.' },
+  W502: { rule: 'code-no-tests', summary: 'No `test` fence: the learner can only compare with the solution.' },
+  I504: { rule: 'code-self-check', summary: 'Only Python and JavaScript run in the browser: for this language the tests become a self-check list.' },
+  E503: { rule: 'code-lang-mismatch', summary: 'Starter/test/solution fences use different languages.' },
+  // W6xx pedagogy & item writing
+  W601: { rule: 'card-too-long', summary: 'Card prose exceeds 150 words (heuristic).' },
+  W602: { rule: 'retrieval-gap', summary: 'More than 3 consecutive cards without a widget (heuristic).' },
+  W603: { rule: 'lesson-too-long', summary: 'More than 15 cards; split the lesson (heuristic).' },
+  W604: { rule: 'image-no-alt', summary: 'Image without alt text.' },
+  I605: { rule: 'answer-in-exposition', summary: 'A blank answer appears in the same card’s text: the player hides that text during the check, but retrieval is stronger if the check moves one card later.' },
+  W606: { rule: 'answer-label-visible', summary: '"Answer:"/"Solution:" text outside a hidden `>` block.' },
+  I607: { rule: 'time-drift', summary: 'Declared `time` differs >50% from the compiler estimate (the player shows the estimate).' },
+  W608: { rule: 'heading-promoted', summary: 'No `##` cards; `###` headings promoted to cards.' },
+  W609: { rule: 'widget-in-intro', summary: 'Widgets belong in cards; a widget before the first `##` is locked.' },
+  // W7xx math
+  E701: { rule: 'katex-error', summary: 'KaTeX cannot render this TeX.' },
+  W702: { rule: 'double-backslash', summary: '`\\\\name` in math (JSON-escaping habit?).' },
+  E703: { rule: 'untrusted-tex', summary: '`\\href`, `\\url`, `\\includegraphics` or `\\html*` are not allowed.' },
+  I704: { rule: 'math-key-tex-compare', summary: 'Math blank key is not numerically evaluable (e.g. `P(H\\mid E)`); checked by normalised-TeX comparison.' },
+  // I8xx normalisation (auto-repairs)
+  // E9xx visual blocks (plot, formula, animate, sim)
+  E901: { rule: 'visual-no-formula', summary: 'A plot or formula needs a display formula (`$$…$$`); each animate frame needs a formula.' },
+  E902: { rule: 'formula-unevaluable', summary: 'The formula uses something that cannot be computed (an unsupported function or notation).' },
+  E903: { rule: 'symbol-undeclared', summary: 'The formula uses a symbol with no value or range.', fix: 'Declare it as a list item, e.g. `- $c$ = 3e8 m/s — speed of light`.' },
+  E904: { rule: 'param-invalid', summary: 'A parameter is malformed: min ≥ max, value outside its range, a log range that includes 0, or an unreadable number.' },
+  E905: { rule: 'plot-no-x', summary: 'A plot needs one variable with a range and no value (the x axis), e.g. `- $R$ in [100, 2000] km — range`.' },
+  W906: { rule: 'plot-many-x', summary: 'Several variables have a range and no value; the first is the x axis, the others start at their midpoint.' },
+  W907: { rule: 'plot-empty', summary: 'Most points of the curve are not finite numbers (division by zero, log of a negative…) with the default values.' },
+  E908: { rule: 'term-not-found', summary: 'An explained term does not appear in the formula as written.', fix: 'Write the term exactly as in the formula, e.g. `- $G^2$ — …`.' },
+  I909: { rule: 'term-repeated', summary: 'An explained term appears more than once in the formula; every occurrence is highlighted.' },
+  W910: { rule: 'visual-too-busy', summary: 'More than 6 sliders, 6 terms or 4 curves: the visual becomes hard to read.' },
+  E911: { rule: 'animate-too-few', summary: 'An animation needs at least 2 frames (an ordered list).' },
+  W912: { rule: 'animate-too-many', summary: 'More than 12 frames; split the derivation.' },
+  E913: { rule: 'sim-code', summary: 'A simulation needs exactly one ```js code block.' },
+  E914: { rule: 'sim-syntax', summary: 'The simulation code has a syntax error.' },
+  E915: { rule: 'sim-too-large', summary: 'Simulation code is limited to 16 KB.' },
+  W916: { rule: 'sim-no-description', summary: 'Say in one sentence what the simulation shows (for readers and screen readers).' },
+  W917: { rule: 'sim-network-api', summary: 'Simulations run offline in a sandbox: network APIs (fetch, XMLHttpRequest, WebSocket, importScripts, import()) are blocked.' },
+  W918: { rule: 'visual-misplaced', summary: 'Visual blocks belong at card level, not inside a question, callout or list.' },
+  I919: { rule: 'visual-attr-ignored', summary: 'An attribute is not used by this kind of visual block.' },
+  I920: { rule: 'param-normalised', summary: 'A parameter line was read in a looser form (e.g. `R: [100 .. 2000] km range`).' },
+  W921: { rule: 'superscript-zero', summary: '`\\sigma^0` would be computed as a power (= 1); declare `$\\sigma^0$` as a symbol to use it as a name.' },
+  I923: { rule: 'euler-e', summary: 'The undeclared symbol `e` is read as Euler\'s number 2.718…' },
+  I801: { rule: 'unwrapped-fence', summary: 'Whole file was wrapped in a ```markdown fence; unwrapped.' },
+  I802: { rule: 'preamble-removed', summary: 'Chat text before the frontmatter removed.' },
+  I803: { rule: 'fence-normalised', summary: 'Directive fence rewritten to canonical `:::name[label]{attrs}`.' },
+  I804: { rule: 'alias-mapped', summary: 'Directive alias mapped to its canonical name.' },
+  I805: { rule: 'separator-dropped', summary: '`---`/`***` separator line dropped (setext-heading trap).' },
+  I806: { rule: 'display-math-split', summary: 'Content on a `$$` fence line (`$$\\begin{…}`, trailing `$$`) moved to its own line.' },
+  I807: { rule: 'tex-delimiters', summary: '`\\(…\\)` / `\\[…\\]` converted to `$…$` / `$$`.' },
+  I808: { rule: 'dollar-escaped', summary: 'Currency-like `$` escaped (Pandoc rule).' },
+  I809: { rule: 'table-math-pipe', summary: '`|` inside math in a table row rewritten as `\\vert`.' },
+  I810: { rule: 'obsidian-syntax', summary: 'Obsidian syntax (`[[…]]`, `![[…]]`, `%%…%%`) converted.' },
+  I811: { rule: 'alert-to-callout', summary: 'GFM/Obsidian alert `> [!TYPE]` converted to a callout.' },
+  I812: { rule: 'feedback-reindented', summary: 'Option feedback `>` re-indented under its option.' },
+  I813: { rule: 'colons-adjusted', summary: 'Container fence lengthened so nesting/colon lines parse correctly.' },
+  I814: { rule: 'stray-closer', summary: '`:::` without an open container removed.' },
+  I815: { rule: 'frontmatter-synonym', summary: 'Frontmatter key synonym mapped (e.g. objectives → goals).' },
+  I817: { rule: 'frontmatter-unknown-key', summary: 'Unknown frontmatter key ignored.' },
+  I820: { rule: 'stray-display-math', summary: 'A `$$` that is never closed was kept as text (documents only), so the rest of the document still renders.' },
+  I816: { rule: 'h1-title', summary: 'Leading `#` heading used as / dropped in favour of the title.' },
+} as const satisfies Record<string, Omit<CodeDef, 'code'>>
+
+export type Code = keyof typeof CODES
+export const severityOf = (c: Code): Severity => (c[0] === 'E' ? 'error' : c[0] === 'W' ? 'warning' : 'info')
+
+export interface Diagnostic { code: Code; line: number; col?: number; message?: string }
+export const format = (d: Diagnostic) =>
+  `${d.line}:${d.col ?? 1} ${d.code} ${CODES[d.code].rule}${d.message ? ': ' + d.message : ''}`

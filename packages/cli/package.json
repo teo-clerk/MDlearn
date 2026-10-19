@@ -1,0 +1,19 @@
+{
+  "name": "@mdlearn/cli",
+  "version": "0.2.0",
+  "description": "mdlearn command line: lint, build, outline, section, plan, status, review.",
+  "type": "module",
+  "bin": {
+    "mdlearn": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p ."
+  },
+  "dependencies": {
+    "@mdlearn/core": "0.2.0",
+    "@mdlearn/studio": "0.3.0"
+  }
+}
