@@ -59,7 +59,8 @@ export function studyQueue(lessons: Lesson[], reviews: ReviewEvent[], opts: Queu
   due.sort((a, b) => (a.retrievability ?? 0) - (b.retrievability ?? 0))
   return [...interleave(due), ...fresh.slice(0, opts.newCards ?? 5)].slice(0, limit)
 }
-function interleave(items: QueueItem[]): QueueItem[] {
+/** Reorder so two items of one lesson are not adjacent when avoidable (interleaving). */
+export function interleave(items: QueueItem[]): QueueItem[] {
   const out: QueueItem[] = [], rest = [...items]
   while (rest.length) {
     const i = rest.findIndex((x) => x.lessonId !== out[out.length - 1]?.lessonId)

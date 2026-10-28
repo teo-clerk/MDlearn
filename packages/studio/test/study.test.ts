@@ -8,7 +8,7 @@ import { settingsStore } from '../server/settings'
 import { Workspaces } from '../server/workspaces'
 import { loadProgress, workspace, loadCourse } from '@mdlearn/core/node'
 import { seededOrder, type Lesson } from '@mdlearn/core'
-import type { StudyPlan, StudyItem, RecordResponse } from '../shared/types'
+import type { StudyPlan, StudyItem, RecordResponse, ConfidenceInfo } from '../shared/types'
 
 const fixture = resolve(__dirname, '../../core/test/fixtures/curriculum')
 const tmp = (p: string) => mkdtempSync(join(tmpdir(), p))
@@ -87,5 +87,23 @@ describe('study over HTTP', () => {
   it('unknown cards are 404 with a helpful message', async () => {
     const r = await post('/study/record', { cardKey: 'nope/nope', outcome: { correct: true } })
     expect(r.status).toBe(404)
+  })
+})
+
+describe('the confidence check', () => {
+  it('lists a card you were sure about and missed, and "Review these" asks that very question again', async () => {
+    const { get, post, lessons } = setup()
+    const quiz = lessons.flatMap((l) => l.cards.flatMap((c) => c.blocks)).find((b) => b.type === 'quiz')!
+    if (quiz.type !== 'quiz') throw new Error('fixture needs a quiz')
+    const wrong = (quiz.sortNumeric ? quiz.options : seededOrder(quiz.options, quiz.id)).findIndex((o) => !o.correct)
+    for (let i = 0; i < 5; i++) await post('/study/check', { widgetId: quiz.id, answer: { type: 'quiz', picked: [wrong] }, sure: i < 3 })
+    const rep = await get<{ confidence: ConfidenceInfo }>('/study/report')
+    expect(rep.confidence.split).toMatchObject({ sureWrong: 3, unsureWrong: 2, answered: 5 })
+    expect(rep.confidence.weeks).toHaveLength(8)
+    expect(rep.confidence.overconfident).toEqual([expect.objectContaining({ widget: quiz.id, count: 3, cardTitle: expect.any(String), lessonPath: expect.stringMatching(/\.learn\.md$/) })])
+    const plan = await get<StudyPlan>(`/study/queue?widgets=${encodeURIComponent(`${quiz.id},gone/quiz-1`)}`)
+    expect(plan.items.map((i) => i.widgetId)).toEqual([quiz.id])
+    const tooMany = await get<{ error: { code: string } }>(`/study/queue?widgets=${Array.from({ length: 21 }, (_, i) => `x/quiz-${i}`).join(',')}`)
+    expect(tooMany.error.code).toBe('invalid')
   })
 })

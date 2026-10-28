@@ -65,7 +65,7 @@ export function useStudySession(ws: string) {
   const loadItem = useCallback(async (widgetId: string) => {
     try { dispatch({ type: 'item', item: await studyApi.item(ws, widgetId) }) } catch (e) { fail(e) }
   }, [ws])
-  const start = useCallback(async (o: { scope?: string; doc?: string; limit?: number; newCards?: number; due?: boolean }) => {
+  const start = useCallback(async (o: { scope?: string; doc?: string; limit?: number; newCards?: number; due?: boolean; widgets?: string[] }) => {
     try {
       const plan = await studyApi.plan(ws, o)
       dispatch({ type: 'plan', plan })

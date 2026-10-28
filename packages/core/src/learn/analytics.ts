@@ -73,6 +73,38 @@ export function calibration(attempts: AttemptLike[], now = Date.now(), days = 30
   return { ...c, answered: sure + unsure, sureAccuracy: sure ? c.sureRight / sure : null, unsureAccuracy: unsure ? c.unsureRight / unsure : null }
 }
 
+export interface ConfidenceWeek { start: string; sure: number; sureRight: number; unsure: number; unsureRight: number }
+/** A card you said you were sure about and got wrong: `widget` is the question you missed last. */
+export interface Overconfident { card: string; widget: string; count: number; last: number; answers: string[] }
+/** The local day number of the Monday that starts the week holding day `d` (day 0, 1 Jan 1970, was a Thursday). */
+const mondayOf = (d: number) => d - ((d + 3) % 7)
+/**
+ * The confidence check: the sure/not-sure × right/wrong split of the last `days` days, the same per week for
+ * the last `weeks` weeks, and the cards you were sure about and got wrong (most often first). A card leaves the
+ * list once you were sure and right about it again.
+ */
+export function confidence(attempts: AttemptLike[], now = Date.now(), opts: { days?: number; weeks?: number; top?: number } = {}, tz = localTz(now)) {
+  const { days = 30, weeks = 8, top = 8 } = opts
+  const rated = attempts.filter((a) => a.kind === 'attempt' && a.sure !== undefined && a.correct !== undefined).sort((x, y) => x.t - y.t)
+  const thisWeek = mondayOf(dayNumber(now, tz))
+  const out: ConfidenceWeek[] = Array.from({ length: weeks }, (_, i) => ({ start: new Date((thisWeek - (weeks - 1 - i) * 7) * DAY).toISOString().slice(0, 10), sure: 0, sureRight: 0, unsure: 0, unsureRight: 0 }))
+  for (const a of rated) {
+    const w = out[weeks - 1 - (thisWeek - mondayOf(dayNumber(a.t, tz))) / 7]
+    if (!w) continue
+    if (a.sure) { w.sure++; if (a.correct) w.sureRight++ } else { w.unsure++; if (a.correct) w.unsureRight++ }
+  }
+  const since = now - days * DAY
+  const byCard = new Map<string, Overconfident>()
+  for (const a of rated) {
+    if (a.sure && a.correct) { byCard.delete(a.card); continue } // sure and right again: fixed
+    if (!a.sure || a.correct || a.t < since) continue
+    const o = byCard.get(a.card)
+    byCard.set(a.card, { card: a.card, widget: a.widget, count: (o?.count ?? 0) + 1, last: a.t, answers: [a.answer?.trim(), ...(o?.answers ?? [])].filter((x): x is string => !!x).slice(0, 3) })
+  }
+  const overconfident = [...byCard.values()].sort((x, y) => y.count - x.count || y.last - x.last).slice(0, top)
+  return { split: calibration(attempts, now, days), weeks: out, overconfident }
+}
+
 export interface Leech { key: string; lapses: number; reviews: number; lastReview: number; wrongAnswers: string[] }
 /**
  * Cards you keep failing: at least 4 "again" after the first review (unless your last two ratings were

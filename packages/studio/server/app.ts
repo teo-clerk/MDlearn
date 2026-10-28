@@ -9,12 +9,13 @@ import { MEDIA_TYPES, mediaResponse } from './media.js'
 import { extname, relative, join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { z } from 'zod'
-import { compile, parseDocument, findSection, sectionText, isWidget, parseWebAnswer, checkStructured } from '@mdlearn/core'
+import { compile, parseDocument, findSection, sectionText, isWidget, parseWebAnswer, checkStructured, MAX_EXAM_QUESTIONS } from '@mdlearn/core'
 import { loadCourse, compileSource, searchCurriculum, loadDoc, loadGoals, saveGoals, inRoot } from '@mdlearn/core/node'
 import { security, capsOf, clientOf, need, type SecurityOptions } from './security.js'
 import { Workspaces, UserError, browse, type Handle } from './workspaces.js'
 import { redactLesson, redactDoc, findDocWidget } from './redact.js'
 import * as study from './study.js'
+import { examPlan, examGrade } from './exam.js'
 import { today } from './today.js'
 import { passageFor, addCard } from './cards.js'
 import { notesStore, AnchorSchema } from './notes.js'
@@ -254,6 +255,7 @@ export function createApp(deps: Deps): Hono {
   const num = (v: string | undefined, max: number) => (v === undefined || v === '' ? undefined : z.coerce.number().int().min(0).max(max).parse(v))
   app.get('/api/w/:ws/study/queue', need('study', o), (c) => c.json(study.plan(ws(c), {
     scope: c.req.query('scope') || undefined, doc: c.req.query('doc') || undefined, limit: num(c.req.query('limit'), 50), newCards: num(c.req.query('newCards'), 20), due: c.req.query('due') === '1',
+    widgets: c.req.query('widgets') ? z.array(z.string().min(1).max(300)).max(20).parse(c.req.query('widgets')!.split(',')) : undefined,
   })))
   app.get('/api/w/:ws/study/item', need('study', o), (c) => c.json(study.item(ws(c), z.string().min(1).max(300).parse(c.req.query('widget')))))
   app.post('/api/w/:ws/study/check', need('study', o), async (c) => {
@@ -271,6 +273,13 @@ export function createApp(deps: Deps): Hono {
     return c.json(study.record(ws(c), cardKey, outcome))
   })
   app.get('/api/w/:ws/study/report', need('study', o), (c) => c.json(study.progressReport(ws(c))))
+  app.get('/api/w/:ws/exam/plan', need('study', o), (c) => c.json(examPlan(ws(c), {
+    count: z.coerce.number().int().min(1).max(MAX_EXAM_QUESTIONS).parse(c.req.query('count') ?? 20), doc: c.req.query('doc') || undefined, lesson: c.req.query('lesson') || undefined,
+  })))
+  app.post('/api/w/:ws/exam/grade', need('study', o), async (c) => {
+    const body = z.object({ id: z.string().uuid(), answers: z.array(z.object({ widgetId: z.string().min(1).max(300), answer: z.unknown(), sure: z.boolean().optional(), ms: z.number().int().min(0).max(4 * 3600_000) })).min(1).max(MAX_EXAM_QUESTIONS) }).parse(await c.req.json())
+    return c.json(examGrade(ws(c), body.id, body.answers.map((a) => ({ ...a, answer: a.answer ?? null }))))
+  })
   app.get('/api/w/:ws/study/map', need('study', o), (c) => c.json(study.sectionMap(ws(c), pathParam(c))))
 
   // ---- knowledge: formulas, glossary, links, map

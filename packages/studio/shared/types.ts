@@ -1,5 +1,5 @@
 // Contract between the MDlearn Studio server and web app (imported with `import type` on both sides).
-import type { DocModel, DocOutline, Diagnostic, Lesson, Block, PosedWidget, QueueItem, Checked, ReadRef, MdNode } from '@mdlearn/core'
+import type { DocModel, DocOutline, Diagnostic, Lesson, Block, PosedWidget, QueueItem, Checked, ReadRef, MdNode, ExamAnswer, ExamSummary } from '@mdlearn/core'
 
 export type Capability = 'read' | 'study' | 'notes' | 'askLocal' | 'write' | 'ai' | 'fs'
 export interface SessionInfo {
@@ -38,6 +38,18 @@ export interface StudyPlan { items: QueueItem[]; due: number; fresh: number; min
 /** `video`: the video this question pauses at in the lesson (its title, the time, a link that starts there when online). */
 export interface StudyItem { item: QueueItem; title: string; widget: PosedWidget; exposition: MdNode[]; reads: ReadRef[]; lessonPath: string; video?: { title: string; at: string; link?: string } }
 export interface CheckResponse { checked: Checked }
+/** A mock exam paper: the questions without their answers; `available` is how many studied cards could be asked. */
+export interface ExamPlan { id: string; requested: number; available: number; items: { item: QueueItem; widget: PosedWidget; lessonPath: string }[] }
+export interface ExamResult {
+  summary: ExamSummary
+  results: (ExamAnswer & { checked: Checked; rating?: 1 | 2 | 3; word?: string; next?: string })[]
+}
+/** The confidence check (Progress): sure/not sure × right/wrong, per week, and the cards you were sure about and missed. */
+export interface ConfidenceInfo {
+  split: { sureRight: number; sureWrong: number; unsureRight: number; unsureWrong: number; answered: number; sureAccuracy: number | null; unsureAccuracy: number | null }
+  weeks: { start: string; sure: number; sureRight: number; unsure: number; unsureRight: number }[]
+  overconfident: { card: string; widget: string; count: number; last: number; answers: string[]; lessonTitle: string; cardTitle: string; lessonPath: string }[]
+}
 export interface RecordResponse { rating: 1 | 2 | 3; word: string; meaning: string; next: { due: string; when: string } | null }
 
 // ---- events (SSE)

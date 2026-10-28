@@ -2,7 +2,7 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { api, qs } from './client'
 import { currentLang } from '../i18n'
-import type { SessionInfo, WorkspaceSummary, Tree, DocResponse, LessonResponse, BrowseResult, StudyPlan, StudyItem, RecordResponse, SearchHit, Note, NoteAnchor, EnginesInfo, JobSummary, JobEvent, TodayResponse, GoalsInfo, FormulasResponse, GlossaryResponse, LinksResponse, MapResponse, DocSummary, AskStatus, AskEntry, SheetResponse, FileInfo, HistoryEntry, PreviewResponse, ImportResult, ChatCheck, Integrations, Batch, BatchCandidate } from '../../shared/types'
+import type { SessionInfo, WorkspaceSummary, Tree, DocResponse, LessonResponse, BrowseResult, StudyPlan, StudyItem, RecordResponse, SearchHit, Note, NoteAnchor, EnginesInfo, JobSummary, JobEvent, TodayResponse, GoalsInfo, FormulasResponse, GlossaryResponse, LinksResponse, MapResponse, DocSummary, AskStatus, AskEntry, SheetResponse, FileInfo, HistoryEntry, PreviewResponse, ImportResult, ChatCheck, Integrations, Batch, BatchCandidate, ConfidenceInfo, ExamPlan, ExamResult } from '../../shared/types'
 import type { Checked, MdNode, WebAnswer, Outcome } from '@mdlearn/core'
 
 export const keys = {
@@ -166,13 +166,17 @@ export function useUpload() {
 }
 // study (not cached: each call is one step of a session)
 export const studyApi = {
-  plan: (ws: string, o: { scope?: string; doc?: string; limit?: number; newCards?: number; due?: boolean }) =>
-    api.get<StudyPlan>(`/api/w/${ws}/study/queue?${qs({ ...o, due: o.due ? 1 : undefined })}`),
+  plan: (ws: string, o: { scope?: string; doc?: string; limit?: number; newCards?: number; due?: boolean; widgets?: string[] }) =>
+    api.get<StudyPlan>(`/api/w/${ws}/study/queue?${qs({ ...o, due: o.due ? 1 : undefined, widgets: o.widgets?.join(',') })}`),
   item: (ws: string, widget: string) => api.get<StudyItem>(`/api/w/${ws}/study/item?${qs({ widget })}`),
   check: (ws: string, body: { widgetId: string; answer: WebAnswer; sure?: boolean; practice?: boolean }) => api.post<{ checked: Checked }>(`/api/w/${ws}/study/check`, body),
   hint: (ws: string, widgetId: string, n: number) => api.post<{ hint: MdNode[] | null }>(`/api/w/${ws}/study/hint`, { widgetId, n }),
   record: (ws: string, cardKey: string, outcome: Outcome) => api.post<RecordResponse>(`/api/w/${ws}/study/record`, { cardKey, outcome }),
   judge: (ws: string, widgetId: string, text: string) => api.post<JudgeResult>(`/api/w/${ws}/study/judge`, { widgetId, text }),
+}
+export const examApi = {
+  plan: (ws: string, o: { count: number; doc?: string; lesson?: string }) => api.get<ExamPlan>(`/api/w/${ws}/exam/plan?${qs(o)}`),
+  grade: (ws: string, id: string, answers: { widgetId: string; answer: WebAnswer | null; sure?: boolean; ms: number }[]) => api.post<ExamResult>(`/api/w/${ws}/exam/grade`, { id, answers }),
 }
 export interface SectionMemory { num: string | null; anchor: string; title: string; depth: number; cards: number; seen: number; due: number; memory: number | null }
 export interface ReportResponse {
@@ -180,6 +184,7 @@ export interface ReportResponse {
   totals: { cards: number; seen: number; due: number; reviews: number }
   accuracy: { today: { answered: number; correct: number }; last7Days: { answered: number; correct: number } }
   nextDue: string | null; nextDueText: string | null; streak: number
+  confidence: ConfidenceInfo
 }
 export interface JudgeResult { ideas: { index: number; verdict: 'covered' | 'partly' | 'missing'; evidence?: string }[]; feedback: string }
 export interface Passage { text: string; startLine: number; endLine: number; section: { num: string | null; anchor: string; title: string } | null }

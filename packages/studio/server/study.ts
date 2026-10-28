@@ -3,14 +3,15 @@
 import { randomUUID } from 'node:crypto'
 import { relative, sep } from 'node:path'
 import {
-  studyQueue, locate, checkStructured, parseWebAnswer, redactWidget, ratingFor, ratingWords, scheduleAfter, whenText, report, deriveCards, retrievability, askable, videoMoment,
+  studyQueue, locate, checkStructured, parseWebAnswer, redactWidget, ratingFor, ratingWords, scheduleAfter, whenText, report, deriveCards, retrievability, askable, videoMoment, confidence,
+  type QueueItem,
   type Lesson, type Outcome, type MdNode, type Block, type WebAnswer,
 } from '@mdlearn/core'
 import { loadCourse, loadProgress, loadGoals, appendProgress, findDoc, loadDoc, lessonDirFor } from '@mdlearn/core/node'
 import { defaultNewCards } from './today.js'
 import type { Handle } from './workspaces.js'
 import { UserError } from './workspaces.js'
-import type { StudyPlan, StudyItem, RecordResponse } from '../shared/types.js'
+import type { StudyPlan, StudyItem, RecordResponse, ConfidenceInfo } from '../shared/types.js'
 
 const MINUTES: Record<string, number> = { quiz: 0.6, cloze: 0.8, order: 1, steps: 1.5, explain: 2, code: 3, match: 1, sort: 1, speed: 1.5 }
 const posix = (p: string) => p.split(sep).join('/')
@@ -24,17 +25,33 @@ export const progressOf = (h: Handle) => {
   try { return loadProgress(h.ws) } catch (e) { throw new UserError('progress', `Your progress file cannot be read (${(e as Error).message}). Nothing was changed.`) }
 }
 
-export function plan(h: Handle, opts: { scope?: string; limit?: number; newCards?: number; due?: boolean; doc?: string }): StudyPlan {
+export function plan(h: Handle, opts: { scope?: string; limit?: number; newCards?: number; due?: boolean; doc?: string; widgets?: string[] }): StudyPlan {
   const { lessons } = course(h)
   const p = progressOf(h)
+  if (opts.widgets) return summed(chosen(lessons, p, opts.widgets))
   // "Study this document": every lesson whose files live in the document's companion folder
   const inDoc = opts.doc ? lessonsOfDoc(h, opts.doc) : null
   const pool = inDoc ? lessons.filter((l) => inDoc.has(l.id)) : lessons
   // with a deadline the day's quota of new cards follows the pace needed to finish in time
   const paced = opts.due || opts.newCards !== undefined ? null : defaultNewCards(h, pool, p)
   const items = studyQueue(pool, p.reviews, { limit: opts.limit ?? (paced ? Math.min(40, 10 + paced) : 10), newCards: opts.due ? 0 : opts.newCards ?? paced ?? 5, scope: opts.scope, attempts: p.attempts, suspended: new Set(loadGoals(h.ws).suspended) })
+  return summed(items)
+}
+function summed(items: QueueItem[]): StudyPlan {
   const due = items.filter((i) => i.reason === 'due').length
   return { items, due, fresh: items.length - due, minutes: Math.max(1, Math.round(items.reduce((m, i) => m + (MINUTES[i.kind] ?? 1), 0))) }
+}
+/** A session on given questions ("Review these" from the confidence check), early if need be; cards that are gone are left out. */
+function chosen(lessons: Lesson[], p: ReturnType<typeof progressOf>, widgets: string[]): QueueItem[] {
+  const cards = deriveCards(p.reviews)
+  const now = new Date()
+  return [...new Set(widgets)].flatMap((id): QueueItem[] => {
+    const loc = locate(lessons, id)
+    if (!loc) return []
+    const key = `${loc.lesson.id}/${loc.card.id}`, state = cards.get(key)
+    const base = { cardKey: key, lessonId: loc.lesson.id, lessonTitle: loc.lesson.title, cardId: loc.card.id, cardTitle: loc.card.title, widgetId: id, kind: loc.widget.type }
+    return [state ? { ...base, reason: 'due', retrievability: Math.round(retrievability(state, now) * 1000) / 1000, dueSince: state.due.toISOString() } : { ...base, reason: 'new' }]
+  })
 }
 export function lessonsOfDoc(h: Handle, docRel: string): Set<string> {
   const abs = findDoc(h.ws, docRel)
@@ -81,7 +98,7 @@ export function check(h: Handle, body: { widgetId: string; answer: unknown; sure
 }
 
 /** What the learner answered, as text for the attempt log. */
-function answerText(a: WebAnswer): string {
+export function answerText(a: WebAnswer): string {
   switch (a.type) {
     case 'quiz': return a.picked.join(',')
     case 'cloze': case 'steps': return a.values.join(' ; ')
@@ -117,8 +134,22 @@ export function record(h: Handle, cardKey: string, outcome: Outcome): RecordResp
 export function progressReport(h: Handle) {
   const { lessons, pathOf } = course(h)
   const p = progressOf(h)
-  const r = report(lessons, p.reviews, Date.now(), p.attempts)
-  return { ...r, nextDueText: r.nextDue ? whenText(r.nextDue) : null, lessons: r.lessons.map((l) => ({ ...l, path: pathOf.get(l.lessonId) ?? '' })) }
+  const now = Date.now()
+  const r = report(lessons, p.reviews, now, p.attempts)
+  return { ...r, nextDueText: r.nextDue ? whenText(r.nextDue) : null, lessons: r.lessons.map((l) => ({ ...l, path: pathOf.get(l.lessonId) ?? '' })), confidence: confidenceOf(h, lessons, pathOf, p, now) }
+}
+/** The confidence check, with the cards named; cards that were edited away or set aside are left out. */
+function confidenceOf(h: Handle, lessons: Lesson[], pathOf: Map<string, string>, p: ReturnType<typeof progressOf>, now: number): ConfidenceInfo {
+  const c = confidence(p.attempts, now, { top: 20 })
+  const suspended = new Set(loadGoals(h.ws).suspended)
+  const overconfident = c.overconfident.flatMap((o) => {
+    const loc = locate(lessons, o.widget)
+    if (!loc || suspended.has(o.card) || `${loc.lesson.id}/${loc.card.id}` !== o.card) return []
+    // what you typed means something on its own; a picked option's number or an order does not
+    const typed = loc.widget.type === 'cloze' || loc.widget.type === 'steps'
+    return [{ ...o, answers: typed ? o.answers : [], lessonTitle: loc.lesson.title, cardTitle: loc.card.title, lessonPath: pathOf.get(loc.lesson.id) ?? '' }]
+  }).slice(0, 8)
+  return { ...c, overconfident }
 }
 
 /** Memory per section of a document: which cards read it, how many are seen/due, mean predicted recall. */

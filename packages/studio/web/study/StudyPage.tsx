@@ -24,9 +24,11 @@ export default function StudyPage({ ws }: { ws: string }) {
   const scope = params.get('scope') ?? undefined
   const doc = params.get('doc') ?? undefined
   const more = params.get('new') ? Number(params.get('new')) : undefined
+  const widgets = params.get('widgets')?.split(',').filter(Boolean).slice(0, 20)
   const s = useStudySession(ws)
   const qc = useQueryClient()
-  useEffect(() => { void s.start({ scope, doc, ...(more ? { newCards: more, limit: 10 + more } : {}) }) }, [ws, scope, doc, more]) // eslint-disable-line react-hooks/exhaustive-deps
+  const again = () => s.start({ scope, doc, ...(widgets ? { widgets } : {}), ...(more ? { newCards: more, limit: 10 + more } : {}) })
+  useEffect(() => { void again() }, [ws, scope, doc, more, params.get('widgets')]) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { document.title = t('Study · MDlearn Studio') }, [])
   // progress shown elsewhere (sidebar counts, outline memory) follows the session
   useEffect(() => { if (s.state.recorded) { void qc.invalidateQueries({ queryKey: ['tree', ws] }); void qc.invalidateQueries({ queryKey: ['report', ws] }) } }, [s.state.recorded, qc, ws])
@@ -35,12 +37,12 @@ export default function StudyPage({ ws }: { ws: string }) {
   return (
     <div className="mx-auto max-w-[720px] px-5 pb-24 pt-2 sm:px-8">
       <TopLeft><span className="truncate px-1 text-[13px] text-muted">{t('Study')}{scope ? ` · ${scope}` : doc ? ` · ${doc.split('/').pop()}` : ''}</span></TopLeft>
-      {st.phase === 'error' && <ErrorNote error={new Error(st.error ?? '')} retry={() => s.start({ scope, doc })} />}
+      {st.phase === 'error' && <ErrorNote error={new Error(st.error ?? '')} retry={() => void again()} />}
       {st.phase === 'empty' && <Nothing ws={ws} />}
-      {st.phase === 'summary' && <Summary ws={ws} state={st} onAgain={() => s.start({ scope, doc })} />}
+      {st.phase === 'summary' && <Summary ws={ws} state={st} onAgain={() => void s.start({ scope, doc })} />}
       {st.plan && st.plan.items.length > 0 && st.phase !== 'summary' && st.phase !== 'error' && (
         <>
-          <PlanLine state={st} />
+          <PlanLine state={st} chosen={widgets ? (params.get('from') === 'exam' ? 'exam' : 'sure') : null} />
           <div className="mt-3 h-[3px] overflow-hidden rounded-full bg-hover" role="progressbar" aria-valuemin={0} aria-valuemax={total} aria-valuenow={st.index + (st.recorded ? 1 : 0)} aria-label={t('Session progress')}>
             <div className="h-full bg-accent transition-[width] duration-300 ease-out" style={{ width: `${((st.index + (st.phase === 'feedback' ? 1 : 0)) / Math.max(1, total)) * 100}%` }} />
           </div>
@@ -52,12 +54,12 @@ export default function StudyPage({ ws }: { ws: string }) {
   )
 }
 
-function PlanLine({ state: st }: { state: SessionState }) {
+function PlanLine({ state: st, chosen }: { state: SessionState; chosen: 'sure' | 'exam' | null }) {
   const p = st.plan!
   return (
     <div className="flex items-baseline justify-between gap-3 pt-4">
       <h1 className="text-[15px] font-semibold">
-        {st.revisit ? t('Revisiting what you missed') : t('Today: {plan}', { plan: [p.due ? tp(p.due, '{n} to review', '{n} to review') : '', p.fresh ? tp(p.fresh, '{n} new', '{n} new') : ''].filter(Boolean).join(', ') })}
+        {st.revisit ? t('Revisiting what you missed') : chosen === 'exam' ? t('What you missed in the exam') : chosen ? t('Cards you were sure about, but missed') : t('Today: {plan}', { plan: [p.due ? tp(p.due, '{n} to review', '{n} to review') : '', p.fresh ? tp(p.fresh, '{n} new', '{n} new') : ''].filter(Boolean).join(', ') })}
       </h1>
       <p className="shrink-0 tabular text-[12.5px] text-muted">{st.revisit ? t('{done} of {total}', { done: st.index + 1, total: st.revisitList.length }) : `${t('{done} of {total}', { done: st.index + 1, total: p.items.length })} · ${t('about {n} min', { n: p.minutes })}`}</p>
     </div>

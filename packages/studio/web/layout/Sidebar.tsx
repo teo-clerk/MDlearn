@@ -1,7 +1,7 @@
 // Left sidebar: folder switcher, search, study entry with today's count, the document tree, theme.
 import { useMemo, useState } from 'react'
 import { Link, useLocation } from 'wouter'
-import { BookA, BookOpenCheck, LifeBuoy, FilePlus, FileInput, ChartNoAxesColumn, ChevronsUpDown, FolderOpen, House, MessageSquareText, Monitor, Moon, Network, PanelLeftClose, Search, Settings, Sigma, Sparkles, Sun, Loader2 } from 'lucide-react'
+import { BookA, BookOpenCheck, ClipboardCheck, LifeBuoy, FilePlus, FileInput, ChartNoAxesColumn, ChevronsUpDown, FolderOpen, House, MessageSquareText, Monitor, Moon, Network, PanelLeftClose, Search, Settings, Sigma, Sparkles, Sun, Loader2 } from 'lucide-react'
 import { useJobs, useSession, useTree, useWorkspaces } from '../api/queries'
 import { useUi, type Theme } from '../state/ui'
 import { FileTree } from './FileTree'
@@ -35,6 +35,7 @@ export function Sidebar({ ws }: { ws: string }) {
         <NavItem href={`/w/${ws}`} icon={House} tour="today" active={location === `/w/${ws}` || location === `/w/${ws}/`}>{t('Today')}</NavItem>
         <NavItem href={`/w/${ws}/study`} icon={BookOpenCheck} tour="study" active={location.startsWith(`/w/${ws}/study`)}
           badge={due ? <span className="tabular rounded-full bg-active px-1.5 text-[11.5px] font-medium text-text" title={tp(due, '{n} card due', '{n} cards due')}>{due}</span> : null}>{t('Study')}</NavItem>
+        <NavItem href={`/w/${ws}/exam`} icon={ClipboardCheck} active={location.startsWith(`/w/${ws}/exam`)}>{t('Mock exam')}</NavItem>
         <NavItem href={`/w/${ws}/ask`} icon={MessageSquareText} active={location.startsWith(`/w/${ws}/ask`)}>{t('Ask')}</NavItem>
         <NavItem href={`/w/${ws}/progress`} icon={ChartNoAxesColumn} active={location.startsWith(`/w/${ws}/progress`)}>{t('Progress')}</NavItem>
         {canAi && <NavItem href={`/w/${ws}/studio`} icon={Sparkles} tour="ai" active={location.startsWith(`/w/${ws}/studio`)} badge={running ? <Loader2 className="size-3.5 animate-spin text-muted" aria-label={t('A job is running')} /> : null}>{t('AI Studio')}</NavItem>}

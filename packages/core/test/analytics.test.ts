@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { deriveCards, type ReviewEvent } from '../src/learn/srs'
-import { forecast, heatmap, studyTime, calibration, leeches, pacing, dayKey } from '../src/learn/analytics'
+import { forecast, heatmap, studyTime, calibration, confidence, leeches, pacing, dayKey } from '../src/learn/analytics'
 
 const TZ = 0 // UTC, so the tests do not depend on the machine's time zone
 const at = (iso: string) => new Date(iso).getTime()
@@ -53,6 +53,29 @@ describe('confidence calibration', () => {
     const c = calibration([{ id: 'x', t: NOW - 40 * 864e5, widget: 'w', card: 'c', kind: 'attempt', sure: true, correct: true }, { id: 'y', t: NOW, widget: 'w', card: 'c', kind: 'attempt', correct: true }], NOW, 30)
     expect(c.answered).toBe(0)
     expect(c.sureAccuracy).toBeNull()
+  })
+})
+
+describe('confidence check', () => {
+  const a = (id: string, iso: string, card: string, sure: boolean, correct: boolean, widget = `${card}#w`) => ({ id, t: at(iso), widget, card, kind: 'attempt', sure, correct, answer: `${id}!` })
+  it('splits answers by confidence and week (weeks start on Monday)', () => {
+    const c = confidence([a('1', '2026-10-05T09:00:00Z', 'l/a', true, true), a('2', '2026-10-04T09:00:00Z', 'l/a', true, false), a('3', '2026-10-06T09:00:00Z', 'l/b', false, true)], NOW, { weeks: 3 }, TZ)
+    expect(c.split).toMatchObject({ sureRight: 1, sureWrong: 1, unsureRight: 1, unsureWrong: 0 })
+    expect(c.weeks.map((w) => w.start)).toEqual(['2026-09-21', '2026-09-28', '2026-10-05'])
+    expect(c.weeks[2]).toEqual({ start: '2026-10-05', sure: 1, sureRight: 1, unsure: 1, unsureRight: 1 })
+    expect(c.weeks[1]).toEqual({ start: '2026-09-28', sure: 1, sureRight: 0, unsure: 0, unsureRight: 0 })
+  })
+  it('lists the cards you were sure about and got wrong, most often first, with the question you missed', () => {
+    const c = confidence([
+      a('1', '2026-10-01T09:00:00Z', 'l/a', true, false, 'l/a#q1'), a('2', '2026-10-03T09:00:00Z', 'l/a', true, false, 'l/a#q2'),
+      a('3', '2026-10-02T09:00:00Z', 'l/b', true, false), a('4', '2026-10-04T09:00:00Z', 'l/c', false, false),
+    ], NOW, {}, TZ)
+    expect(c.overconfident.map((o) => [o.card, o.count, o.widget])).toEqual([['l/a', 2, 'l/a#q2'], ['l/b', 1, 'l/b#w']])
+    expect(c.overconfident[0].answers).toEqual(['2!', '1!'])
+  })
+  it('drops a card once you were sure and right about it again', () => {
+    const c = confidence([a('1', '2026-10-01T09:00:00Z', 'l/a', true, false), a('2', '2026-10-02T09:00:00Z', 'l/a', true, true)], NOW, {}, TZ)
+    expect(c.overconfident).toEqual([])
   })
 })
 

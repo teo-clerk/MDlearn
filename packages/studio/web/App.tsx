@@ -8,6 +8,7 @@ const TodayPage = lazy(() => import('./today/TodayPage'))
 const Reader = lazy(() => import('./reader/Reader'))
 const LessonView = lazy(() => import('./lesson/LessonView'))
 const StudyPage = lazy(() => import('./study/StudyPage'))
+const ExamPage = lazy(() => import('./exam/ExamPage'))
 const ProgressPage = lazy(() => import('./progress/ProgressPage'))
 const StudioPage = lazy(() => import('./studio/StudioPage'))
 const FormulasPage = lazy(() => import('./knowledge/FormulasPage'))
@@ -28,6 +29,7 @@ function Workspace() {
           <Route path="/w/:ws/doc"><Reader ws={ws} /></Route>
           <Route path="/w/:ws/lesson"><LessonView ws={ws} /></Route>
           <Route path="/w/:ws/study"><StudyPage ws={ws} /></Route>
+          <Route path="/w/:ws/exam"><ExamPage ws={ws} /></Route>
           <Route path="/w/:ws/progress"><ProgressPage ws={ws} /></Route>
           <Route path="/w/:ws/studio"><StudioPage ws={ws} /></Route>
           <Route path="/w/:ws/edit"><EditPage ws={ws} /></Route>

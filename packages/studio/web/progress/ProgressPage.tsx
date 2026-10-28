@@ -10,6 +10,7 @@ import { Button, Empty, ErrorNote, MemoryMark, Spinner } from '../ui/primitives'
 import { TopLeft } from '../layout/Shell'
 import { t, tp, locale } from '../i18n'
 import { whenText } from '../lib/when'
+import { Confidence } from './Confidence'
 
 const pct = (a: { answered: number; correct: number }) => (a.answered ? `${Math.round((a.correct / a.answered) * 100)}%` : '–')
 export default function ProgressPage({ ws }: { ws: string }) {
@@ -42,6 +43,7 @@ export default function ProgressPage({ ws }: { ws: string }) {
           <div key={k}><dt className="text-[12px] text-muted">{k}</dt><dd className="mt-0.5 tabular text-[20px] font-semibold">{v}</dd><dd className="text-[11.5px] leading-snug text-subtle">{hint}</dd></div>
         ))}
       </dl>
+      <Confidence ws={ws} c={r.confidence} />
       <h2 className="mt-8 text-[13px] font-medium text-muted">{t('Lessons')}</h2>
       {/* fixed layout: long lesson titles truncate instead of pushing the numbers off a phone screen */}
       <table className="mt-2 w-full table-fixed border-collapse text-[13.5px]">
