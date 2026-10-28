@@ -61,9 +61,11 @@ times ("tomorrow", "in 3 days (Fri 4 Oct)"), and ends quietly when piped into `h
 
 ## 4. MCP server (`mdlearn-mcp`)
 
-Stdio server built on `@modelcontextprotocol/sdk` 1.31. Configuration: `MDLEARN_ROOT` (curriculum
-root) and `MDLEARN_LEARN_DIR` (default `learn`). Registered project-scoped in
-`ESA-PROJECTS/.mcp.json`; Claude Code asks once to approve it.
+Stdio server built on `@modelcontextprotocol/sdk` 1.31. Configuration: `MDLEARN_ROOT` (the folder; else
+`CLAUDE_PROJECT_DIR`, else the working directory — an unexpanded `${…}` is ignored), `MDLEARN_LEARN_DIR`
+(default `learn`) and `MDLEARN_READONLY=1` (no `save_lesson`; MDlearn Studio sets it because its jobs guard
+writes themselves). It works in any folder, including one with no curriculum. Registered project-scoped in
+`ESA-PROJECTS/.mcp.json`, or everywhere through the Claude Code plugin (§5).
 
 | Tool | Kind | What it returns |
 |---|---|---|
@@ -80,6 +82,14 @@ root) and `MDLEARN_LEARN_DIR` (default `learn`). Registered project-scoped in
 | `check_answer` | write (attempt log) | correct / partial / null (tutor judges with the returned rubric), feedback in words, `answer` (always present), what to reveal |
 | `record_review` | write (FSRS log) | the rating in plain words (`say`: "solid: … next review in 3 days") plus the FSRS label and due date for bookkeeping |
 | `progress_report` | read | per-lesson seen/due/predicted recall, your accuracy today and over 7 days, next due, study streak |
+| `authoring_guide` | read | how to write lessons: part `method` (AGENT_SKILL.md, default), `spec` (the section list, or one section with `section: "8.3"`), `visuals`, `tutor`, `curriculum` |
+| `save_lesson` | write (a lesson file) | lints, then saves a `.learn.md` (or a `course.md` overview) inside the folder; refuses errors (returns the lint lines), existing files without `overwrite`, and anything else |
+
+**Prompts** (slash commands in most clients; `/mcp__mdlearn__create_course` in Claude Code):
+`create_course(topic, level?, language?, minutes?, notes?)` — a course on any topic, from notes or from
+general knowledge (doubtful claims flagged `<!-- added: verify … -->`, sources listed), the same text
+Studio's *Any topic* job uses (`coursePrompt` in core); `companion_lessons(doc)`; `study(scope?)` (the tutor
+protocol). **Resources**: `mdlearn://guide/method`, `mdlearn://guide/spec`, `mdlearn://guide/chat`.
 
 Safety: every path is confined to the root; questions are generated from the CourseAST with answers
 stripped, so the model cannot leak a key by quoting the question; the progress file is validated
@@ -98,6 +108,19 @@ Progress lives in `learn/.mdlearn/progress.json` (git-ignored): an append-only l
 
 Installed as symlinks in `MDlearn/.claude/skills/` and `ESA-PROJECTS/.claude/skills/`; the sources
 live in `MDlearn/skills/` and `MDlearn/docs/AGENT_SKILL.md`.
+
+`scripts/build-integrations.ts` (run by every Studio build) packages them for other assistants into
+`packages/studio/dist/integrations/`:
+
+| Output | For |
+|---|---|
+| `claude-plugin/` | A Claude Code marketplace with the `mdlearn` plugin: the four skills, `/mdlearn:course` and `/mdlearn:study`, and the MCP server bundled into one file (`mcp/server.mjs`, with its guide in `mcp/guide/`). `claude plugin marketplace add <dir>` then `claude plugin install mdlearn@mdlearn`; `claude --plugin-dir <dir>/mdlearn` tries it for one session |
+| `mdlearn-skill.zip` | Claude.ai (Settings → Capabilities → Skills): the course skill, the DSL spec and `scripts/lint.mjs`, the checker as one file |
+| `MDLEARN_PROMPT.md` | Chats without tools: [CHAT_PROMPT.md](CHAT_PROMPT.md) below its marker line (under 8,000 characters, so it fits a Custom GPT's instructions); its example is compiled by `check-docs` |
+| `MDLEARN_GUIDE.md` | The method and the full DSL specification in one file, to attach to a chat |
+
+A chat's answer comes back through Studio's *Import → From a chat* or `mdlearn import-chat`
+(`splitBundle`, `planBundle` and `fixMessage` in core).
 
 ## 6. Workflow for ESA-PROJECTS
 

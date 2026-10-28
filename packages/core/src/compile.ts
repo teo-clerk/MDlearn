@@ -16,7 +16,7 @@ export interface CompileResult { lesson: Lesson | null; diagnostics: Diagnostic[
 export type { SourceResolver }
 export interface CompileOptions { path?: string; resolveSource?: SourceResolver; checkJs?: (code: string) => string | null }
 /** Heuristic minutes per widget for the time estimate (reading is estimated at 180 words/min). */
-const WIDGET_MINUTES: Record<string, number> = { quiz: 0.5, cloze: 0.5, order: 0.75, explain: 1.5, steps: 1.5, code: 3, ...VISUAL_MINUTES }
+const WIDGET_MINUTES: Record<string, number> = { quiz: 0.5, cloze: 0.5, order: 0.75, explain: 1.5, steps: 1.5, code: 3, match: 1, sort: 1, speed: 1.5, ...VISUAL_MINUTES }
 
 export function compile(source: string, opts: CompileOptions = {}): CompileResult {
   const s0 = stage0(source)
@@ -51,7 +51,7 @@ export function compile(source: string, opts: CompileOptions = {}): CompileResul
   const tree = processor.parse(s0.text) as Root
   // ---- title & headings
   let children = tree.children.filter((n) => {
-    if (n.type === 'html') { if (!/^\s*<!--[\s\S]*-->\s*$/.test(n.value)) diag('E107', n); return false }
+    if (n.type === 'html') return !/^\s*<!--[\s\S]*-->\s*$/.test(n.value) // comments are annotations; other HTML is sanitised (§4)
     if (n.type === 'definition' || n.type === 'thematicBreak') return false
     return true
   })

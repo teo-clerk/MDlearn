@@ -2,6 +2,7 @@
 import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { ChevronsDown, Loader2, Pencil, Play, RotateCcw } from 'lucide-react'
 import { python, usePython, type RunOutput } from './runtime'
+import { t } from '../i18n'
 
 const CodeBlock = lazy(() => import('../prose/CodeBlock'))
 const registry = new Map<HTMLElement, () => string>()
@@ -31,25 +32,25 @@ export function PythonBlock({ code }: { code: string }) {
   /** Earlier blocks on the page first (like running a notebook down to here), then this one. */
   const runAbove = async () => {
     const all = [...registry.keys()].sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1))
-    for (const el of all) { if (el === root.current) break; const r = await python.run(registry.get(el)!()); if (r.error) { setError(`An earlier block failed:\n${r.error}`); setRan(true); return } }
+    for (const el of all) { if (el === root.current) break; const r = await python.run(registry.get(el)!()); if (r.error) { setError(`${t('An earlier block failed:')}\n${r.error}`); setRan(true); return } }
     await run()
   }
   const busy = mine && status.state !== 'idle'
   const btn = 'inline-flex h-7 items-center gap-1.5 rounded-[6px] px-2 text-[12.5px] font-medium text-muted hover:bg-hover hover:text-text disabled:opacity-40 cursor-pointer'
   return (
-    <figure ref={root} data-py className="not-prose my-5 overflow-hidden rounded-[8px] border border-border bg-code font-ui">
+    <figure ref={root} data-py className="not-prose my-5 overflow-hidden rounded-[8px] border border-border bg-code font-ui focus-within:border-focus">
       {editing
-        ? <textarea value={src} onChange={(e) => setSrc(e.target.value)} spellCheck={false} aria-label="Python code" rows={Math.min(24, src.split('\n').length + 1)}
+        ? <textarea value={src} onChange={(e) => setSrc(e.target.value)} spellCheck={false} aria-label={t('Python code')} rows={Math.min(24, src.split('\n').length + 1)}
             onKeyDown={(e) => { if (e.key === 'Enter' && (e.shiftKey || e.ctrlKey || e.metaKey)) { e.preventDefault(); void run() } }}
             className="block w-full resize-y bg-transparent px-3.5 py-3 font-mono text-[13px] leading-[1.6] outline-none" />
         : <Suspense fallback={<pre className="code"><code>{src}</code></pre>}><CodeBlock code={src} lang="python" bare /></Suspense>}
       <div className="flex items-center gap-0.5 border-t border-border bg-bg/60 px-1.5 py-1">
-        <button className={btn} onClick={() => void run()} disabled={busy} aria-label="Run this block">{busy ? <Loader2 className="size-3.5 animate-spin" aria-hidden /> : <Play className="size-3.5" aria-hidden />}Run</button>
-        <button className={btn} onClick={() => void runAbove()} disabled={busy} title="Run the earlier Python blocks on this page first, then this one"><ChevronsDown className="size-3.5" aria-hidden />Run from the top</button>
-        <button className={btn} onClick={() => setEditing((e) => !e)} aria-pressed={editing}><Pencil className="size-3.5" aria-hidden />{editing ? 'Done editing' : 'Edit'}</button>
-        <button className={btn} onClick={() => { python.restart(); setOutput([]); setFigures([]); setValue(null); setError(null); setRan(false) }} title="Forget all variables"><RotateCcw className="size-3.5" aria-hidden />Restart</button>
-        {busy && <span className="ml-auto pr-2 text-[12px] text-muted" role="status">{status.status || 'Working…'}</span>}
-        {!busy && editing && <span className="ml-auto pr-2 text-[11.5px] text-subtle">Shift+Enter runs</span>}
+        <button className={btn} onClick={() => void run()} disabled={busy} aria-label={t('Run this block')}>{busy ? <Loader2 className="size-3.5 animate-spin" aria-hidden /> : <Play className="size-3.5" aria-hidden />}{t('Run')}</button>
+        <button className={btn} onClick={() => void runAbove()} disabled={busy} title={t('Run the earlier Python blocks on this page first, then this one')}><ChevronsDown className="size-3.5" aria-hidden />{t('Run from the top')}</button>
+        <button className={btn} onClick={() => setEditing((e) => !e)} aria-pressed={editing}><Pencil className="size-3.5" aria-hidden />{editing ? t('Done editing') : t('Edit')}</button>
+        <button className={btn} onClick={() => { python.restart(); setOutput([]); setFigures([]); setValue(null); setError(null); setRan(false) }} title={t('Forget all variables')}><RotateCcw className="size-3.5" aria-hidden />{t('Restart')}</button>
+        {busy && <span className="ml-auto pr-2 text-[12px] text-muted" role="status">{status.status || t('Working…')}</span>}
+        {!busy && editing && <span className="ml-auto pr-2 text-[11.5px] text-subtle">{t('Shift+Enter runs')}</span>}
       </div>
       {ran && (output.length > 0 || figures.length > 0 || value !== null || error) && (
         <div className="border-t border-border bg-bg px-3.5 py-2.5 text-[13px]" aria-live="polite">

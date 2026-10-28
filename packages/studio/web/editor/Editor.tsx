@@ -8,8 +8,9 @@ import { markdown } from '@codemirror/lang-markdown'
 import { HighlightStyle, syntaxHighlighting, indentOnInput } from '@codemirror/language'
 import { autocompletion, completionKeymap, type CompletionContext } from '@codemirror/autocomplete'
 import { lintGutter, setDiagnostics, type Diagnostic as CmDiagnostic } from '@codemirror/lint'
-import { tags as t } from '@lezer/highlight'
+import { tags } from '@lezer/highlight'
 import { BLOCK_NAMES, splitCursor } from './snippets'
+import { t } from '../i18n'
 
 export interface EditorHandle { insert(text: string): void; focus(): void; setText(text: string): void; jumpTo(line: number): void }
 export interface Problem { line: number; severity: 'error' | 'warning'; message: string }
@@ -32,11 +33,11 @@ const theme = EditorView.theme({
 })
 // quiet highlighting: weight and tone, no hues
 const highlight = HighlightStyle.define([
-  { tag: [t.heading1, t.heading2, t.heading3, t.heading4], fontWeight: '650' },
-  { tag: t.strong, fontWeight: '650' }, { tag: t.emphasis, fontStyle: 'italic' },
-  { tag: [t.monospace, t.processingInstruction], color: 'var(--muted)' },
-  { tag: [t.link, t.url], color: 'var(--muted)', textDecoration: 'underline' },
-  { tag: [t.quote, t.comment], color: 'var(--muted)' }, { tag: t.contentSeparator, color: 'var(--subtle)' },
+  { tag: [tags.heading1, tags.heading2, tags.heading3, tags.heading4], fontWeight: '650' },
+  { tag: tags.strong, fontWeight: '650' }, { tag: tags.emphasis, fontStyle: 'italic' },
+  { tag: [tags.monospace, tags.processingInstruction], color: 'var(--muted)' },
+  { tag: [tags.link, tags.url], color: 'var(--muted)', textDecoration: 'underline' },
+  { tag: [tags.quote, tags.comment], color: 'var(--muted)' }, { tag: tags.contentSeparator, color: 'var(--subtle)' },
 ])
 
 function blockNames(ctx: CompletionContext) {
@@ -54,7 +55,7 @@ export const Editor = forwardRef<EditorHandle, { initial: string; onChange(text:
     const extensions: Extension[] = [
       lineNumbers(), history(), drawSelection(), highlightActiveLine(), indentOnInput(), EditorView.lineWrapping, lintGutter(),
       markdown(), syntaxHighlighting(highlight), theme, autocompletion({ override: [blockNames], icons: false }),
-      placeholder('Write Markdown. Insert a question or a visual from the Insert menu.'),
+      placeholder(t('Write Markdown. Insert a question or a visual from the Insert menu.')),
       EditorView.contentAttributes.of({ 'aria-label': ariaLabel, spellcheck: 'true' }),
       keymap.of([{ key: 'Mod-s', preventDefault: true, run: () => { cb.current.onSave(); return true } }, ...completionKeymap, ...defaultKeymap, ...historyKeymap]),
       EditorView.updateListener.of((u) => { if (u.docChanged) cb.current.onChange(u.state.doc.toString()) }),

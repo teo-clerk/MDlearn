@@ -6,6 +6,8 @@ export const PROSE_TYPES = [
   'paragraph', 'heading', 'list', 'listItem', 'blockquote', 'table', 'tableRow', 'tableCell', 'code', 'thematicBreak',
   'math', 'inlineMath', 'text', 'emphasis', 'strong', 'delete', 'inlineCode', 'break', 'link', 'image',
   'blank', 'strayBlank', 'callout',
+  // safe HTML (v1.3): an allowlisted inline element, a container around Markdown, a raw block the player sanitises
+  'htmlInline', 'htmlBlock', 'htmlRaw',
 ] as const
 export interface MdNode { type: (typeof PROSE_TYPES)[number]; children?: MdNode[]; [k: string]: unknown }
 
@@ -30,6 +32,12 @@ export const WidgetSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('steps'), ...base, problem: Flow, steps: z.array(Flow).min(2), blanks: z.array(BlankSchema), exact: z.boolean() }),
   z.object({ type: z.literal('code'), ...base, prompt: Flow, lang: z.string(), starter: z.string(),
     tests: z.string().optional(), solution: z.string().optional(), mode: z.enum(['run', 'self']) }),
+  // games (v1.3): graded like the others, played with motion in the Studio
+  z.object({ type: z.literal('match'), ...base, prompt: Flow, pairs: z.array(z.object({ left: Phrasing, right: Phrasing })).min(3), memory: z.boolean() }),
+  z.object({ type: z.literal('sort'), ...base, prompt: Flow, groups: z.array(z.object({ label: Phrasing, items: z.array(Phrasing).min(1) })).min(2) }),
+  z.object({ type: z.literal('speed'), ...base, prompt: Flow, items: z.array(z.object({ content: Phrasing, truth: z.boolean(), feedback: Flow.optional() })).min(3),
+    /** Seconds for the whole round; none = untimed. */
+    time: z.number().optional() }),
   z.object({ type: z.literal('unavailable'), id: z.string(), kind: z.string(), codes: z.array(z.string()),
     /** Content still worth showing (documents: an unknown directive's body; visuals: caption and formula). */
     fallback: Flow.optional() }),
@@ -55,8 +63,11 @@ export const VisualSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('formula'), ...visualBase, tex: z.string(), marked: z.string(),
     terms: z.array(z.object({ i: z.number(), tex: z.string(), label: Phrasing })), params: z.array(ParamSchema),
     live: z.object({ lhs: z.string().optional(), expr: MathJsonSchema }).optional() }),
-  z.object({ type: z.literal('animate'), ...visualBase, frames: z.array(z.object({ tex: z.string(), caption: Flow })).min(2), auto: z.boolean() }),
+  // a frame is a formula with a caption, or (v1.3) any Markdown; `replace` shows one frame at a time
+  z.object({ type: z.literal('animate'), ...visualBase, frames: z.array(z.object({ tex: z.string().optional(), caption: Flow })).min(2), auto: z.boolean(), replace: z.boolean() }),
   z.object({ type: z.literal('sim'), ...visualBase, code: z.string(), params: z.array(ParamSchema), height: z.number() }),
+  /** Author HTML/CSS/JS run in a sandbox (v1.3); `height` unset = fit the content. */
+  z.object({ type: z.literal('html'), ...visualBase, code: z.string(), height: z.number().optional(), auto: z.boolean() }),
 ])
 export type Param = z.infer<typeof ParamSchema>
 export type VisualCurve = z.infer<typeof VisualCurveSchema>
@@ -83,7 +94,7 @@ export const LessonSchema = z.object({
   intro: z.array(BlockSchema), cards: z.array(CardSchema),
 })
 /** Graded, interactive block types. */
-export const WIDGET_TYPES = ['quiz', 'cloze', 'order', 'explain', 'steps', 'code'] as const satisfies readonly Exclude<z.infer<typeof WidgetSchema>['type'], 'unavailable'>[]
+export const WIDGET_TYPES = ['quiz', 'cloze', 'order', 'explain', 'steps', 'code', 'match', 'sort', 'speed'] as const satisfies readonly Exclude<z.infer<typeof WidgetSchema>['type'], 'unavailable'>[]
 // every widget type of the schema must be listed (a new widget type that is missing here fails to compile)
 type _AllWidgetsListed = Exclude<z.infer<typeof WidgetSchema>['type'], 'unavailable' | (typeof WIDGET_TYPES)[number]> extends never ? true : never
 const _allWidgetsListed: _AllWidgetsListed = true

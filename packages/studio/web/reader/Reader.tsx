@@ -25,8 +25,8 @@ import { Menu, MenuItem } from '../ui/Menu'
 import { lastDocKey } from '../today/TodayPage'
 import { duration } from '../lib/title'
 import type { Checked, WebAnswer } from '@mdlearn/core'
+import { t, tp } from '../i18n'
 
-const fmt = new Intl.NumberFormat()
 export default function Reader({ ws }: { ws: string }) {
   const params = new URLSearchParams(useSearch())
   const path = params.get('path') ?? undefined
@@ -63,6 +63,7 @@ export default function Reader({ ws }: { ws: string }) {
   useEffect(() => { if (path) try { localStorage.setItem(lastDocKey(ws), path) } catch { /* ignore */ } }, [ws, path])
   useEffect(() => { setSource(false) }, [path])
   useEffect(() => { if (doc.data) document.title = `${doc.data.title} · MDlearn Studio` }, [doc.data])
+  const errorCount = doc.data?.diagnostics.filter((d) => d.code.startsWith('E')).length ?? 0
   // jump to ?section=3.1 (search results) or #anchor once the document is on screen
   useEffect(() => {
     if (!doc.data) return
@@ -82,39 +83,39 @@ export default function Reader({ ws }: { ws: string }) {
     check: async (widgetId: string, answer: WebAnswer) => (await api.post<{ checked: Checked }>(`/api/w/${ws}/doc/check`, { path, widgetId, answer })).checked,
   }), [ws, path, plan])
 
-  if (!path) return <Empty icon={FileText} title="No document selected">Choose a file in the sidebar.</Empty>
+  if (!path) return <Empty icon={FileText} title={t('No document selected')}>{t('Choose a file in the sidebar.')}</Empty>
   const crumbs = path.split('/')
   return (
     <>
       <TopLeft>
-        <nav aria-label="Path" className="flex min-w-0 items-center gap-1 px-1 text-[13px] text-muted">
+        <nav aria-label={t('Path')} className="flex min-w-0 items-center gap-1 px-1 text-[13px] text-muted">
           <Link href={`/w/${ws}`} className="shrink-0 hover:text-text">{tree.data?.name ?? 'Folder'}</Link>
           {crumbs.map((c, i) => <span key={i} className={`flex min-w-0 items-center gap-1 ${i < crumbs.length - 1 ? 'max-[700px]:hidden' : ''}`}><span className="text-subtle">/</span><span className={`truncate ${i === crumbs.length - 1 ? 'text-text' : ''}`}>{c}</span></span>)}
         </nav>
       </TopLeft>
       <TopActions>
-        {!!entry?.lessons.length && <Button size="sm" variant="ghost" icon={BookOpenCheck} onClick={() => navigate(`/w/${ws}/study?doc=${encodeURIComponent(path)}`)}>Study</Button>}
-        {canAi && entry && !entry.lessons.length && <Button size="sm" variant="ghost" icon={Sparkles} onClick={() => navigate(`/w/${ws}/studio?kind=course&doc=${encodeURIComponent(path)}`)}>Make a course</Button>}
-        {canWrite && <Link href={`/w/${ws}/edit?path=${encodeURIComponent(path)}`} aria-label="Edit this file" title="Edit this file" className="inline-flex size-7 items-center justify-center rounded-[6px] text-muted hover:bg-hover hover:text-text"><Pencil className="size-4" strokeWidth={1.8} aria-hidden /></Link>}
-        <Menu iconOnly label="More" icon={Ellipsis}>
+        {!!entry?.lessons.length && <Button size="sm" variant="ghost" icon={BookOpenCheck} collapse onClick={() => navigate(`/w/${ws}/study?doc=${encodeURIComponent(path)}`)}>{t('Study')}</Button>}
+        {canAi && entry && !entry.lessons.length && <Button size="sm" variant="ghost" icon={Sparkles} collapse onClick={() => navigate(`/w/${ws}/studio?kind=course&doc=${encodeURIComponent(path)}`)}>{t('Make a course')}</Button>}
+        {canWrite && <Link href={`/w/${ws}/edit?path=${encodeURIComponent(path)}`} aria-label={t('Edit this file')} title={t('Edit this file')} className="inline-flex size-7 items-center justify-center rounded-[6px] text-muted hover:bg-hover hover:text-text"><Pencil className="size-4" strokeWidth={1.8} aria-hidden /></Link>}
+        <Menu iconOnly label={t('More')} icon={Ellipsis}>
           {(close) => (
             <>
-              <MenuItem hint="Formulas and defined terms of this document" onClick={() => { close(); navigate(`/w/${ws}/sheet?path=${encodeURIComponent(path)}`) }}>Cheat sheet</MenuItem>
-              <MenuItem onClick={() => { close(); window.print() }}>Print this document</MenuItem>
-              {canWrite && !!entry?.lessons.length && <MenuItem hint="Study cards as an .apkg file" onClick={() => { close(); window.location.assign(`/api/w/${ws}/export/anki?scope=${encodeURIComponent(path)}`) }}>Export the study cards to Anki</MenuItem>}
-              <MenuItem hint={termHints ? 'On: hover a dotted word for its definition' : 'Off'} onClick={() => { close(); setTermHints(!termHints) }}>{termHints ? 'Stop underlining defined terms' : 'Underline defined terms'}</MenuItem>
+              <MenuItem hint={t('Formulas and defined terms of this document')} onClick={() => { close(); navigate(`/w/${ws}/sheet?path=${encodeURIComponent(path)}`) }}>{t('Cheat sheet')}</MenuItem>
+              <MenuItem onClick={() => { close(); window.print() }}>{t('Print this document')}</MenuItem>
+              {canWrite && !!entry?.lessons.length && <MenuItem hint={t('Study cards as an .apkg file')} onClick={() => { close(); window.location.assign(`/api/w/${ws}/export/anki?scope=${encodeURIComponent(path)}`) }}>{t('Export the study cards to Anki')}</MenuItem>}
+              <MenuItem hint={termHints ? t('On: hover a dotted word for its definition') : t('Off')} onClick={() => { close(); setTermHints(!termHints) }}>{termHints ? t('Stop underlining defined terms') : t('Underline defined terms')}</MenuItem>
             </>
           )}
         </Menu>
-        <IconButton icon={source ? X : Code2} label={source ? 'Back to the formatted view' : 'Show Markdown source'} active={source} onClick={() => setSource((s) => !s)} />
+        <IconButton icon={source ? X : Code2} label={source ? t('Back to the formatted view') : t('Show Markdown source')} active={source} onClick={() => setSource((s) => !s)} />
       </TopActions>
       {doc.data && (
         <PanelSlot>
-          <div role="tablist" aria-label="Side panel" className="flex h-11 shrink-0 items-center gap-1 px-2.5">
-            {(['outline', 'notes', 'links'] as const).map((t) => (
-              <button key={t} role="tab" aria-selected={panelTab === t} onClick={() => setPanelTab(t)}
-                className={`h-7 rounded-[6px] px-2.5 text-[12.5px] font-medium cursor-pointer ${panelTab === t ? 'bg-active text-text' : 'text-muted hover:bg-hover'}`}>
-                {t === 'outline' ? 'Outline' : t === 'links' ? <>Links{links.data && links.data.backlinks.length ? <span className="ml-1 tabular text-subtle">{links.data.backlinks.length}</span> : null}</> : <>Notes{notes.data?.length ? <span className="ml-1 tabular text-subtle">{notes.data.length}</span> : null}</>}
+          <div role="tablist" aria-label={t('Side panel')} className="flex h-11 shrink-0 items-center gap-1 px-2.5">
+            {(['outline', 'notes', 'links'] as const).map((tab) => (
+              <button key={tab} role="tab" aria-selected={panelTab === tab} onClick={() => setPanelTab(tab)}
+                className={`h-7 rounded-[6px] px-2.5 text-[12.5px] font-medium cursor-pointer ${panelTab === tab ? 'bg-active text-text' : 'text-muted hover:bg-hover'}`}>
+                {tab === 'outline' ? t('Outline') : tab === 'links' ? <>{t('Links')}{links.data && links.data.backlinks.length ? <span className="ml-1 tabular text-subtle">{links.data.backlinks.length}</span> : null}</> : <>{t('Notes')}{notes.data?.length ? <span className="ml-1 tabular text-subtle">{notes.data.length}</span> : null}</>}
               </button>
             ))}
           </div>
@@ -126,7 +127,7 @@ export default function Reader({ ws }: { ws: string }) {
         </PanelSlot>
       )}
       {!source && <SelectionToolbar root={article} onAction={(k, a) => void onSelection(k, a)} canAsk={!!engines.data?.local.available} />}
-      {doc.isLoading && <div className="p-10"><Spinner label="Opening document" /></div>}
+      {doc.isLoading && <div className="p-10"><Spinner label={t('Opening document')} /></div>}
       {doc.error && <ErrorNote error={doc.error} retry={() => doc.refetch()} />}
       {doc.data && env && (source ? <Source ws={ws} path={path} /> : (
         <article className="mx-auto max-w-[760px] px-6 pb-[30vh] pt-4 sm:px-12" lang={typeof doc.data.frontmatter?.lang === 'string' ? doc.data.frontmatter.lang : undefined}>
@@ -135,9 +136,9 @@ export default function Reader({ ws }: { ws: string }) {
             <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 tabular text-[13px] text-muted">
               {doc.data.outline.timeMin && <span>{duration(doc.data.outline.timeMin)}</span>}
               {doc.data.outline.level && <span className="capitalize">{doc.data.outline.level}</span>}
-              <span>{fmt.format(doc.data.outline.words)} words</span>
-              {!!entry?.lessons.length && <span>{entry.lessons.length} {entry.lessons.length === 1 ? 'lesson' : 'lessons'} · {entry.cards} cards</span>}
-              {doc.data.diagnostics.some((d) => d.code.startsWith('E')) && <span title={doc.data.diagnostics.filter((d) => d.code.startsWith('E')).map((d) => `line ${d.line}: ${d.code} ${d.message ?? ''}`).join('\n')}>{doc.data.diagnostics.filter((d) => d.code.startsWith('E')).length} formatting problems</span>}
+              <span>{tp(doc.data.outline.words, '{n} word', '{n} words')}</span>
+              {!!entry?.lessons.length && <span>{tp(entry.lessons.length, '{n} lesson', '{n} lessons')} · {tp(entry.cards, '{n} card', '{n} cards')}</span>}
+              {doc.data.diagnostics.some((d) => d.code.startsWith('E')) && <span title={doc.data.diagnostics.filter((d) => d.code.startsWith('E')).map((d) => `${t('line {n}', { n: d.line })}: ${d.code} ${d.message ?? ''}`).join('\n')}>{tp(errorCount, '{n} formatting problem', '{n} formatting problems')}</span>}
             </p>
           </header>
           <div className="read" ref={setArticle}>
@@ -156,7 +157,7 @@ function Source({ ws, path }: { ws: string; path: string }) {
   const lines = (raw.data ?? '').split('\n')
   return (
     <div className="mx-auto max-w-[980px] px-4 pb-20 pt-2">
-      <pre className="overflow-x-auto rounded-[8px] border border-border bg-code py-3 font-mono text-[12.5px] leading-[1.65]" aria-label="Markdown source">
+      <pre className="overflow-x-auto rounded-[8px] border border-border bg-code py-3 font-mono text-[12.5px] leading-[1.65]" aria-label={t('Markdown source')}>
         {lines.map((l, i) => <div key={i} className="flex"><span className="w-12 shrink-0 select-none pr-4 text-right tabular text-subtle">{i + 1}</span><span className="whitespace-pre pr-4">{l || ' '}</span></div>)}
       </pre>
     </div>

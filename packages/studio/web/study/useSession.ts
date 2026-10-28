@@ -5,6 +5,7 @@ import { useCallback, useReducer, useRef } from 'react'
 import type { Checked, MdNode, WebAnswer, Outcome, ReadRef } from '@mdlearn/core'
 import { studyApi } from '../api/queries'
 import type { StudyPlan, StudyItem, RecordResponse } from '../../shared/types'
+import { t } from '../i18n'
 
 export type Phase = 'loading' | 'empty' | 'answer' | 'sure' | 'self' | 'feedback' | 'summary' | 'error'
 export interface CardResult { widgetId: string; cardKey: string; title: string; rating: 1 | 2 | 3; reads: ReadRef[]; reason: 'due' | 'new'; lessonPath: string }
@@ -59,7 +60,7 @@ const autoGraded = (k: string, a: WebAnswer) => ['quiz', 'cloze', 'order', 'step
 export function useStudySession(ws: string) {
   const [state, dispatch] = useReducer(reducer, undefined, initial)
   const sure = useRef<boolean | undefined>(undefined)
-  const fail = (e: unknown) => dispatch({ type: 'error', message: e instanceof Error ? e.message : 'Something went wrong.' })
+  const fail = (e: unknown) => dispatch({ type: 'error', message: e instanceof Error ? e.message : t('Something went wrong.') })
 
   const loadItem = useCallback(async (widgetId: string) => {
     try { dispatch({ type: 'item', item: await studyApi.item(ws, widgetId) }) } catch (e) { fail(e) }

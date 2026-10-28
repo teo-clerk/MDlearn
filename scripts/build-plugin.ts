@@ -22,3 +22,9 @@ skill('mdlearn-course', { 'SKILL.md': 'docs/AGENT_SKILL.md', 'DSL_SPECIFICATION.
 for (const name of ['mdlearn-curriculum', 'mdlearn-tutor', 'mdlearn-visuals'])
   if (existsSync(join(repo, 'skills', name, 'SKILL.md'))) skill(name, { 'SKILL.md': `skills/${name}/SKILL.md` })
 console.log(`plugin written to ${out}`)
+
+// the interactive tutorial (feature tour + "Start here"), opened from Home → "Open the tutorial"
+const tutorial = join(repo, 'packages/studio/dist/tutorial')
+rmSync(tutorial, { recursive: true, force: true })
+cpSync(join(repo, 'examples/showcase'), tutorial, { recursive: true, filter: (f) => !/[\\/]\.mdlearn([\\/]|$)/.test(f) })
+console.log(`tutorial written to ${tutorial}`)

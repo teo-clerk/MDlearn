@@ -1,10 +1,10 @@
 // Study cards as an Anki deck (.apkg): a zip holding a legacy-format collection (SQLite) that every Anki
-// version imports. Quiz, order, explain, steps and code become "Basic" notes, cloze becomes "Cloze" (all gaps
+// version imports. Quiz, order, explain, steps, code and the games become "Basic" notes, cloze becomes "Cloze" (all gaps
 // of one card are hidden together). Notes carry a stable id, so importing again updates instead of duplicating.
 import { createHash } from 'node:crypto'
 import { DatabaseSync } from 'node:sqlite'
 import { zipSync, strToU8 } from 'fflate'
-import { seededOrder, type Lesson, type Widget, type Blank } from '@mdlearn/core'
+import { seededOrder, rightOrder, sortItems, speedItems, isWidget, type Lesson, type Widget, type Blank } from '@mdlearn/core'
 import { esc, inlineHtml, toHtml } from './html.js'
 
 type W = Exclude<Widget, { type: 'unavailable' }>
@@ -48,12 +48,25 @@ export function noteFor(lesson: Lesson, cardId: string, w: W, cardTitle: string)
     case 'explain': return basic(toHtml(w.prompt), `<ul>${w.ideas.map((i) => `<li>${toHtml(i).replace(/^<p>|<\/p>$/g, '')}</li>`).join('')}</ul>${withReveal(w)}`)
     case 'steps': return basic(toHtml(w.problem), `<ol>${w.steps.map((s) => `<li>${toHtml(s, answersFor(w.blanks)).replace(/^<p>|<\/p>$/g, '')}</li>`).join('')}</ol>${withReveal(w)}`)
     case 'code': return basic(`${toHtml(w.prompt)}${w.starter ? `<pre><code>${esc(w.starter)}</code></pre>` : ''}`, `${w.solution ? `<pre><code>${esc(w.solution)}</code></pre>` : `<p>${esc(cardTitle)}</p>`}${withReveal(w)}`)
+    case 'match': {
+      const right = rightOrder(w)
+      return basic(`${toHtml(w.prompt)}<table><tr><td><ol>${w.pairs.map((p) => `<li>${inlineHtml(p.left)}</li>`).join('')}</ol></td><td><ol type="A">${right.map((i) => `<li>${inlineHtml(w.pairs[i].right)}</li>`).join('')}</ol></td></tr></table><p><i>Match each number with a letter.</i></p>`,
+        `<ul>${w.pairs.map((p) => `<li>${inlineHtml(p.left)} — ${inlineHtml(p.right)}</li>`).join('')}</ul>${withReveal(w)}`)
+    }
+    case 'sort':
+      return basic(`${toHtml(w.prompt)}<p>${w.groups.map((g) => `<b>${inlineHtml(g.label)}</b>`).join(' · ')}</p><ul>${sortItems(w).map((x) => `<li>${inlineHtml(x.content)}</li>`).join('')}</ul><p><i>Sort each item into its group.</i></p>`,
+        `${w.groups.map((g) => `<p><b>${inlineHtml(g.label)}</b>: ${g.items.map((x) => inlineHtml(x)).join(', ')}</p>`).join('')}${withReveal(w)}`)
+    case 'speed': {
+      const shown = speedItems(w)
+      return basic(`${toHtml(w.prompt)}<ol>${shown.map((x) => `<li>${inlineHtml(x.content)}</li>`).join('')}</ol><p><i>True or false?</i></p>`,
+        `<ol>${shown.map((x) => `<li><b>${x.truth ? 'True' : 'False'}</b>${x.feedback?.length ? ` — ${toHtml(x.feedback).replace(/^<p>|<\/p>$/g, '')}` : ''}</li>`).join('')}</ol>${withReveal(w)}`)
+    }
   }
 }
 
 export function notesOf(lessons: Lesson[]): AnkiNote[] {
   const out: AnkiNote[] = []
-  for (const l of lessons) for (const c of l.cards) for (const b of c.blocks) if (b.type !== 'unavailable' && ['quiz', 'cloze', 'order', 'explain', 'steps', 'code'].includes(b.type)) out.push(noteFor(l, c.id, b as W, c.title))
+  for (const l of lessons) for (const c of l.cards) for (const b of c.blocks) if (isWidget(b)) out.push(noteFor(l, c.id, b, c.title))
   return out
 }
 

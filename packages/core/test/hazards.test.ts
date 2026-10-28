@@ -135,9 +135,12 @@ describe('fail-closed', () => {
   it('stray task lists never expose checked state', () => {
     expect(prose('- [x] secret\n- [ ] other')).not.toContain('checked')
   })
-  it('raw html is dropped and reported; comments are silent annotations', () => {
-    expect(prose('10<sup>-3</sup> <!-- fix: was 10^3 -->')).not.toContain('sup')
-    expect(codes('## C\n10<sup>-3</sup>')).toContain('E107')
+  it('safe html renders, unsafe html is removed and reported; comments are silent annotations', () => {
+    expect(prose('10<sup>-3</sup> <!-- fix: was 10^3 -->')).toContain('"tag":"sup"')
+    expect(prose('10<sup>-3</sup> <!-- fix: was 10^3 -->')).not.toContain('fix: was')
+    expect(codes('## C\n10<sup>-3</sup>')).not.toContain('E107')
+    expect(codes('## C\n<script>alert(1)</script>')).toContain('E107')
+    expect(codes('## C\n<b onclick="x()">hi</b>')).toContain('E107')
     expect(codes('## C\nok <!-- added: x -->')).not.toContain('E107')
   })
   it('javascript: links are neutralised', () => { expect(prose('[x](javascript:alert(1))')).toContain('"url":""') })

@@ -1,8 +1,12 @@
-// Renders compiler output (MdNode trees) as React. The compiler already dropped raw HTML and unsafe URLs;
-// this renderer adds nothing executable either: no dangerouslySetInnerHTML except KaTeX's own output.
-import { Fragment, lazy, Suspense, type ReactNode } from 'react'
+// Renders compiler output (MdNode trees) as React. The compiler already paired the safe HTML tags and dropped
+// unsafe URLs; this renderer adds nothing executable either: allowlisted HTML elements are React elements, and
+// the only innerHTML is KaTeX's own output and SafeHtml's DOMPurify-cleaned blocks.
+import { Fragment, lazy, Suspense, type CSSProperties, type ReactNode } from 'react'
 import type { MdNode } from '@mdlearn/core'
+import { CONTAINER_TAGS, INLINE_TAGS, cleanStyle } from '@mdlearn/core/html'
 import { Tex } from './Tex'
+import { SafeHtml } from './SafeHtml'
+import { t } from '../i18n'
 
 const CodeBlock = lazy(() => import('./CodeBlock'))
 const Mermaid = lazy(() => import('./Mermaid'))
@@ -25,6 +29,17 @@ export interface ProseContext {
   /** A link to another document, wrapped (for the hover card). */
   wrapLink?: (url: string, anchor: ReactNode) => ReactNode
 }
+/** `color: red; font-weight: 600` → React style (filtered again: the AST may come from anywhere). */
+function styleOf(css: unknown): CSSProperties | undefined {
+  if (typeof css !== 'string' || !css) return undefined
+  const out: Record<string, string> = {}
+  for (const d of cleanStyle(css).split(';')) {
+    const i = d.indexOf(':')
+    if (i > 0) out[d.slice(0, i).trim().replace(/-([a-z])/g, (_, c: string) => c.toUpperCase())] = d.slice(i + 1).trim()
+  }
+  return Object.keys(out).length ? out : undefined
+}
+const attrsOf = (n: MdNode) => (n.attrs ?? {}) as Record<string, string>
 const kids = (n: MdNode, cx: ProseContext) => (n.children ?? []).map((c, i) => <Node key={i} node={c} cx={cx} />)
 
 export function Prose({ nodes, cx = {} }: { nodes: MdNode[]; cx?: ProseContext }) {
@@ -92,8 +107,8 @@ function Node({ node: n, cx }: { node: MdNode; cx: ProseContext }): ReactNode {
       const url = String(n.url ?? '')
       return url ? <img src={cx.imageSrc ? cx.imageSrc(url) : url} alt={String(n.alt ?? '')} loading="lazy" /> : null
     }
-    case 'blank': return cx.blank ? cx.blank(String(n.id)) : <span className="gap" aria-label="gap" />
-    case 'strayBlank': return <span className="gap" aria-label="gap" />
+    case 'blank': return cx.blank ? cx.blank(String(n.id)) : <span className="gap" aria-label={t('gap')} />
+    case 'strayBlank': return <span className="gap" aria-label={t('gap')} />
     case 'callout': {
       const kind = String(n.kind)
       const summary = n.summary as MdNode[] | undefined
@@ -102,6 +117,22 @@ function Node({ node: n, cx }: { node: MdNode; cx: ProseContext }): ReactNode {
         ? <details className={`callout callout-${kind}`}><summary>{summary ? <Inline nodes={summary} cx={cx} /> : kind}</summary>{body}</details>
         : <aside className={`callout callout-${kind}`} aria-label={kind}>{summary && <p className="callout-title"><Inline nodes={summary} cx={cx} /></p>}{body}</aside>
     }
+    case 'htmlInline': {
+      const tag = String(n.tag), a = attrsOf(n)
+      const Tag = (INLINE_TAGS.has(tag) && tag !== 'a' && tag !== 'font' ? tag : 'span') as 'span'
+      return <Tag style={styleOf(a.style)} title={a.title} {...(tag === 'time' && a.datetime ? { dateTime: a.datetime } : {})}>{kids(n, cx)}</Tag>
+    }
+    case 'htmlBlock': {
+      const tag = String(n.tag), a = attrsOf(n)
+      const body = <Prose nodes={(n.children ?? []) as MdNode[]} cx={cx} />
+      if (tag === 'details') {
+        const summary = n.summary as MdNode[] | undefined
+        return <details className="html-details" open={'open' in a} style={styleOf(a.style)}><summary>{summary ? <Inline nodes={summary} cx={cx} /> : t('Details')}</summary>{body}</details>
+      }
+      const Tag = (CONTAINER_TAGS.has(tag) ? tag : 'div') as 'div'
+      return <Tag className="html-block" style={styleOf(a.style)} title={a.title}>{body}</Tag>
+    }
+    case 'htmlRaw': return <SafeHtml html={String(n.value)} cx={cx} />
     default: return n.children ? <>{kids(n, cx)}</> : null
   }
 }

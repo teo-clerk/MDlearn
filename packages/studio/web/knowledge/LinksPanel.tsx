@@ -6,17 +6,18 @@ import { docRoute } from '../lib/paths'
 import { prettyTitle } from '../lib/title'
 import { Spinner } from '../ui/primitives'
 import type { LinkedDoc } from '../../shared/types'
+import { t, tp } from '../i18n'
 
 export function LinksPanel({ ws, path }: { ws: string; path: string }) {
   const res = useLinks(ws, path)
-  if (res.isLoading) return <div className="p-4"><Spinner label="Finding links" /></div>
-  if (!res.data) return <p className="px-4 py-3 text-[13px] text-muted">Links could not be read.</p>
+  if (res.isLoading) return <div className="p-4"><Spinner label={t('Finding links')} /></div>
+  if (!res.data) return <p className="px-4 py-3 text-[13px] text-muted">{t('Links could not be read.')}</p>
   const { outgoing, backlinks } = res.data
   return (
     <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2">
-      <Group ws={ws} title="Points to" rows={outgoing} empty="This document does not link to another document of the folder." />
-      <Group ws={ws} title="Pointed to by" rows={backlinks} empty="No other document links here yet." />
-      <Link href={`/w/${ws}/map?doc=${encodeURIComponent(path)}`} className="mx-2 inline-flex h-7 items-center gap-1.5 rounded-[6px] border border-border-strong px-2.5 text-[12.5px] font-medium hover:bg-hover"><Network className="size-3.5" aria-hidden />Show on the map</Link>
+      <Group ws={ws} title={t('Points to')} rows={outgoing} empty={t('This document does not link to another document of the folder.')} />
+      <Group ws={ws} title={t('Pointed to by')} rows={backlinks} empty={t('No other document links here yet.')} />
+      <Link href={`/w/${ws}/map?doc=${encodeURIComponent(path)}`} className="mx-2 inline-flex h-7 items-center gap-1.5 rounded-[6px] border border-border-strong px-2.5 text-[12.5px] font-medium hover:bg-hover"><Network className="size-3.5" aria-hidden />{t('Show on the map')}</Link>
     </div>
   )
 }
@@ -32,11 +33,11 @@ function Group({ ws, title, rows, empty }: { ws: string; title: string; rows: Li
             {r.exists
               ? <Link href={docRoute(ws, r.path)} className="block rounded-[5px] px-2 py-1.5 hover:bg-hover">
                   <span className="block text-[13px] leading-snug">{prettyTitle(r.title)}</span>
-                  <span className="block truncate text-[11.5px] text-subtle">{r.path}{r.kind === 'prereq' ? ' · prerequisite' : ''}{r.count > 1 ? ` · ${r.count} links` : ''}</span>
+                  <span className="block truncate text-[11.5px] text-subtle">{r.path}{r.kind === 'prereq' ? ` · ${t('prerequisite')}` : ''}{r.count > 1 ? ` · ${tp(r.count, '{n} link', '{n} links')}` : ''}</span>
                 </Link>
-              : <div className="px-2 py-1.5 text-muted" title="This file is not in the folder">
+              : <div className="px-2 py-1.5 text-muted" title={t('This file is not in the folder')}>
                   <span className="block text-[13px] leading-snug line-through decoration-subtle">{r.path.split('/').pop()}</span>
-                  <span className="block truncate text-[11.5px] text-subtle">not found · {r.path}</span>
+                  <span className="block truncate text-[11.5px] text-subtle">{t('not found')} · {r.path}</span>
                 </div>}
           </li>
         ))}

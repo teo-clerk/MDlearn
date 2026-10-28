@@ -89,3 +89,32 @@ describe('import routes', () => {
     expect(existsSync(join(root, 'imports/my-paper.md'))).toBe(true)
   })
 })
+
+describe('import from a chat', () => {
+  const lesson = (title: string, body = ':::cloze\nTides follow the {{Moon}}.\n:::\n') => `---\ntitle: ${title}\nlevel: beginner\n---\n\n## The idea\n\nTides follow the Moon.\n\n${body}`
+  const answer = `<!-- file: tides/course.md -->\n~~~~markdown\n# Tides\n~~~~\n<!-- file: tides/01-why.learn.md -->\n~~~~markdown\n${lesson('Why')}~~~~\n<!-- file: tides/02-bad.learn.md -->\n~~~~markdown\n${lesson('Bad', ':::quiz\nQ?\n- [ ] a\n- [ ] b\n:::\n')}~~~~\n`
+  it('checks without writing, then saves only the files without errors', async () => {
+    const { root, json } = setup()
+    const check = await (await json('/import/chat/check', { text: answer })).json() as { folder: string; files: { path: string; errors: number; cards: number }[]; fix: string }
+    expect(check.folder).toBe('tides')
+    expect(check.files.map((f) => [f.path, f.errors])).toEqual([['tides/course.md', 0], ['tides/01-why.learn.md', 0], ['tides/02-bad.learn.md', 1]])
+    expect(check.fix).toMatch(/<!-- file: tides\/02-bad\.learn\.md -->\n- \d+:\d+ E202/)
+    expect(existsSync(join(root, 'tides'))).toBe(false)
+    const r = await (await json('/import/chat', { text: answer })).json() as ImportResult
+    expect(r.files).toEqual([{ path: 'tides/course.md', kind: 'document' }, { path: 'tides/01-why.learn.md', kind: 'lesson' }])
+    expect(r.warnings.join(' ')).toMatch(/02-bad\.learn\.md was not saved/)
+    expect(r.fix).toMatch(/E202/)
+    expect(readFileSync(join(root, 'tides/01-why.learn.md'), 'utf8')).toBe(lesson('Why'))
+    // a second import goes to a new folder instead of touching the first
+    expect((await (await json('/import/chat/check', { text: answer })).json() as { folder: string }).folder).toBe('tides-2')
+  })
+  it('keeps everything inside the folder and says when nothing was found', async () => {
+    const { json } = setup()
+    expect((await json('/import/chat/check', { text: answer, folder: '../up' })).ok).toBe(false)
+    const escaped = await (await json('/import/chat/check', { text: '<!-- file: ../../x.learn.md -->\n' + lesson('X') })).json() as { files: { path: string }[] }
+    expect(escaped.files[0].path).toBe('x/x.learn.md') // the unsafe name is dropped, the lesson is named by its title
+    const none = await json('/import/chat/check', { text: '<!-- file: a.learn.md -->\n\n' })
+    expect(none.ok).toBe(false)
+    expect(JSON.stringify(await none.json())).toMatch(/No lesson found/)
+  })
+})

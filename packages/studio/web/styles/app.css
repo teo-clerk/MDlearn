@@ -18,11 +18,12 @@
   --border-strong: #d6d5d1;
   --hover: rgb(40 38 33 / 0.05);
   --active: rgb(40 38 33 / 0.085);
-  --accent: #2c2c2b;
-  --accent-ink: #2c2c2b;
-  --accent-soft: rgb(40 38 33 / 0.07);
-  --on-accent: #ffffff;
-  --focus: #6b7cc8;
+  /* accent: graphite unless Settings → Appearance sets --accent-l … (light) and --accent-d … (dark) on <html> */
+  --accent: var(--accent-l, #2c2c2b);
+  --accent-ink: var(--accent-ink-l, #2c2c2b);
+  --accent-soft: var(--accent-soft-l, rgb(40 38 33 / 0.07));
+  --on-accent: var(--on-accent-l, #ffffff);
+  --focus: var(--focus-l, #6b7cc8);
   --good: #2c7a4b;
   --good-soft: rgb(44 122 75 / 0.1);
   --warn: #9a5b06;
@@ -41,7 +42,7 @@
   --text: #e7e6e2; --muted: #a09f9b; --subtle: #858480;
   --border: #2f2f2e; --border-strong: #3b3b3a;
   --hover: rgb(255 255 255 / 0.055); --active: rgb(255 255 255 / 0.09);
-  --accent: #e7e6e2; --accent-ink: #e7e6e2; --accent-soft: rgb(255 255 255 / 0.08); --on-accent: #191919; --focus: #8d9be0;
+  --accent: var(--accent-d, #e7e6e2); --accent-ink: var(--accent-ink-d, #e7e6e2); --accent-soft: var(--accent-soft-d, rgb(255 255 255 / 0.08)); --on-accent: var(--on-accent-d, #191919); --focus: var(--focus-d, #8d9be0);
   --good: #6cc391; --good-soft: rgb(108 195 145 / 0.13); --warn: #e0a54a; --warn-soft: rgb(224 165 74 / 0.14); --bad: #f08074; --bad-soft: rgb(240 128 116 / 0.13);
   --code-bg: #222221; --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.35);
   color-scheme: dark;
@@ -52,7 +53,7 @@
     --text: #e7e6e2; --muted: #a09f9b; --subtle: #858480;
     --border: #2f2f2e; --border-strong: #3b3b3a;
     --hover: rgb(255 255 255 / 0.055); --active: rgb(255 255 255 / 0.09);
-    --accent: #e7e6e2; --accent-ink: #e7e6e2; --accent-soft: rgb(255 255 255 / 0.08); --on-accent: #191919; --focus: #8d9be0;
+    --accent: var(--accent-d, #e7e6e2); --accent-ink: var(--accent-ink-d, #e7e6e2); --accent-soft: var(--accent-soft-d, rgb(255 255 255 / 0.08)); --on-accent: var(--on-accent-d, #191919); --focus: var(--focus-d, #8d9be0);
     --good: #6cc391; --good-soft: rgb(108 195 145 / 0.13); --warn: #e0a54a; --warn-soft: rgb(224 165 74 / 0.14); --bad: #f08074; --bad-soft: rgb(240 128 116 / 0.13);
     --code-bg: #222221; --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.35);
     color-scheme: dark;
@@ -72,13 +73,21 @@
 }
 
 /* ---------------------------------------------------------------- base & browser surfaces */
-html, body, #root { height: 100%; }
+/* The page itself never scrolls or rubber-bands: only its panes do (the page, the sidebar, the side panel).
+   Otherwise a touchpad overscroll at the end of a pane, or anything taller than the window, slides the whole
+   app up and leaves an empty band below it. */
+html, body, #root { height: 100%; overflow: clip; overscroll-behavior: none; }
 body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font-ui); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
 ::selection { background: var(--accent-soft); color: inherit; }
 * { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
-:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
-input, textarea { caret-color: var(--accent); }
-::placeholder { color: var(--muted); opacity: 1; }
+/* Base rules sit in the base layer so utilities (outline-none, caret colours) can override them. */
+@layer base {
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
+  /* focused by the app, not a tab stop (the page, a question's options): no ring */
+  [tabindex="-1"]:focus-visible { outline: none; }
+  input, textarea { caret-color: var(--accent); }
+  ::placeholder { color: var(--muted); opacity: 1; }
+}
 .tabular { font-variant-numeric: tabular-nums; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
 
@@ -171,3 +180,48 @@ details > summary::-webkit-details-marker { display: none; }
   .sheet .katex-display { margin: 0.35em 0; }
   @page { size: A4; margin: 12mm; }
 }
+
+/* ---------------------------------------------------------------- games (match, memory, sort, speed)
+   Motion uses transform and opacity only; the reduced-motion rule above turns it into instant changes. */
+.match-line { stroke-dasharray: 1; stroke-dashoffset: 1; animation: match-draw 380ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards; transition: stroke 200ms; }
+@keyframes match-draw { to { stroke-dashoffset: 0; } }
+.game-badge { animation: game-pop 240ms cubic-bezier(0.2, 0.9, 0.3, 1.3); }
+@keyframes game-pop { from { transform: scale(0.6); opacity: 0; } to { transform: none; opacity: 1; } }
+.flip-card { perspective: 900px; display: block; padding: 0; border: 0; background: none; }
+.flip-inner { position: relative; display: block; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+.flip-card.is-flipped .flip-inner { transform: rotateY(180deg); }
+.flip-face { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border-strong); backface-visibility: hidden; -webkit-backface-visibility: hidden; overflow: hidden; text-align: center; }
+.flip-front { background-color: var(--panel); background-image: radial-gradient(var(--border) 1px, transparent 1px); background-size: 9px 9px; }
+.flip-card:not(.is-flipped):hover .flip-front { border-color: var(--text); }
+.flip-back { transform: rotateY(180deg); background: var(--raised); color: var(--text); }
+.flip-card.is-found .flip-back { border-color: color-mix(in srgb, var(--good) 55%, transparent); background: var(--good-soft); }
+.flip-card.is-miss .flip-back { border-color: color-mix(in srgb, var(--bad) 50%, transparent); animation: game-shake 360ms ease-in-out; }
+@keyframes game-shake { 0%, 100% { translate: 0; } 25% { translate: -4px; } 75% { translate: 4px; } }
+.game-card { animation: game-in 260ms cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes game-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.game-card.game-right { animation: game-pulse 380ms ease-out; }
+.game-card.game-wrong { animation: game-shake 360ms ease-in-out; }
+@keyframes game-pulse { 0% { transform: scale(1); } 40% { transform: scale(1.015); } 100% { transform: scale(1); } }
+.game-streak { transition: opacity 200ms; }
+.game-settle { animation: game-in 320ms cubic-bezier(0.16, 1, 0.3, 1); }
+/* animate {replace}: frames crossfade in place */
+.animate-slide { opacity: 0; visibility: hidden; transform: translateY(4px); transition: opacity 380ms ease, transform 380ms cubic-bezier(0.16, 1, 0.3, 1), visibility 0s linear 380ms; }
+.animate-slide.is-on { opacity: 1; visibility: visible; transform: none; transition: opacity 380ms ease, transform 380ms cubic-bezier(0.16, 1, 0.3, 1), visibility 0s; }
+/* safe HTML from documents (SafeHtml, htmlBlock): sized to the column, quiet defaults */
+.html-block { max-width: 100%; overflow-x: auto; }
+.html-block :where(img, svg, video) { max-width: 100%; height: auto; }
+.html-block :where(table) { border-collapse: collapse; }
+.html-block :where(td, th) { border: 1px solid var(--border); padding: 4px 8px; }
+.html-block :where(figure) { margin: 1.2em 0; }
+.html-block :where(figcaption) { font-family: var(--font-ui); font-size: 13px; color: var(--muted); margin-top: 6px; }
+.read :where(kbd) { font-family: var(--font-mono); font-size: 0.8em; padding: 1px 5px; border: 1px solid var(--border-strong); border-bottom-width: 2px; border-radius: 4px; background: var(--raised); }
+.read :where(mark) { background: color-mix(in srgb, var(--warn) 22%, transparent); color: inherit; padding: 0 2px; border-radius: 2px; }
+.html-details { margin: 1em 0; border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; }
+.html-details > summary { cursor: pointer; font-family: var(--font-ui); font-size: 14px; font-weight: 500; }
+
+/* ---------------------------------------------------------------- welcome tour */
+.tour-ring { box-shadow: 0 0 0 2px var(--text), 0 0 0 6px color-mix(in srgb, var(--text) 12%, transparent); transition: left 260ms cubic-bezier(0.2, 0.8, 0.2, 1), top 260ms cubic-bezier(0.2, 0.8, 0.2, 1), width 260ms, height 260ms; }
+.tour-card { animation: game-in 240ms cubic-bezier(0.16, 1, 0.3, 1); outline: none; }
+/* game lists are layouts, not prose lists */
+.read ul.game-list, .read ol.game-list, ul.game-list, ol.game-list { list-style: none; padding-left: 0; margin: 0; }
+.read .game-list > li + li { margin-top: 0; }

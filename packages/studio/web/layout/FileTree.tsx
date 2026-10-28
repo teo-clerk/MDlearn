@@ -5,6 +5,7 @@ import { ChevronRight, FileText, Folder, GraduationCap, TriangleAlert } from 'lu
 import type { Tree, TreeDoc } from '../../shared/types'
 import { docRoute, lessonRoute } from '../lib/paths'
 import { Spinner } from '../ui/primitives'
+import { t } from '../i18n'
 
 interface Dir { name: string; path: string; dirs: Map<string, Dir>; docs: TreeDoc[] }
 function build(docs: TreeDoc[]): Dir {
@@ -31,16 +32,16 @@ export function FileTree({ ws, tree, loading, error }: { ws: string; tree?: Tree
     try { sessionStorage.setItem('mdl-tree', JSON.stringify([...n])) } catch { /* ignore */ }
     return n
   })
-  if (loading) return <div className="px-2 py-2"><Spinner label="Reading folder" /></div>
+  if (loading) return <div className="px-2 py-2"><Spinner label={t('Reading folder')} /></div>
   if (error) return <p className="px-2 py-2 text-[13px] text-bad">{(error as Error).message}</p>
-  if (!tree?.docs.length && !tree?.orphanLessons.length) return <p className="px-2 py-2 text-[13px] text-muted">No Markdown files in this folder.</p>
+  if (!tree?.docs.length && !tree?.orphanLessons.length) return <p className="px-2 py-2 text-[13px] text-muted">{t('No Markdown files in this folder.')}</p>
   return (
-    <div role="tree" aria-label="Files" className="text-[13.5px]">
-      <p className="px-2 pb-1 pt-3 text-[11.5px] font-medium text-muted">Files</p>
+    <div role="tree" aria-label={t('Files')} className="text-[13.5px]">
+      <p className="px-2 pb-1 pt-3 text-[11.5px] font-medium text-muted">{t('Files')}</p>
       <DirView ws={ws} dir={root} depth={0} open={open} toggle={toggle} />
       {!!tree?.orphanLessons.length && (
         <>
-          <p className="px-2 pb-1 pt-4 text-[11.5px] font-medium text-muted">Lessons</p>
+          <p className="px-2 pb-1 pt-4 text-[11.5px] font-medium text-muted">{t('Lessons')}</p>
           {tree.orphanLessons.map((l) => <LessonRow key={l.path} ws={ws} lesson={l} depth={0} />)}
         </>
       )}
@@ -82,7 +83,7 @@ function DocRow({ ws, doc, depth, open, toggle }: { ws: string; doc: TreeDoc; de
     <div role="treeitem" aria-expanded={hasLessons ? isOpen : undefined}>
       <div className={`group flex h-7 items-center rounded-[5px] ${active ? 'bg-active' : 'hover:bg-hover'}`} style={{ paddingLeft: 8 + depth * 14 }}>
         {hasLessons
-          ? <button onClick={() => toggle(doc.path)} aria-label={isOpen ? 'Hide lessons' : 'Show lessons'} className="flex size-4 shrink-0 items-center justify-center rounded text-subtle hover:text-text cursor-pointer">
+          ? <button onClick={() => toggle(doc.path)} aria-label={isOpen ? t('Hide lessons') : t('Show lessons')} className="flex size-4 shrink-0 items-center justify-center rounded text-subtle hover:text-text cursor-pointer">
               <ChevronRight className={`size-3.5 transition-transform duration-150 ${isOpen ? 'rotate-90' : ''}`} aria-hidden />
             </button>
           : <span className="size-4 shrink-0" />}

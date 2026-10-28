@@ -6,10 +6,12 @@ import type { Root, RootContent, Nodes, PhrasingContent, List, ListItem, Code as
 import type { ContainerDirective, LeafDirective } from 'mdast-util-directive'
 import { PH_OPEN, PH_CLOSE, PH_STRAY, WIDGETS, CALLOUTS, VISUALS, type Stage0Result } from './stage0.js'
 import { buildVisual } from './visuals.js'
+import { buildGame, GAME_TYPES } from './games.js'
 import { type Code } from './registry.js'
 import { type Blank, type Block, type MdNode, type Widget } from './ast.js'
 import { mathKeyEvaluable, parseNumber } from './checkers.js'
 import { processor } from './parser.js'
+import { CONTAINER_TAGS, cleanAttrs, groupFlowHtml, pairInline, parseTag, summaryMarkdown, unsafeHtml, type HtmlContainerNode, type HtmlPairNode } from './html.js'
 
 /** Resolves `::read` references. `doc` is the lesson's `source` (or the path in the label), as written. */
 export type SourceResolver = (doc: string, section: string) => { title: string; words: number } | 'no-document' | null
@@ -27,7 +29,7 @@ export interface BuildContext {
   lang: string
   diag: (code: Code, node: Positioned | number, message?: string) => void
   resolveSource?: SourceResolver
-  /** Document mode: raw HTML becomes literal text (no E107), unknown directives keep their content. */
+  /** Document mode: unknown directives keep their content. */
   document?: boolean
   /** Node-only syntax check for simulation code. */
   checkJs?: (code: string) => string | null
@@ -47,17 +49,50 @@ const sideHint = (id: string): PhrasingContent[] => {
 let widgetSeq = 0
 const allBlankAnswers: string[] = []
 
+/** Phrasing parents' children pair inline HTML tags; flow children group container HTML (§4, html.ts). */
+const PHRASING = new Set(['text', 'emphasis', 'strong', 'delete', 'inlineCode', 'inlineMath', 'link', 'image', 'break', 'linkReference', 'imageReference', 'footnoteReference'])
+const cleanAll = (nodes: Nodes[], inWidget: string | null): MdNode[] =>
+  (nodes.some((c) => PHRASING.has(c.type)) ? pairInline(nodes) : groupFlowHtml(nodes as RootContent[]) as Nodes[]).flatMap((c) => clean(c, inWidget))
+const phrasingOf = (md: string, inWidget: string | null): MdNode[] => {
+  const para = (processor.parse(md) as Root).children[0]
+  return para && 'children' in para ? cleanAll(para.children as Nodes[], inWidget) : []
+}
+
 const clean = (n: Nodes, inWidget: string | null): MdNode[] => {
   // strip position & data (data.hName/hProperties are an injection vector), resolve placeholders
   if (n.type === 'html') {
     if (/^\s*<!--/.test(n.value)) return []
-    if (!ctx.document) { diag('E107', n); return [] }
-    // documents: <br> is a line break; any other tag is shown as the text it is (never rendered as HTML)
-    return /^<br\s*\/?>$/i.test(n.value.trim()) ? [{ type: 'break' }] : [{ type: 'text', value: n.value }]
+    const unsafe = unsafeHtml(n.value)
+    if (unsafe) diag('E107', n, unsafe)
+    const tag = parseTag(n.value)
+    if (!tag) return [{ type: 'htmlRaw', value: n.value }] // a block of HTML: sanitised by the player
+    if (tag.name === 'br' && !tag.close) return [{ type: 'break' }]
+    if (tag.name === 'hr' && !tag.close) return [{ type: 'thematicBreak' }]
+    if (tag.name === 'wbr' || unsafe) return []
+    if (tag.name === 'img' && !tag.close) {
+      if (!tag.attrs.alt) diag('W604', n)
+      const url = safeUrl(tag.attrs.src ?? '', true), width = Number(tag.attrs.width)
+      return url ? [{ type: 'image', url, alt: tag.attrs.alt ?? '', ...(tag.attrs.title ? { title: tag.attrs.title } : {}), ...(width > 0 ? { width } : {}) }] : []
+    }
+    return [{ type: 'text', value: n.value }] // an unknown or unpaired tag is shown as written (`List<T>`)
+  }
+  if ((n.type as string) === 'htmlPair') {
+    const { tag, children } = n as unknown as HtmlPairNode
+    if (Object.keys(tag.attrs).some((k) => k.startsWith('on'))) diag('E107', n, 'on… handler is removed')
+    const kids = cleanAll(children, inWidget)
+    if (tag.name === 'a') return [{ type: 'link', url: safeUrl(tag.attrs.href ?? '', false), ...(tag.attrs.title ? { title: tag.attrs.title } : {}), children: kids }]
+    return [{ type: 'htmlInline', tag: tag.name === 'font' ? 'span' : tag.name, attrs: cleanAttrs(tag), children: kids }]
+  }
+  if ((n.type as string) === 'htmlContainer') {
+    const c = n as unknown as HtmlContainerNode
+    if (Object.keys(c.tag.attrs).some((k) => k.startsWith('on'))) diag('E107', n, 'on… handler is removed')
+    return [{ type: 'htmlBlock', tag: c.tag.name === 'center' ? 'div' : c.tag.name, attrs: cleanAttrs(c.tag),
+      ...(c.summary !== undefined ? { summary: phrasingOf(summaryMarkdown(c.summary) || 'Details', inWidget) } : {}),
+      children: cleanAll(c.children as Nodes[], inWidget) }]
   }
   if (n.type === 'text') return splitPlaceholders(n.value, n)
   if (n.type === 'image') { if (!n.alt) diag('W604', n); return [{ type: 'image', url: safeUrl(n.url, true), alt: n.alt ?? '', title: n.title ?? undefined }] }
-  if (n.type === 'link') return [{ type: 'link', url: safeUrl(n.url, false), title: n.title ?? undefined, children: n.children.flatMap((c) => clean(c, inWidget)) }]
+  if (n.type === 'link') return [{ type: 'link', url: safeUrl(n.url, false), title: n.title ?? undefined, children: cleanAll(n.children, inWidget) }]
   if (n.type === 'math' || n.type === 'inlineMath') {
     const blanks: string[] = []
     const value = n.value.replace(new RegExp(`${PH_OPEN}(b\\d+)${PH_CLOSE}`, 'g'), (_, id) => (blanks.push(id), `\\placeholder[${id}]{}`))
@@ -65,16 +100,16 @@ const clean = (n: Nodes, inWidget: string | null): MdNode[] => {
     return [{ type: n.type, value, ...(blanks.length ? { blanks } : {}) }]
   }
   if (n.type === 'containerDirective' && (CALLOUTS as readonly string[]).includes(n.name)) return [callout(n, inWidget) as unknown as MdNode]
-  if (n.type === 'containerDirective' && (VISUALS as readonly string[]).includes(n.name)) { diag('W918', n, n.name); return n.children.flatMap((c) => clean(c, inWidget)) }
+  if (n.type === 'containerDirective' && (VISUALS as readonly string[]).includes(n.name)) { diag('W918', n, n.name); return cleanAll(n.children, inWidget) }
   if (n.type === 'leafDirective' && n.name === 'read') { diag('W113', n); return [] }
   if (n.type === 'containerDirective' || n.type === 'leafDirective') { diag(n.type === 'leafDirective' ? 'E104' : 'E103', n, n.name); return [] }
   if (n.type === 'textDirective' || n.type === 'yaml' || n.type === 'definition' || n.type === 'footnoteDefinition' || n.type === 'footnoteReference' || n.type === 'linkReference' || n.type === 'imageReference') {
-    return 'children' in n ? (n.children as Nodes[]).flatMap((c) => clean(c, inWidget)) : []
+    return 'children' in n ? cleanAll(n.children as Nodes[], inWidget) : []
   }
   const out: Record<string, unknown> = { type: n.type }
   for (const [k, v] of Object.entries(n)) if (!['type', 'position', 'data', 'children'].includes(k) && v !== null && v !== undefined) out[k] = v
   if (n.type === 'listItem' && !inWidget) delete out.checked // stray task lists never reveal check state
-  if ('children' in n) out.children = (n.children as Nodes[]).flatMap((c) => clean(c, inWidget))
+  if ('children' in n) out.children = cleanAll(n.children as Nodes[], inWidget)
   return [out as MdNode]
 }
 function splitPlaceholders(value: string, node: Nodes): MdNode[] {
@@ -105,8 +140,8 @@ function callout(n: ContainerDirective, inWidget: string | null) {
   const kids = n.children.filter((c) => !(c.type === 'paragraph' && c.data && 'directiveLabel' in c.data))
   const label = n.children.find((c) => c.type === 'paragraph' && c.data && 'directiveLabel' in c.data)
   return { type: 'callout', kind: n.name, fold: 'fold' in (n.attributes ?? {}),
-    ...(label && 'children' in label ? { summary: label.children.flatMap((c) => clean(c, inWidget)) } : {}),
-    children: kids.flatMap((c) => clean(c, inWidget)) }
+    ...(label && 'children' in label ? { summary: cleanAll(label.children, inWidget) } : {}),
+    children: cleanAll(kids, inWidget) }
 }
 const blanksIn = (nodes: MdNode[]): string[] => nodes.flatMap((n) =>
   n.type === 'blank' ? [n.id as string] : [...((n.blanks as string[]) ?? []), ...blanksIn(n.children ?? [])])
@@ -131,7 +166,7 @@ function widget(n: ContainerDirective, cardId: string): Widget[] {
   for (const c of top) {
     if (c.type === 'leafDirective' && c.name === 'hint') {
       const ph = toString(c).match(new RegExp(`${PH_OPEN}(h\\d+)${PH_CLOSE}`))
-      hints.push(ph ? sideHint(ph[1]).flatMap((x) => clean(x, kind)) : (c as LeafDirective).children.flatMap((x) => clean(x, kind)))
+      hints.push(cleanAll(ph ? sideHint(ph[1]) : (c as LeafDirective).children, kind))
     } else if (c.type === 'containerDirective' && (WIDGETS as readonly string[]).includes(c.name)) {
       body.push({ type: 'paragraph', children: [] }) // locked nested widget; reported in stage 0 (E106)
     } else body.push(c)
@@ -139,18 +174,21 @@ function widget(n: ContainerDirective, cardId: string): Widget[] {
   let r = body.length
   while (r > 0 && body[r - 1].type === 'blockquote') r--
   const main = body.slice(0, r), trailing = body.slice(r)
-  const revealOf = (nodes: RootContent[]) => nodes.flatMap((b) => ('children' in b ? (b.children as Nodes[]) : [])).flatMap((c) => clean(c, kind))
+  const revealOf = (nodes: RootContent[]) => cleanAll(nodes.flatMap((b) => ('children' in b ? (b.children as Nodes[]) : [])), kind)
   const reveal = trailing.length ? revealOf(trailing) : undefined
   const answerLabel = main.find((b) => /^(answer|solution|risposta|soluzione|respuesta|solución)\s*:/i.test(toString(b)))
   if (answerLabel) diag('W606', answerLabel)
   const pinned = (n.attributes as Record<string, string> | undefined)?.id
   const id = (key: string) => uniqueId(pinned ? `${cardId}/${pinned}` : `${cardId}/${kind}-${fingerprint(key)}`)
-  const flow = (nodes: RootContent[]) => nodes.flatMap((c) => clean(c, kind))
+  const flow = (nodes: RootContent[]) => cleanAll(nodes, kind)
   const fail = (code: Code, node: Nodes, msg?: string): Widget[] => {
     diag(code, node, msg)
     return [{ type: 'unavailable', id: `${cardId}/${kind}-${++widgetSeq}`, kind, codes: [code] }]
   }
 
+  if ((GAME_TYPES as readonly string[]).includes(kind)) {
+    return buildGame({ kind: kind as (typeof GAME_TYPES)[number], directive: n, main, cleanAll: (xs) => cleanAll(xs, kind), diag, id, fail, hints, ...(reveal ? { reveal } : {}) })
+  }
   if (kind === 'quiz') {
     // split multi-question quizzes: each task list + the stem blocks before it
     const groups: { stem: RootContent[]; list: List; extra: RootContent[] }[] = []
@@ -173,9 +211,9 @@ function widget(n: ContainerDirective, cardId: string): Widget[] {
         const marker = markerCorrect(li)
         if (marker !== null) { diag('W208', li); correct = correct || marker }
         const [first, ...rest] = li.children
-        const content = first && first.type === 'paragraph' ? first.children.flatMap((c) => clean(c, kind)) : []
+        const content = first && first.type === 'paragraph' ? cleanAll(first.children, kind) : []
         stripMarker(content)
-        const fb = rest.filter((x) => x.type === 'blockquote').flatMap((x) => ('children' in x ? (x.children as Nodes[]) : [])).flatMap((c) => clean(c, kind))
+        const fb = cleanAll(rest.filter((x) => x.type === 'blockquote').flatMap((x) => ('children' in x ? (x.children as Nodes[]) : [])), kind)
         return { id: `o${oi}`, correct, content, ...(fb.length ? { feedback: fb } : {}), _li: li }
       })
       const extra = gi === groups.length - 1 ? pending : []
@@ -209,14 +247,14 @@ function widget(n: ContainerDirective, cardId: string): Widget[] {
   if (kind === 'order') {
     const li = main.findIndex((b) => b.type === 'list' && b.ordered)
     if (li < 0 || (main[li] as List).children.length < 3) return fail('E210', n)
-    const items = (main[li] as List).children.map((it) => it.children.flatMap((c) => clean(c, kind)))
+    const items = (main[li] as List).children.map((it) => cleanAll(it.children, kind))
     return [{ type: 'order', id: id(toString({ type: 'root', children: main })), prompt: flow(main.slice(0, li)), items, hints, ...(reveal ? { reveal } : {}) }]
   }
   if (kind === 'explain') {
     if (!trailing.length) return fail('E401', n)
     const lists = trailing.flatMap((b) => ('children' in b ? (b.children as RootContent[]) : [])).filter((c): c is List => c.type === 'list')
     if (!lists.length) diag('W402', trailing[0])
-    const ideas = lists.length ? lists.flatMap((l) => l.children.map((it) => it.children.flatMap((c) => clean(c, kind)))) : reveal!.map((p) => [p])
+    const ideas = lists.length ? lists.flatMap((l) => l.children.map((it) => cleanAll(it.children, kind))) : reveal!.map((p) => [p])
     return [{ type: 'explain', id: id(toString({ type: 'root', children: body })), prompt: flow(main), ideas, hints }]
   }
   if (kind === 'steps') {
@@ -267,24 +305,24 @@ function readBlock(n: LeafDirective): Block[] {
   }
   return refs.length ? [{ type: 'read', refs }] : []
 }
-const toBlocks = (nodes: RootContent[], cardId: string): Block[] => nodes.flatMap((n): Block[] => {
+const toBlocks = (nodes: RootContent[], cardId: string): Block[] => groupFlowHtml(nodes, CONTAINER_TAGS).flatMap((n): Block[] => {
   if (n.type === 'leafDirective' && n.name === 'read') return readBlock(n)
   if (n.type === 'containerDirective' && (WIDGETS as readonly string[]).includes(n.name)) return widget(n, cardId)
   if (n.type === 'containerDirective' && (VISUALS as readonly string[]).includes(n.name)) {
     const pinned = (n.attributes as Record<string, string> | undefined)?.id
-    return buildVisual(n, { clean: (x) => clean(x, null), diag, checkJs: ctx.checkJs,
+    return buildVisual(n, { clean: (x) => clean(x, null), cleanAll: (xs) => cleanAll(xs, null), diag, checkJs: ctx.checkJs,
       id: (key) => uniqueId(pinned ? `${cardId}/${pinned}` : `${cardId}/${n.name}-${fingerprint(key)}`) })
   }
   if (n.type === 'containerDirective' && !(CALLOUTS as readonly string[]).includes(n.name)) {
     diag('E103', n, n.name)
-    const fallback = ctx.document ? n.children.flatMap((c) => clean(c, null)) : []
+    const fallback = ctx.document ? cleanAll(n.children, null) : []
     return [{ type: 'unavailable', id: `${cardId}/x-${++widgetSeq}`, kind: n.name, codes: ['E103'], ...(fallback.length ? { fallback } : {}) }]
   }
   return clean(n, null).map((node) => (node.type === 'callout' ? (node as unknown as Block) : { type: 'prose', node }))
 })
 
 
-  return { clean, toBlocks }
+  return { clean, cleanAll, toBlocks }
 }
 
 /** ✅ / "(correct)" markers → true; ✗ / "(wrong)" → false; none → null. */

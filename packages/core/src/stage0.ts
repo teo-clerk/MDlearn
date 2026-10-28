@@ -36,7 +36,7 @@ const ALIASES: Record<string, string> = {
   chart: 'plot', graph: 'plot', equation: 'formula', animation: 'animate', morph: 'animate', simulation: 'sim', applet: 'sim',
   caution: 'warning', danger: 'warning', attention: 'warning', failure: 'warning', bug: 'warning', misconception: 'warning',
 }
-export const VISUALS = ['plot', 'formula', 'animate', 'sim'] as const
+export const VISUALS = ['plot', 'formula', 'animate', 'sim', 'html'] as const
 const CANON = new Set<string>([...WIDGETS, ...CALLOUTS, ...VISUALS])
 
 interface Container {
@@ -209,7 +209,7 @@ export function stage0(input: string, opts: Stage0Options = {}): Stage0Result {
       diag('I811', ln); i--; continue
     }
     // --- quiz option feedback re-indentation
-    const inQuiz = stack.length && stack[stack.length - 1].name === 'quiz'
+    const inQuiz = stack.length && ['quiz', 'speed'].includes(stack[stack.length - 1].name)
     if (inQuiz) {
       const opt = /^(\s*(?:[-*+]|\d+[.)])\s+)\[[ xX]\]/.exec(l)
       if (opt) optionCol = opt[1].length
@@ -419,7 +419,8 @@ function parseAttrs(s: string): string[] {
   const out: string[] = []
   for (const tok of s.match(/#[\w-]+|[\w-]+(?:\s*=\s*(?:"[^"]*"|[^\s}]+))?/g) ?? []) {
     if (tok.startsWith('#')) out.push(tok)
-    else if (/^(fold|collapsed?|exact|auto)$/.test(tok)) out.push(tok.startsWith('collapse') ? 'fold' : tok)
+    else if (/^(fold|collapsed?|exact|auto|memory|replace)$/.test(tok)) out.push(tok.startsWith('collapse') ? 'fold' : tok)
+    else if (/^time\s*=\s*"?\d{1,4}"?$/.test(tok)) out.push(tok.replace(/\s|"/g, ''))
     else if (/^(x|y)\s*=\s*"?(log|lin|linear)"?$/.test(tok)) out.push(tok.replace(/\s|"/g, '').replace('linear', 'lin'))
     else if (/^height\s*=\s*"?\d{2,4}"?$/.test(tok)) out.push(tok.replace(/\s|"/g, ''))
     else if (/^collapse\s*=\s*"?true/.test(tok)) out.push('fold')

@@ -49,6 +49,9 @@ const studioDir = () => {
   }
 }
 
+// The mdlearn tools a job may call: reading the folder and checking lessons. Not the tutor's check_answer or
+// record_review, which write study history (notes in the folder must not be able to forge it).
+const MDLEARN_TOOLS = ['curriculum_status', 'doc_outline', 'get_section', 'search_curriculum', 'plan_lessons', 'lint_lesson', 'read_lesson', 'authoring_guide']
 export class ClaudeEngine implements AiEngine {
   name = 'Claude Code'
   constructor(private cfg: ClaudeConfig) {}
@@ -80,11 +83,11 @@ export class ClaudeEngine implements AiEngine {
       options: {
         cwd: job.root, pathToClaudeCodeExecutable: bin, env: cleanEnv(), settingSources: [],
         plugins: [{ type: 'local', path: plugin, skipMcpDiscovery: true }],
-        mcpServers: { mdlearn: { type: 'stdio', command: process.execPath, args: [mcpEntry], env: { MDLEARN_ROOT: job.root } } },
+        mcpServers: { mdlearn: { type: 'stdio', command: process.execPath, args: [mcpEntry], env: { MDLEARN_ROOT: job.root, MDLEARN_READONLY: '1' } } },
         strictMcpConfig: true,
         systemPrompt: { type: 'preset', preset: 'claude_code', append: APPEND },
         tools: ['Read', 'Glob', 'Grep', 'Write', 'Edit', 'MultiEdit', 'Skill', 'TodoWrite'],
-        allowedTools: ['Read', 'Glob', 'Grep', 'Write', 'Edit', 'MultiEdit', 'Skill', 'TodoWrite', 'mcp__mdlearn__*'],
+        allowedTools: ['Read', 'Glob', 'Grep', 'Write', 'Edit', 'MultiEdit', 'Skill', 'TodoWrite', ...MDLEARN_TOOLS.map((t) => `mcp__mdlearn__${t}`)],
         disallowedTools: ['Bash', 'WebFetch', 'WebSearch', 'Task', 'NotebookEdit'],
         permissionMode: 'dontAsk',
         hooks: { PreToolUse: [{ matcher: 'Write|Edit|MultiEdit', hooks: [writeGuard] }, { matcher: 'Read|Glob|Grep', hooks: [readGuard] }] },

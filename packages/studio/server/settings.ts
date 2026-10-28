@@ -9,6 +9,8 @@ const SettingsSchema = z.object({
   libraryDir: z.string().default(join(homedir(), 'MDlearn', 'library')),
   ollama: z.object({ url: z.string().default('http://127.0.0.1:11434'), model: z.string().default('qwen3:8b'), embedModel: z.string().default('embeddinggemma') }).default({ url: 'http://127.0.0.1:11434', model: 'qwen3:8b', embedModel: 'embeddinggemma' }),
   claude: z.object({ path: z.string().optional(), model: z.string().default('sonnet') }).default({ model: 'sonnet' }),
+  /** First-run help: the welcome tour is shown until it is finished or skipped once. */
+  onboarding: z.object({ tourDone: z.boolean().default(false) }).default({ tourDone: false }),
 })
 export type Settings = z.infer<typeof SettingsSchema>
 export const defaultSettingsFile = () => join(process.env.XDG_CONFIG_HOME ?? join(homedir(), '.config'), 'mdlearn', 'studio.json')

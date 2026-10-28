@@ -1,23 +1,29 @@
 #!/usr/bin/env node
-// mdlearn MCP server — gives Claude exact access to a curriculum (outlines, sections), lesson linting,
-// and an FSRS-backed tutor whose questions never leak their answers.
-// Config: MDLEARN_ROOT (curriculum root, default cwd), MDLEARN_LEARN_DIR (default "learn").
+// mdlearn MCP server — gives Claude exact access to a curriculum (outlines, sections), the authoring guide,
+// lesson linting and saving, ready-made prompts (a course on any topic, with or without notes; companion
+// lessons; a study session), and an FSRS-backed tutor whose questions never leak their answers.
+// Config: MDLEARN_ROOT (folder, default the project folder or cwd), MDLEARN_LEARN_DIR (default "learn"),
+// MDLEARN_READONLY=1 (no save_lesson: for hosts that guard writes themselves, such as MDlearn Studio).
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod'
 import { randomUUID } from 'node:crypto'
-import { readFileSync, existsSync } from 'node:fs'
-import { relative } from 'node:path'
+import { readFileSync, existsSync, mkdirSync, writeFileSync, renameSync, rmSync } from 'node:fs'
+import { relative, dirname, join, basename } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import {
-  formatDiagnostic, sectionText, studyQueue, locate, pose, check, hint, ratingFor, ratingWords, scheduleAfter, whenText, report,
+  formatDiagnostic, sectionText, outlineDoc, studyQueue, locate, pose, check, hint, ratingFor, ratingWords, scheduleAfter, whenText, report, coursePrompt,
   type Lesson,
 } from '@mdlearn/core'
 import {
   workspace, curriculumStatus, findDoc, loadDoc, planFor, loadCourse, loadProgress, loadGoals, appendProgress, compileSource, compileFile, searchCurriculum, inRoot as insideRoot,
 } from '@mdlearn/core/node'
 
-const ws = workspace(process.env.MDLEARN_ROOT ?? process.cwd(), process.env.MDLEARN_LEARN_DIR ?? 'learn')
-const server = new McpServer({ name: 'mdlearn', version: '0.2.0' })
+// a plugin's .mcp.json may pass an unexpanded "${…}" when the host does not know the variable
+const fromEnv = (v: string | undefined) => (v && !v.includes('${') ? v : undefined)
+const ws = workspace(fromEnv(process.env.MDLEARN_ROOT) ?? fromEnv(process.env.CLAUDE_PROJECT_DIR) ?? process.cwd(), process.env.MDLEARN_LEARN_DIR ?? 'learn')
+const readOnly = process.env.MDLEARN_READONLY === '1'
+const server = new McpServer({ name: 'mdlearn', version: '0.3.0' })
 
 const text = (s: string) => ({ content: [{ type: 'text' as const, text: s }] })
 const json = (v: unknown) => text(JSON.stringify(v, null, 1))
@@ -25,6 +31,19 @@ const error = (s: string) => ({ content: [{ type: 'text' as const, text: s }], i
 const lessons = (): Lesson[] => loadCourse(ws.learnDir).map((l) => l.lesson).filter((l): l is Lesson => !!l)
 const inRoot = (p: string) => insideRoot(ws.root, p)
 const RO = { readOnlyHint: true, openWorldHint: false }
+
+// The authoring guide ships next to the server (plugin bundle: ./guide/<part>.md) or comes from the repo's docs.
+const here = dirname(fileURLToPath(import.meta.url))
+const GUIDE = {
+  method: 'docs/AGENT_SKILL.md', spec: 'docs/DSL_SPECIFICATION.md', chat: 'docs/CHAT_PROMPT.md',
+  visuals: 'skills/mdlearn-visuals/SKILL.md', tutor: 'skills/mdlearn-tutor/SKILL.md', curriculum: 'skills/mdlearn-curriculum/SKILL.md',
+} as const
+type GuidePart = keyof typeof GUIDE
+function guide(part: GuidePart): string {
+  for (const f of [join(here, 'guide', `${part}.md`), join(here, '..', '..', '..', GUIDE[part])])
+    if (existsSync(f)) return readFileSync(f, 'utf8').replace(/^---\n[\s\S]*?\n---\n+/, '') // without skill frontmatter
+  return `(The ${part} guide is not installed next to the mdlearn server.)`
+}
 
 // ------------------------------------------------------------------ curriculum (read-only)
 server.registerTool('curriculum_status', {
@@ -93,6 +112,58 @@ server.registerTool('lint_lesson', {
   const lines = r.diagnostics.map(formatDiagnostic)
   const cards = r.lesson?.cards.length ?? 0
   return text(`${errs ? `✗ ${errs} error(s)` : '✓ no errors'} · ${cards} cards\n${lines.join('\n') || '(no diagnostics)'}`)
+})
+
+server.registerTool('authoring_guide', {
+  title: 'Authoring guide',
+  description: 'How to write MDlearn lessons (.learn.md). Read part "method" before writing any lesson: steps, level blueprints, card and item rules, syntax with a full example, and the self-check list. Part "spec" lists the DSL specification sections; pass `section` (e.g. "8.12") to read one. Other parts: "visuals" (plots, formulas, animations, sims), "tutor" (running a study session), "curriculum" (converting many documents).',
+  inputSchema: {
+    part: z.enum(['method', 'spec', 'visuals', 'tutor', 'curriculum']).optional().describe('Default "method"'),
+    section: z.string().optional().describe('With part "spec": a section number such as "8.3", or "all" for the whole specification'),
+  },
+  annotations: RO,
+}, async ({ part = 'method', section }) => {
+  if (part !== 'spec') return text(guide(part))
+  const md = guide('spec')
+  if (section === 'all') return text(md)
+  const outline = outlineDoc(md, 'DSL_SPECIFICATION.md')
+  if (section) {
+    const s = sectionText(md, outline, section)
+    return s ? text(s.text) : error(`No section "${section}" in the specification.`)
+  }
+  return text(`MDlearn DSL specification — ask for one section with section: "<number>".\n${outline.sections.map((x) => `${'  '.repeat(Math.max(0, (x.num?.split('.').length ?? 1) - 1))}${x.num ? `§${x.num} ` : ''}${x.title}`).join('\n')}`)
+})
+
+if (!readOnly) server.registerTool('save_lesson', {
+  title: 'Save lesson',
+  description: 'Lint a lesson and save it in this folder. `path` ends in .learn.md (or is a course.md overview); folders are created. Refuses files with lint errors (fix every E line it returns and save again) and existing files unless overwrite is true. Never writes source documents.',
+  inputSchema: {
+    path: z.string().describe('Folder-relative path, e.g. "tides/01-why-tides.learn.md" or "tides/course.md"'),
+    content: z.string().max(400_000),
+    overwrite: z.boolean().optional().describe('Replace an existing lesson file'),
+  },
+  annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+}, async ({ path, content, overwrite }) => {
+  const lesson = /\.learn\.md$/i.test(path), overview = basename(path).toLowerCase() === 'course.md'
+  if (!lesson && !overview) return error('Only lesson files (*.learn.md) and course.md overviews can be saved.')
+  const abs = inRoot(path)
+  if (!abs) return error('Path must be inside this folder.')
+  if (existsSync(abs) && (!overwrite || overview)) return error(overview ? `${path} already exists; edit it instead (an overview is never replaced, it may be the user's own file).` : `${path} already exists; pass overwrite: true to replace it.`)
+  let summary = 'saved'
+  if (lesson) {
+    const r = compileSource(content, abs)
+    const errs = r.diagnostics.filter((d) => d.code.startsWith('E'))
+    const lines = r.diagnostics.filter((d) => !d.code.startsWith('I')).map(formatDiagnostic)
+    if (errs.length || !r.lesson) return error(`✗ not saved: ${errs.length} error(s)\n${lines.join('\n')}`)
+    summary = `✓ saved ${relative(ws.root, abs)} · ${r.lesson.cards.length} cards${lines.length ? `\n${lines.join('\n')}` : ''}`
+  } else if (!content.trim()) return error('The overview is empty.')
+  mkdirSync(dirname(abs), { recursive: true })
+  const tmp = `${abs}.${process.pid}.tmp`
+  try {
+    writeFileSync(tmp, content.endsWith('\n') ? content : `${content}\n`)
+    renameSync(tmp, abs)
+  } catch (e) { rmSync(tmp, { force: true }); return error(`Could not save ${path}: ${(e as Error).message}`) }
+  return text(lesson ? summary : `✓ saved ${relative(ws.root, abs)}`)
 })
 
 // ------------------------------------------------------------------ tutor
@@ -179,5 +250,40 @@ server.registerTool('read_lesson', {
   const abs = inRoot(path)
   return abs && /\.md$/.test(abs) && existsSync(abs) ? text(readFileSync(abs, 'utf8')) : error(`No such lesson: ${path} (lesson files end in .learn.md)`)
 })
+
+// ------------------------------------------------------------------ ready-made prompts (slash commands in most clients)
+const ask = (s: string) => ({ messages: [{ role: 'user' as const, content: { type: 'text' as const, text: s } }] })
+server.registerPrompt('create_course', {
+  title: 'Create a course',
+  description: 'Build an MDlearn course on any topic — from your notes or from general knowledge — with proven learning methods, linted and saved in this folder.',
+  argsSchema: {
+    topic: z.string().describe('What to learn, e.g. "orbital mechanics for ML engineers"'),
+    level: z.string().optional().describe('beginner, intermediate or advanced'),
+    language: z.string().optional().describe('Language of the lessons'),
+    minutes: z.string().optional().describe('Total study time in minutes (default 45)'),
+    notes: z.string().optional().describe('A notes file or folder to build from (leave empty for none)'),
+  },
+}, ({ topic, level, language, minutes, notes }) => ask(coursePrompt({
+  topic, level, language, notes: notes?.trim() || undefined, minutes: Number.parseInt(minutes ?? '', 10) || undefined, save: readOnly ? 'write' : 'tool',
+})))
+server.registerPrompt('companion_lessons', {
+  title: 'Companion lessons for a document',
+  description: 'Turn one long document of this folder into companion lessons that link back to its sections.',
+  argsSchema: { doc: z.string().describe('Document path or a unique part of its name') },
+}, ({ doc }) => ask(`Write MDlearn companion lessons for the document "${doc}" in this folder.
+
+1. Call \`authoring_guide\` and follow it, especially "Companion lessons": the learner reads the document; each card links to a section with \`::read[§…]\`, gives a short gist of what to look for, and asks one retrieval question.
+2. Call \`plan_lessons\` for the document: it gives each lesson's id, path, \`source:\` value and sections.
+3. For each planned lesson, read every section it covers with \`get_section\` (never from memory), then write the lesson and ${readOnly ? 'write the file, then lint it with `lint_lesson`' : 'save it with `save_lesson`'}; fix every E and W line until it is clean. Recompute every number from the section text.
+4. Finish with one line per file (path, cards, lint result), and list any errors you found in the document itself.`))
+server.registerPrompt('study', {
+  title: 'Study session',
+  description: 'A spaced-repetition study session on what is due, one question at a time, with feedback and scheduling.',
+  argsSchema: { scope: z.string().optional().describe('A lesson id or topic to focus on (default: everything due)') },
+}, ({ scope }) => ask(`Run an MDlearn study session${scope ? ` on "${scope}"` : ''} with the mdlearn tools, following this protocol exactly:\n\n${guide('tutor')}`))
+
+// ------------------------------------------------------------------ the guide as resources
+for (const [part, name] of [['method', 'How to write MDlearn lessons'], ['spec', 'MDlearn DSL specification'], ['chat', 'MDlearn prompt for chats without tools']] as const)
+  server.registerResource(`guide-${part}`, `mdlearn://guide/${part}`, { title: name, mimeType: 'text/markdown' }, async (uri) => ({ contents: [{ uri: uri.href, mimeType: 'text/markdown', text: guide(part) }] }))
 
 await server.connect(new StdioServerTransport())

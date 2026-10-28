@@ -1,23 +1,26 @@
-// Bring something into the folder: a web page, a PDF, an Anki deck or a Jupyter notebook.
-import { useRef, useState, type ReactNode } from 'react'
+// Bring something into the folder: lessons a chat wrote, a web page, a PDF, an Anki deck or a Jupyter notebook.
+import { useCallback, useRef, useState, type ReactNode } from 'react'
 import { Link } from 'wouter'
 import { useQueryClient } from '@tanstack/react-query'
-import { BookOpenCheck, FileText, Globe, GraduationCap, Layers, NotebookText, X } from 'lucide-react'
+import { BookOpenCheck, FileText, Globe, GraduationCap, Layers, MessageSquareText, NotebookText, X } from 'lucide-react'
 import { importApi, keys, useSession } from '../api/queries'
 import { docRoute, lessonRoute } from '../lib/paths'
 import { Button } from '../ui/primitives'
-import type { ImportResult } from '../../shared/types'
+import type { ChatCheck, ImportResult } from '../../shared/types'
+import { ChatImport, FixRequest } from './ChatImport'
+import { t } from '../i18n'
 
-type Kind = 'web' | 'pdf' | 'anki' | 'notebook'
-const KINDS: { id: Kind; icon: typeof Globe; label: string; hint: string; accept?: string }[] = [
-  { id: 'web', icon: Globe, label: 'Web page', hint: 'An article, as Markdown with its math and pictures' },
-  { id: 'pdf', icon: FileText, label: 'PDF', hint: 'A paper or a chapter', accept: '.pdf,application/pdf' },
-  { id: 'anki', icon: Layers, label: 'Anki deck', hint: 'Notes become study cards; history can come along', accept: '.apkg' },
-  { id: 'notebook', icon: NotebookText, label: 'Notebook', hint: 'A Jupyter .ipynb with its outputs', accept: '.ipynb' },
+type Kind = 'chat' | 'web' | 'pdf' | 'anki' | 'notebook'
+const KINDS = (): { id: Kind; icon: typeof Globe; label: string; hint: string; accept?: string }[] => [
+  { id: 'chat', icon: MessageSquareText, label: t('From a chat'), hint: t('Lessons ChatGPT, Gemini or Claude.ai wrote with the MDlearn prompt') },
+  { id: 'web', icon: Globe, label: t('Web page'), hint: t('An article, as Markdown with its math and pictures') },
+  { id: 'pdf', icon: FileText, label: t('PDF'), hint: t('A paper or a chapter'), accept: '.pdf,application/pdf' },
+  { id: 'anki', icon: Layers, label: t('Anki deck'), hint: t('Notes become study cards; history can come along'), accept: '.apkg' },
+  { id: 'notebook', icon: NotebookText, label: t('Notebook'), hint: t('A Jupyter .ipynb with its outputs'), accept: '.ipynb' },
 ]
 
 export function ImportDialog({ ws, onClose }: { ws: string; onClose: () => void }) {
-  const [kind, setKind] = useState<Kind>('web')
+  const [kind, setKind] = useState<Kind>('chat')
   const [url, setUrl] = useState('')
   const [file, setFile] = useState<File | null>(null)
   const [quality, setQuality] = useState<'fast' | 'high'>('fast')
@@ -25,16 +28,20 @@ export function ImportDialog({ ws, onClose }: { ws: string; onClose: () => void 
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState<ImportResult | null>(null)
+  const [chat, setChat] = useState(''), [folder, setFolder] = useState('')
+  const [check, setCheck] = useState<ChatCheck | null>(null)
+  const onCheck = useCallback((c: ChatCheck | null) => setCheck(c), [])
   const picker = useRef<HTMLInputElement>(null)
   const qc = useQueryClient()
   const canAi = !!useSession().data?.caps.includes('ai')
-  const spec = KINDS.find((k) => k.id === kind)!
-  const ready = kind === 'web' ? /^https?:\/\//i.test(url.trim()) : !!file
+  const spec = KINDS().find((k) => k.id === kind)!
+  const ready = kind === 'chat' ? !!check?.files.some((f) => !f.errors && !f.exists) : kind === 'web' ? /^https?:\/\//i.test(url.trim()) : !!file
 
   const run = async () => {
     setBusy(true); setError(null)
     try {
-      const r = kind === 'web' ? await importApi.web(ws, url.trim())
+      const r = kind === 'chat' ? await importApi.chat(ws, chat, folder || check?.folder)
+        : kind === 'web' ? await importApi.web(ws, url.trim())
         : kind === 'pdf' ? await importApi.file(ws, quality === 'high' ? 'pdf-quality' : 'pdf-fast', file!)
         : kind === 'anki' ? await importApi.file(ws, 'anki', file!, { keepHistory: String(history) })
         : await importApi.file(ws, 'notebook', file!)
@@ -49,16 +56,16 @@ export function ImportDialog({ ws, onClose }: { ws: string; onClose: () => void 
       <div role="dialog" aria-modal="true" aria-labelledby="import-title" onMouseDown={(e) => e.stopPropagation()} onKeyDown={(e) => { if (e.key === 'Escape') onClose() }}
         className="w-full max-w-[560px] rounded-[10px] border border-border bg-raised p-5 shadow-pop">
         <div className="flex items-start justify-between gap-3">
-          <div><h2 id="import-title" className="text-[16px] font-semibold">Import</h2><p className="mt-0.5 text-[13px] text-muted">Everything is copied into this folder; nothing you already have is changed.</p></div>
-          <button onClick={onClose} aria-label="Close" className="rounded-[6px] p-1 text-muted hover:bg-hover cursor-pointer"><X className="size-4" aria-hidden /></button>
+          <div><h2 id="import-title" className="text-[16px] font-semibold">{t('Import')}</h2><p className="mt-0.5 text-[13px] text-muted">{t('Everything is copied into this folder; nothing you already have is changed.')}</p></div>
+          <button onClick={onClose} aria-label={t('Close')} className="rounded-[6px] p-1 text-muted hover:bg-hover cursor-pointer"><X className="size-4" aria-hidden /></button>
         </div>
 
-        {done ? <Result ws={ws} r={done} onClose={onClose} onMore={() => { setDone(null); setFile(null); setUrl('') }} /> : (
+        {done ? <Result ws={ws} r={done} onClose={onClose} onMore={() => { setDone(null); setFile(null); setUrl(''); setChat(''); setFolder('') }} /> : (
           <>
-            <div role="radiogroup" aria-label="What to import" className="mt-4 grid grid-cols-2 gap-2">
-              {KINDS.map((k) => (
+            <div role="radiogroup" aria-label={t('What to import')} className="mt-4 grid grid-cols-2 gap-2">
+              {KINDS().map((k) => (
                 <button key={k.id} role="radio" aria-checked={kind === k.id} onClick={() => choose(k.id)}
-                  className={`flex items-start gap-2.5 rounded-[8px] border px-3 py-2.5 text-left cursor-pointer ${kind === k.id ? 'border-text bg-hover' : 'border-border hover:bg-hover'}`}>
+                  className={`${k.id === 'chat' ? 'col-span-2 ' : ''}flex items-start gap-2.5 rounded-[8px] border px-3 py-2.5 text-left cursor-pointer ${kind === k.id ? 'border-text bg-hover' : 'border-border hover:bg-hover'}`}>
                   <k.icon className="mt-0.5 size-4 shrink-0 text-muted" strokeWidth={1.8} aria-hidden />
                   <span><span className="block text-[13.5px] font-medium">{k.label}</span><span className="block text-[12px] leading-snug text-muted">{k.hint}</span></span>
                 </button>
@@ -66,9 +73,9 @@ export function ImportDialog({ ws, onClose }: { ws: string; onClose: () => void 
             </div>
 
             <div className="mt-4">
-              {kind === 'web' ? (
+              {kind === 'chat' ? <ChatImport ws={ws} text={chat} setText={setChat} folder={folder} setFolder={setFolder} onCheck={onCheck} /> : kind === 'web' ? (
                 <>
-                  <label htmlFor="import-url" className="text-[12.5px] text-muted">Address</label>
+                  <label htmlFor="import-url" className="text-[12.5px] text-muted">{t('Address')}</label>
                   <input id="import-url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://…" inputMode="url" autoFocus spellCheck={false}
                     onKeyDown={(e) => { if (e.key === 'Enter' && ready && !busy) void run() }}
                     className="mt-1 h-9 w-full rounded-[6px] border border-border-strong bg-bg px-3 text-[14px] outline-none placeholder:text-subtle focus:border-focus" />
@@ -82,20 +89,20 @@ export function ImportDialog({ ws, onClose }: { ws: string; onClose: () => void 
                 </>
               )}
               {kind === 'pdf' && (
-                <fieldset className="mt-3"><legend className="text-[12.5px] text-muted">How to read it</legend>
-                  <Choice name="q" checked={quality === 'fast'} onChange={() => setQuality('fast')} title="Quick, on this computer" hint="Headings, paragraphs and lists in seconds. Formulas come out as plain text." />
-                  <Choice name="q" checked={quality === 'high'} disabled={!canAi} onChange={() => setQuality('high')} title="High quality, Claude reads the pages" hint={canAi ? 'Formulas become LaTeX and tables stay tables. Takes minutes and uses your Claude usage.' : 'Only on the computer running MDlearn.'} />
+                <fieldset className="mt-3"><legend className="text-[12.5px] text-muted">{t('How to read it')}</legend>
+                  <Choice name="q" checked={quality === 'fast'} onChange={() => setQuality('fast')} title={t('Quick, on this computer')} hint={t('Headings, paragraphs and lists in seconds. Formulas come out as plain text.')} />
+                  <Choice name="q" checked={quality === 'high'} disabled={!canAi} onChange={() => setQuality('high')} title={t('High quality, Claude reads the pages')} hint={canAi ? t('Formulas become LaTeX and tables stay tables. Takes minutes and uses your Claude usage.') : t('Only on the computer running MDlearn.')} />
                 </fieldset>
               )}
               {kind === 'anki' && (
                 <label className="mt-3 flex cursor-pointer items-start gap-2 text-[13px]"><input type="checkbox" checked={history} onChange={(e) => setHistory(e.target.checked)} className="mt-0.5 accent-[var(--accent)]" />
-                  <span>Keep my review history<span className="block text-[12px] text-muted">Cards you know in Anki stay scheduled instead of starting over.</span></span></label>
+                  <span>{t('Keep my review history')}<span className="block text-[12px] text-muted">{t('Cards you know in Anki stay scheduled instead of starting over.')}</span></span></label>
               )}
             </div>
             {error && <p role="alert" className="mt-3 text-[13px] text-bad">{error}</p>}
             <div className="mt-5 flex items-center justify-end gap-2">
-              <Button variant="ghost" onClick={onClose}>Cancel</Button>
-              <Button variant="primary" busy={busy} disabled={!ready} onClick={() => void run()}>{busy ? 'Importing…' : 'Import'}</Button>
+              <Button variant="ghost" onClick={onClose}>{t('Cancel')}</Button>
+              <Button variant="primary" busy={busy} disabled={!ready} onClick={() => void run()}>{busy ? t('Importing…') : t('Import')}</Button>
             </div>
           </>
         )}
@@ -123,14 +130,15 @@ function Result({ ws, r, onClose, onMore }: { ws: string; r: ImportResult; onClo
   )
   return (
     <div className="mt-4" role="status">
-      <p className="text-[14px] font-medium">{r.jobId ? 'Started' : 'Imported'}. <span className="font-normal text-muted">{r.summary}</span></p>
+      <p className="text-[14px] font-medium">{r.jobId ? t('Started') : t('Imported')}. <span className="font-normal text-muted">{r.summary}</span></p>
       <ul className="mt-2 text-[13px]">{[...docs, ...lessons].map(link)}</ul>
       {r.warnings.map((w, i) => <p key={i} className="mt-2 text-[12.5px] text-muted">{w}</p>)}
+      {r.fix && <FixRequest fix={r.fix} />}
       <div className="mt-5 flex flex-wrap items-center justify-end gap-2">
-        {r.jobId && <Link href={`/w/${ws}/studio?job=${r.jobId}`} onClick={onClose} className="inline-flex h-8 items-center rounded-[6px] border border-border-strong px-3 text-[13px] font-medium hover:bg-hover">Watch the job</Link>}
-        {lessons.length > 0 && <Link href={`/w/${ws}/study`} onClick={onClose} className="inline-flex h-8 items-center gap-1.5 rounded-[6px] border border-border-strong px-3 text-[13px] font-medium hover:bg-hover"><BookOpenCheck className="size-4" aria-hidden />Study</Link>}
-        <Button variant="ghost" onClick={onMore}>Import another</Button>
-        <Button variant="primary" onClick={onClose}>Done</Button>
+        {r.jobId && <Link href={`/w/${ws}/studio?job=${r.jobId}`} onClick={onClose} className="inline-flex h-8 items-center rounded-[6px] border border-border-strong px-3 text-[13px] font-medium hover:bg-hover">{t('Watch the job')}</Link>}
+        {lessons.length > 0 && <Link href={`/w/${ws}/study`} onClick={onClose} className="inline-flex h-8 items-center gap-1.5 rounded-[6px] border border-border-strong px-3 text-[13px] font-medium hover:bg-hover"><BookOpenCheck className="size-4" aria-hidden />{t('Study')}</Link>}
+        <Button variant="ghost" onClick={onMore}>{t('Import another')}</Button>
+        <Button variant="primary" onClick={onClose}>{t('Done')}</Button>
       </div>
     </div>
   )

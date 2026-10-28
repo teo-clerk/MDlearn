@@ -1,8 +1,9 @@
-# MDlearn DSL — Specification v1.2
+# MDlearn DSL — Specification v1.3
 
 > **Status:** normative for `format 1` lesson files (`*.learn.md`). v1.1 adds companion lessons
-> (`source:` and `::read`, §8.10); v1.2 adds visual blocks (`plot`, `formula`, `animate`, `sim`, §8.11).
-> Every earlier file is a valid v1.2 file.
+> (`source:` and `::read`, §8.10); v1.2 adds visual blocks (`plot`, `formula`, `animate`, `sim`, §8.11);
+> v1.3 adds games (`match`, `sort`, `speed`, §8.12), safe HTML in place (§8.13), sandboxed `:::html`
+> blocks (§8.14) and Markdown animation frames (§8.11). Every earlier file is a valid v1.3 file.
 > **Conformance:** every example in this document is compiled by the reference prototype
 > (Stage 0 → remark → CourseAST) in the test suite: valid examples produce **0 errors**, invalid
 > ones produce exactly the diagnostics shown. The diagnostics catalogue (§12) is generated from the
@@ -22,7 +23,7 @@ Eight rules shape every syntax decision below.
 | # | Principle | Consequence |
 |---|---|---|
 | P1 | **Standard first.** Headings, lists, tables, code fences, links, images and `$` math stay plain CommonMark/GFM. | A lesson reads well on GitHub, Obsidian or VS Code with no tooling. |
-| P2 | **Closed vocabulary.** 6 widgets, 4 callouts, 1 hint directive, 1 blank syntax, 3 attributes. | Fewer names to hallucinate; unknown names fail loudly (E103). |
+| P2 | **Closed vocabulary.** 9 widgets (6 questions, 3 games), 5 visuals, 4 callouts, 1 hint directive, 1 blank syntax, a short list of attributes. | Fewer names to hallucinate; unknown names fail loudly (E103). |
 | P3 | **Co-location, no cross-references.** Correctness lives on the option (`- [x]`), feedback under the option, the answer inside the blank. | No answer letters, indices or IDs for an LLM to get out of sync. |
 | P4 | **No escaping hazards.** No JSON, JSX, YAML-quoted TeX or prose in attributes. | LaTeX passes through byte-for-byte. |
 | P5 | **Structure by headings, not wrappers.** `##` starts a card; there is no `:::card`. | Zero unclosed-wrapper failures; every card has a title. |
@@ -144,7 +145,7 @@ MDlearn is CommonMark 0.31 + the constructs below. Anything not listed is plain 
 | `$…$`, `$$…$$` math (remark-math) | **enabled** | §6. |
 | Container directives `:::name` and leaf `::hint[…]` | **enabled** | §7. |
 | **Text directives** `:name[…]` | **disabled** | micromark accepts any letter *or digit* after `:`, so `10:30`, `1:99`, `doi:10.1/x`, `localhost:3000` would silently become empty elements. MDlearn registers only the block half of the directive syntax. |
-| Raw HTML | **disabled** | Dropped and reported (E107). `<!-- … -->` comments are allowed as author annotations and stripped. |
+| HTML | **safe subset** (v1.3) | Inline tags and container blocks render; anything executable is removed and reported (E107). `<!-- … -->` comments are author annotations and stripped. §8.13. |
 | Footnotes, link reference definitions | tolerated | Rendered as their text; avoid in lessons. |
 | Setext headings and `---` / `***` thematic breaks | **removed by Stage 0** (I805) | A paragraph followed by `---` would otherwise become an H2 — a fake card. Thematic breaks carry no meaning in a lesson. |
 
@@ -216,19 +217,27 @@ GFM/Obsidian alerts `> [!TIP]-`.
 | `explain` | widget | Self-explanation / free-recall prompt with a model answer of idea units. |
 | `steps` | widget | Worked example revealed step by step; a step containing a blank is a faded step. |
 | `code` | widget | Code exercise with starter, tests and solution. |
+| `match` | game | Match pairs (`left :: right`); with `{memory}`, a memory game over the same pairs. |
+| `sort` | game | Sort items into 2–4 groups (a nested list). |
+| `speed` | game | A true/false round, optionally timed (`{time=60}`). |
+| `plot`, `formula`, `animate`, `sim`, `html` | visual | Never graded: plots, explained formulas, animations, simulations, sandboxed HTML (§8.11, §8.14). |
 | `note`, `tip`, `important`, `warning` | callout | Side detail, intuition, key takeaway, misconception. |
 | `::hint[…]` | leaf | One progressive hint inside a widget (single line). |
 | `::read[§…]` | leaf | Companion lessons: link a card to source sections (§8.10). |
 
 ### 7.3 Attributes
 
-Only three attributes exist; anything else is ignored.
+Attributes are few and named; anything else is ignored.
 
 | Attribute | On | Meaning |
 |---|---|---|
 | `{#id}` | widgets, `## Title {#id}` | Pin an id (§2). |
 | `{fold}` | callouts | Collapsed by default; the `[label]` is the summary line — the "revealable intuition". |
 | `{exact}` | `cloze`, `steps` | Math blanks are compared by form, not by value (for "simplify/expand/factor" tasks). |
+| `{memory}` | `match` | Play the pairs as a memory game (v1.3). |
+| `{time=60}` | `speed` | Seconds for the whole round (5–3600); without it the round is untimed (v1.3). |
+| `{replace}` | `animate` | One frame at a time, crossfading, instead of frames accumulating (v1.3). |
+| `{auto}`, `{height=…}`, `{x=log}`, `{y=log}` | visuals | §8.11, §8.14. |
 
 Widgets never nest (E106: the inner widget is locked). Callouts may appear inside widgets.
 
@@ -539,12 +548,126 @@ api.frame(() => {
 |---|---|---|
 | `plot` | 1–4 formulas (each `lhs = rhs` is a curve) and parameters | one x variable (E905; extra ones start at their midpoint, W906); curves mostly undefined with the defaults: W907 |
 | `formula` | one formula and its terms (and optionally values, which make it compute live) | every term must appear as written (E908); more than 6 terms, sliders or 4 curves: W910 |
-| `animate` | an ordered list of 2–12 frames, each `N. $$formula$$ caption` | E911 below 2 frames, W912 above 12; a frame without a formula: E901 |
+| `animate` | an ordered list of 2–12 frames: `N. $$formula$$ caption`, or (v1.3) any Markdown — text, an image, a table, a diagram, safe HTML | E911 below 2 frames, W912 above 12, an empty frame E927; `{replace}` shows one frame at a time |
 | `sim` | one ```` ```js ```` block (≤ 16 KB) and parameters | runs in a sandboxed frame with no network (W917); the code gets `api.ctx`, `api.width`, `api.height`, `api.params`, `api.frame(fn)`, `api.onParams(fn)`, `api.random()`, `api.theme`; syntax errors are E914 |
 
 In the CourseAST each block carries its MathJSON (`curves[].expr`, `live.expr`), so a player evaluates
 formulas with the small dependency-free evaluator (`@mdlearn/core/eval`) and never needs a TeX parser.
 Terminal and chat surfaces show the caption and the formula.
+
+### 8.12 Games: `match`, `sort`, `speed` (v1.3)
+
+Games are widgets: graded on the server like a quiz, scheduled as cards in a lesson, practised in place in
+a document. They are written in plain Markdown — no JavaScript — and the Studio plays them with motion
+(connector lines, card flips, items gliding into groups, a countdown and a streak). The browser receives
+them without their key and checks every move with a partial answer, so feedback is instant and the key
+never leaves the server.
+
+```markdown
+:::match
+Match each symbol with what it means.
+- $\sigma^0$ :: backscatter coefficient
+- $\lambda$ :: wavelength
+- $B$ :: bandwidth
+:::
+
+:::match{memory}
+Find the instrument of each mission.
+- Sentinel-1 :: C-band SAR
+- Sentinel-2 :: MultiSpectral Instrument
+- Sentinel-3 :: ocean and land colour
+:::
+
+:::sort
+Sort the sensors.
+- Active
+  - SAR
+  - LiDAR
+- Passive
+  - multispectral camera
+  - microwave radiometer
+:::
+
+:::speed[Radar basics]{time=45}
+- [x] SAR is an active sensor.
+- [ ] C-band has a longer wavelength than L-band.
+  > L-band is about 24 cm, C-band about 5.6 cm.
+- [x] Speckle is multiplicative noise.
+:::
+```
+
+| Game | Body | Rules |
+|---|---|---|
+| `match` | a list of 3–8 pairs, `- left :: right` (split at the first ` :: ` in plain text, never inside code or math) | an item without ` :: ` is left out (W212); fewer than 3 pairs: E211; more than 8: W213. The right column is shown in a seeded shuffle. `{memory}`: the same pairs as a memory game (flip one card of each side; a pair stays face up). |
+| `sort` | a nested list: each top item is a group label, its sub-items belong to it | 2–4 groups, 4–12 items in all, every group non-empty (E214; over the limits W215). Items are shown shuffled. |
+| `speed` | a task list of 3–20 statements, `[x]` true and `[ ]` false; a `>` under a statement explains it | fewer than 3: E216; more than 20: W217; all true or all false: W218. `{time=N}` sets a countdown for the whole round. |
+
+Prompt text before the list is shown above the game; `::hint[…]` and trailing `>` explanations work as in
+every widget.
+
+### 8.13 HTML in Markdown (v1.3)
+
+A safe subset of HTML renders in documents and lessons; anything that could run code is removed before it
+reaches the page and reported (E107). The Studio also sanitises again in the browser (DOMPurify) and its
+content policy blocks inline scripts, so a missed case still cannot run.
+
+```markdown
+Inline tags render: <mark>highlight</mark>, <kbd>Ctrl</kbd>+<kbd>K</kbd>, H<sub>2</sub>O, 10<sup>-3</sup>,
+<abbr title="Synthetic Aperture Radar">SAR</abbr> and <span style="color: #2c7a4b">colour</span>.
+
+<div align="center">
+
+**Markdown** between the tags stays Markdown.
+
+</div>
+
+<details>
+<summary>Why <b>R⁴</b>?</summary>
+
+Two-way spreading: $R^2$ out and $R^2$ back.
+
+</details>
+```
+
+| Form | Rendering |
+|---|---|
+| Inline `<mark> <kbd> <sub> <sup> <u> <ins> <small> <abbr> <span> <b> <i> <s> <q> <cite> <dfn> <var> <samp> <time> <code> <a> <font>` with their closing tag | The element itself; Markdown, math and blanks inside it keep working. Attributes kept: `title`, `href` (same URL rules as Markdown links), and `style` limited to colour, background, font weight/style/size, text decoration and alignment, border and padding. |
+| `<br>`, `<hr>`, `<img src alt width>` | A line break, a rule, an image (alt text required, W604). |
+| `<div> <section> <article> <aside> <figure> <figcaption> <center> <details>` opening on its own and closing after Markdown | A container around Markdown (`align` becomes `text-align`; `<details>` folds with its `<summary>`). |
+| Any other complete HTML block (`<table>…</table>`, `<figure><svg>…</svg></figure>`) | Rendered after sanitising: HTML, SVG and SVG filters; `class` and `id` dropped (SVG ids are kept, renamed per block); SVG `animateTransform` / `animateMotion` animate without script. |
+| An unknown or unclosed tag (`List<T>`) | Shown as written. |
+| `<script> <style> <iframe> <object> <embed> <form>` and form fields, `on…=` handlers, `javascript:` URLs | Removed; E107. Put interactive HTML in an `:::html` block (§8.14). |
+
+Terminal and chat surfaces show the text inside the HTML.
+
+### 8.14 Sandboxed HTML: `:::html` (v1.3)
+
+`:::html[caption]{attrs}` holds a description and one ```` ```html ```` block (≤ 64 KB) with your own HTML,
+CSS and JavaScript — a small game, an interactive diagram, a CSS animation. It is a visual block: never
+graded or scheduled, and it fails open-static.
+
+~~~markdown
+:::html[Pick the band]
+Choose the radar band that fits the job.
+```html
+<style> button { color: var(--text); background: var(--raised); } </style>
+<p>Map soil moisture under a forest canopy.</p>
+<button id="l">L-band</button> <button id="x">X-band</button>
+<script>
+  document.getElementById('l').addEventListener('click', () => mdlearn.done({ score: 1, total: 1 }))
+  document.getElementById('x').addEventListener('click', () => mdlearn.done({ score: 0, total: 1 }))
+</script>
+```
+:::
+~~~
+
+| Rule | Detail |
+|---|---|
+| Sandbox | A frame with its own opaque origin: no cookies, no access to the page, the notes or the Studio API; its content policy allows inline scripts and styles but no network (`fetch`, external scripts and images do not load: W926). Images must be `data:` URLs. |
+| Start | A Play button starts it; `{auto}` starts it at once. A block that stops responding is stopped (Run again). |
+| Size | The frame fits its content; `{height=N}` fixes it (80–900 px). |
+| API | `mdlearn.theme` (the Studio's colours and fonts, also as CSS variables: `var(--text)`, `var(--bg)`, `var(--good)`, `var(--font-read)`, …, following light/dark), `mdlearn.reducedMotion`, `mdlearn.done({ score, total })` (shown as "Score 3 / 4" under the block, never recorded), `mdlearn.resize()`. |
+| Errors | Not exactly one `html` block: E924; over 64 KB: E925. Ordinary ```` ```html ```` fences elsewhere stay highlighted code and never run. |
 
 ---
 
@@ -558,8 +681,13 @@ Terminal and chat surfaces show the caption and the formula.
 | order | exact sequence; one adjacent swap is accepted as partial (rated Hard) | distance from the key |
 | explain | self-scored against idea units after an attempt | ticked units, "Can't recall" |
 | code | all tests pass (run mode) or self-check | runs, test results |
+| match | every pair right; one swapped pair is partial (rated Hard) | the pairs chosen |
+| match `{memory}` | every pair found; more misses than pairs is partial | the flips (the server counts the misses) |
+| sort | every item in its group; one misplaced item is partial | the group chosen per item |
+| speed | at least 80 % right (100 %: full, 80–99 %: partial); unanswered statements count as wrong when time runs out | the answers and the time |
 
-The mapping from these events to spaced-repetition ratings is defined once, in
+Single moves of a game (a pair, a flip, one statement) are checked without being recorded; only the
+finished round is. The mapping from these events to spaced-repetition ratings is defined once, in
 PEDAGOGICAL_SPEC §9, and implemented in ENGINE_ARCHITECTURE §8.
 
 ---
@@ -728,18 +856,18 @@ Format of the compact report (one line per diagnostic, designed for an agent to 
 |---|---|---|---|
 | E101 | error | `frontmatter-invalid` | Frontmatter is not valid YAML, or a key has the wrong type (that key is ignored). |
 | E102 | error | `title-missing` | No `title` in frontmatter and no leading `#` heading. |
-| E103 | error | `unknown-container` | Unknown `:::name`; block is locked (fail-closed). Use quiz\|cloze\|order\|explain\|steps\|code\|note\|tip\|important\|warning. |
+| E103 | error | `unknown-container` | Unknown `:::name`; block is locked (fail-closed). Use quiz\|cloze\|order\|explain\|steps\|code (questions), match\|sort\|speed (games), plot\|formula\|animate\|sim\|html (visuals), note\|tip\|important\|warning (callouts). |
 | E104 | error | `unknown-leaf` | Unknown `::name` leaf directive (only `::hint` exists); dropped. |
 | E105 | error | `unclosed-container` | Container not closed; auto-closed at the next `##` or end of file. |
 | E106 | error | `nested-widget` | A widget inside another widget; the inner one is locked. |
-| E107 | error | `raw-html` | Raw HTML is not rendered (comments are allowed as annotations). Use Markdown/LaTeX, e.g. `$10^{-3}$` instead of `10<sup>-3</sup>`. |
+| E107 | error | `unsafe-html` | Unsafe HTML was removed: scripts, styles, frames, forms, `on…=` handlers and script URLs never render (other HTML does). Put interactive HTML, CSS and JavaScript in an `:::html` block; it runs in a sandbox. |
 | E108 | error | `unclosed-comment` | `<!--` without `-->`; comment ended at end of line. |
 | E109 | error | `eof-inside-block` | File ends inside a code fence or display math (truncated output?). |
 | E111 | error | `read-unresolved` | `::read[§…]` points to a section that does not exist in the source document. |
 | W112 | warning | `read-no-source` | `::read` needs a `source:` in frontmatter or a document path in its label. |
 | W113 | warning | `read-in-widget` | `::read` belongs at card level; inside a widget it is ignored. |
 
-**Quiz & order**
+**Quiz, order & games**
 
 | Code | Severity | Rule | Meaning |
 |---|---|---|---|
@@ -753,6 +881,14 @@ Format of the compact report (one line per diagnostic, designed for an agent to 
 | W208 | warning | `answer-marker` | Correctness marker (✅, "(correct)") converted to `[x]`. |
 | I209 | info | `quiz-split` | A quiz with several questions was split into one widget per question. |
 | E210 | error | `order-too-few` | `order` needs an ordered list with at least 3 items. |
+| E211 | error | `match-too-few` | `match` needs a list of at least 3 pairs written `- left :: right`. |
+| W212 | warning | `match-pair-malformed` | A `match` item has no ` :: ` between its two sides; it is left out. |
+| W213 | warning | `match-too-many` | More than 8 pairs: split the match (memory games get slow beyond that). |
+| E214 | error | `sort-too-few` | `sort` needs a nested list: at least 2 groups and 4 items in all, every group with at least one item. |
+| W215 | warning | `sort-too-many` | More than 4 groups or 12 items: the sort becomes hard to see at once. |
+| E216 | error | `speed-too-few` | `speed` needs a task list of at least 3 statements (`- [x]` true, `- [ ]` false). |
+| W217 | warning | `speed-too-many` | More than 20 statements: split the round. |
+| W218 | warning | `speed-one-sided` | Every statement is true (or every one is false): mix them, or answering by habit wins. |
 
 **Cloze & blanks**
 
@@ -782,7 +918,7 @@ Format of the compact report (one line per diagnostic, designed for an agent to 
 | E501 | error | `code-no-fence` | `code` needs at least one code fence. |
 | W502 | warning | `code-no-tests` | No `test` fence: the learner can only compare with the solution. |
 | E503 | error | `code-lang-mismatch` | Starter/test/solution fences use different languages. |
-| I504 | info | `code-self-check` | Language not runnable in the browser yet: tests become a self-check list. |
+| I504 | info | `code-self-check` | Only Python and JavaScript run in the browser: for this language the tests become a self-check list. |
 
 **Pedagogy & item writing (heuristics)**
 
@@ -834,7 +970,7 @@ Format of the compact report (one line per diagnostic, designed for an agent to 
 
 | Code | Severity | Rule | Meaning |
 |---|---|---|---|
-| E901 | error | `visual-no-formula` | A plot or formula needs a display formula (`$$…$$`); each animate frame needs a formula. |
+| E901 | error | `visual-no-formula` | A plot or formula needs a display formula (`$$…$$`). |
 | E902 | error | `formula-unevaluable` | The formula uses something that cannot be computed (an unsupported function or notation). |
 | E903 | error | `symbol-undeclared` | The formula uses a symbol with no value or range. Declare it as a list item, e.g. `- $c$ = 3e8 m/s — speed of light`. |
 | E904 | error | `param-invalid` | A parameter is malformed: min ≥ max, value outside its range, a log range that includes 0, or an unreadable number. |
@@ -856,6 +992,10 @@ Format of the compact report (one line per diagnostic, designed for an agent to 
 | I920 | info | `param-normalised` | A parameter line was read in a looser form (e.g. `R: [100 .. 2000] km range`). |
 | W921 | warning | `superscript-zero` | `\sigma^0` would be computed as a power (= 1); declare `$\sigma^0$` as a symbol to use it as a name. |
 | I923 | info | `euler-e` | The undeclared symbol `e` is read as Euler's number 2.718… |
+| E924 | error | `html-code` | An `:::html` block needs exactly one ```html code block. |
+| E925 | error | `html-too-large` | An `:::html` block is limited to 64 KB. |
+| W926 | warning | `html-network-api` | `:::html` runs offline in a sandbox: network requests, external scripts and external images do not load. |
+| E927 | error | `animate-empty-frame` | An animate frame is empty. |
 
 ---
 

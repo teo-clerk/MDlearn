@@ -23,6 +23,10 @@
     "./paths": {
       "types": "./dist/paths.d.ts",
       "import": "./dist/paths.js"
+    },
+    "./html": {
+      "types": "./dist/html.d.ts",
+      "import": "./dist/html.js"
     }
   },
   "files": [

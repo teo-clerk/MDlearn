@@ -8,6 +8,10 @@ export type Draft =
   | { type: 'order'; order: number[] }
   /** `run`: how the exercise's checks went when the code was last checked in the browser. */
   | { type: 'text'; text: string; run?: CheckResult }
+  /** Games: a part not played yet is null. Memory games keep every pair of flips (the server counts misses). */
+  | { type: 'match'; pairs: (number | null)[]; log: [number, number][] }
+  | { type: 'sort'; groups: (number | null)[] }
+  | { type: 'speed'; answers: (boolean | null)[]; ms: number; done: boolean }
 export function emptyDraft(w: PosedWidget): Draft {
   switch (w.type) {
     case 'quiz': return { type: 'quiz', picked: [] }
@@ -15,6 +19,9 @@ export function emptyDraft(w: PosedWidget): Draft {
     case 'order': return { type: 'order', order: w.items.map((_, i) => i) }
     case 'explain': return { type: 'text', text: '' }
     case 'code': return { type: 'text', text: w.starter }
+    case 'match': return { type: 'match', pairs: w.left.map(() => null), log: [] }
+    case 'sort': return { type: 'sort', groups: w.items.map(() => null) }
+    case 'speed': return { type: 'speed', answers: w.statements.map(() => null), ms: 0, done: false }
   }
 }
 export function toAnswer(w: PosedWidget, d: Draft): WebAnswer {
@@ -23,6 +30,9 @@ export function toAnswer(w: PosedWidget, d: Draft): WebAnswer {
     case 'cloze': case 'steps': return { type: w.type, values: w.blanks.map((b) => (d.type === 'gaps' ? d.values[b.id] ?? '' : '')) }
     case 'order': return { type: 'order', order: d.type === 'order' ? d.order : [] }
     case 'explain': case 'code': return { type: w.type, text: d.type === 'text' ? d.text : '' }
+    case 'match': return d.type === 'match' ? { type: 'match', pairs: d.pairs, ...(w.memory ? { log: d.log } : {}) } : { type: 'match', pairs: w.left.map(() => null) }
+    case 'sort': return { type: 'sort', groups: d.type === 'sort' ? d.groups : w.items.map(() => null) }
+    case 'speed': return d.type === 'speed' ? { type: 'speed', answers: d.answers, ms: Math.round(d.ms), done: d.done } : { type: 'speed', answers: w.statements.map(() => null), done: true }
   }
 }
 /** True when the learner has entered enough to check. */
@@ -32,8 +42,13 @@ export function ready(w: PosedWidget, d: Draft): boolean {
     case 'gaps': return w.type === 'cloze' || w.type === 'steps' ? w.blanks.length === 0 || w.blanks.some((b) => (d.values[b.id] ?? '').trim()) : false
     case 'order': return true
     case 'text': return d.text.trim().length > 0
+    case 'match': return d.pairs.every((x) => x !== null)
+    case 'sort': return d.groups.every((x) => x !== null)
+    case 'speed': return d.done || d.answers.every((x) => x !== null)
   }
 }
+/** Games that end on their own (the last pair found, the round over) and submit themselves. */
+export const selfSubmitting = (w: PosedWidget) => (w.type === 'match' && w.memory) || w.type === 'speed'
 export const LETTERS = 'ABCDEFGH'
 
 const isPython = (lang: string) => /^py(thon3?)?$/i.test(lang)

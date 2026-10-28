@@ -4,6 +4,7 @@ import { ArrowDown, ArrowUp, GripVertical } from 'lucide-react'
 import { Prose } from '../prose/Prose'
 import type { Draft } from './draft'
 import type { WidgetProps } from './WidgetView'
+import { t } from '../i18n'
 
 export function Order({ widget, draft, setDraft, result }: WidgetProps<Extract<Draft, { type: 'order' }>>) {
   const [drag, setDrag] = useState<number | null>(null)
@@ -20,7 +21,7 @@ export function Order({ widget, draft, setDraft, result }: WidgetProps<Extract<D
   return (
     <div>
       <div className="read"><Prose nodes={widget.prompt} /></div>
-      <ol className="mt-3 flex flex-col gap-1.5" aria-label="Items to put in order">
+      <ol className="mt-3 flex flex-col gap-1.5" aria-label={t('Items to put in order')}>
         {draft.order.map((itemIdx, pos) => {
           const right = correctPos ? correctPos[pos] === itemIdx : null
           return (
@@ -34,16 +35,16 @@ export function Order({ widget, draft, setDraft, result }: WidgetProps<Extract<D
               <div className="read min-w-0 flex-1 text-[16px] leading-[1.55] [&_p]:!m-0"><Prose nodes={widget.items[itemIdx]} /></div>
               {!locked && (
                 <span className="flex shrink-0 flex-col">
-                  <button type="button" onClick={() => move(pos, pos - 1)} disabled={pos === 0} aria-label="Move up" className="rounded p-0.5 text-muted hover:bg-hover disabled:opacity-30 cursor-pointer"><ArrowUp className="size-3.5" /></button>
-                  <button type="button" onClick={() => move(pos, pos + 1)} disabled={pos === draft.order.length - 1} aria-label="Move down" className="rounded p-0.5 text-muted hover:bg-hover disabled:opacity-30 cursor-pointer"><ArrowDown className="size-3.5" /></button>
+                  <button type="button" onClick={() => move(pos, pos - 1)} disabled={pos === 0} aria-label={t('Move up')} className="rounded p-0.5 text-muted hover:bg-hover disabled:opacity-30 cursor-pointer"><ArrowUp className="size-3.5" /></button>
+                  <button type="button" onClick={() => move(pos, pos + 1)} disabled={pos === draft.order.length - 1} aria-label={t('Move down')} className="rounded p-0.5 text-muted hover:bg-hover disabled:opacity-30 cursor-pointer"><ArrowDown className="size-3.5" /></button>
                 </span>
               )}
-              {right === false && correctPos && <span className="shrink-0 self-center font-ui text-[12px] text-muted">belongs at {correctPos.indexOf(itemIdx) + 1}</span>}
+              {right === false && correctPos && <span className="shrink-0 self-center font-ui text-[12px] text-muted">{t('belongs at {n}', { n: correctPos.indexOf(itemIdx) + 1 })}</span>}
             </li>
           )
         })}
       </ol>
-      {!locked && <p className="mt-2 text-[12px] text-muted">Drag the items, or focus one and press Alt+↑ / Alt+↓.</p>}
+      {!locked && <p className="mt-2 text-[12px] text-muted">{t('Drag the items, or focus one and press Alt+↑ / Alt+↓.')}</p>}
     </div>
   )
 }

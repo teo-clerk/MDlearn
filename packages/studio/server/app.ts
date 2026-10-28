@@ -27,6 +27,7 @@ import { buildApkg, notesOf } from './export/anki.js'
 import { sheetOf, startIdeas, ideaProgress } from './sheet.js'
 import { createFile, listHistory, readFileInfo, readVersion, saveFile, MAX_FILE_CHARS } from './editor.js'
 import { importWeb } from './import/web.js'
+import { checkChat, importChat, MAX_CHAT_CHARS } from './import/chat.js'
 import { importNotebook } from './import/notebook.js'
 import { importPdfFast, pdfPageCount } from './import/pdf-fast.js'
 import { importAnki } from './import/anki.js'
@@ -35,11 +36,14 @@ import { visualise } from './ai/visualise.js'
 import { insertAfterQuote } from './insert.js'
 import type { JobManager } from './ai/jobs.js'
 import type { AiEngine } from './ai/engine.js'
-import { createCourse, improveLesson, customJob, importPdf } from './ai/recipes.js'
+import { createCourse, improveLesson, customJob, importPdf, topicCourse } from './ai/recipes.js'
 import { BatchRunner } from './ai/batch.js'
 import type { EventBus, Envelope } from './bus.js'
 import type { SettingsStore } from './settings.js'
-import type { SessionInfo, LessonResponse, CompileResponse, PreviewResponse } from '../shared/types.js'
+import type { SessionInfo, LessonResponse, CompileResponse, PreviewResponse, Integrations } from '../shared/types.js'
+
+/** Languages with a translated help page (help.<lang>.md). */
+const HELP_LANGS = new Set(['it', 'es', 'fr', 'ca'])
 
 export interface Deps {
   version: string
@@ -94,6 +98,50 @@ export function createApp(deps: Deps): Hono {
     return c.json({ id: h.id, name: h.name, root: h.root })
   })
   app.post('/api/workspaces/imports', need('fs', o), (c) => { const h = deps.workspaces.importsFolder(); return c.json({ id: h.id, name: h.name, root: h.root }) })
+  // ---- help: the welcome tour (shown once), the tutorial folder, the help page
+  const pkgFile = (...p: string[]) => {
+    const here = dirname(fileURLToPath(import.meta.url)) // dist/server (built) or server (tsx)
+    return [join(here, '..', '..', ...p), join(here, '..', ...p)].find((f) => existsSync(f)) ?? join(here, '..', '..', ...p)
+  }
+  // a built package carries the tutorial in dist/; in the repository it is examples/showcase
+  const tutorialSource = () => [pkgFile('dist', 'tutorial'), join(pkgFile('..', '..', 'examples'), 'showcase')].find((d) => existsSync(d)) ?? pkgFile('dist', 'tutorial')
+  app.get('/api/onboarding', need('read', o), (c) => c.json(deps.settings.get().onboarding))
+  app.post('/api/onboarding', need('notes', o), async (c) => {
+    const { tourDone } = z.object({ tourDone: z.boolean() }).parse(await c.req.json())
+    return c.json(deps.settings.update((s) => ({ ...s, onboarding: { ...s.onboarding, tourDone } })).onboarding)
+  })
+  app.post('/api/workspaces/tutorial', need('fs', o), async (c) => {
+    const { reset } = z.object({ reset: z.boolean().optional() }).parse(await c.req.json().catch(() => ({})))
+    const h = deps.workspaces.tutorial(tutorialSource(), reset)
+    return c.json({ id: h.id, name: h.name, root: h.root })
+  })
+  app.get('/api/help', need('read', o), (c) => {
+    // ?lang= picks a translated help page (a fixed list, never a path); English is the fallback
+    const lang = c.req.query('lang')
+    const translated = lang && HELP_LANGS.has(lang) ? pkgFile(`help.${lang}.md`) : null
+    const file = translated && existsSync(translated) ? translated : pkgFile('help.md')
+    if (!existsSync(file)) throw new UserError('not-found', 'Help is missing from this installation.')
+    return c.json({ doc: parseDocument(readFileSync(file, 'utf8'), { path: 'help.md' }) })
+  })
+  // ---- MDlearn in other assistants (built by scripts/build-integrations.ts)
+  const integration = (f: string) => pkgFile('dist', 'integrations', f)
+  app.get('/api/integrations', need('read', o), (c) => {
+    const prompt = integration('MDLEARN_PROMPT.md')
+    if (!existsSync(prompt)) throw new UserError('not-found', 'The integrations are missing; run `npm run build -w @mdlearn/studio`.')
+    const local = capsOf(c, o).includes('fs')
+    return c.json<Integrations>({
+      prompt: readFileSync(prompt, 'utf8'),
+      ...(local ? { pluginDir: integration('claude-plugin') } : {}),
+      skillZip: existsSync(integration('mdlearn-skill.zip')), guide: existsSync(integration('MDLEARN_GUIDE.md')),
+    })
+  })
+  app.get('/api/integrations/:file{mdlearn-skill\\.zip|MDLEARN_GUIDE\\.md}', need('read', o), (c) => {
+    const name = c.req.param('file'), file = integration(name)
+    if (!existsSync(file)) throw new UserError('not-found', 'Not built yet.')
+    c.header('Content-Type', name.endsWith('.zip') ? 'application/zip' : 'text/markdown; charset=utf-8')
+    c.header('Content-Disposition', `attachment; filename="${name}"`)
+    return c.body(readFileSync(file))
+  })
   app.get('/api/fs/browse', need('fs', o), (c) => c.json(browse(c.req.query('path'))))
   app.post('/api/workspaces/upload', need('fs', o), bodyLimit({ maxSize: 200 * 1024 * 1024, onError: (c) => c.json({ error: { code: 'too-large', message: 'Upload too large (200 MB at most).' } }, 413) }), async (c) => {
     const body = await c.req.parseBody({ all: true })
@@ -262,6 +310,9 @@ export function createApp(deps: Deps): Hono {
     const { url } = z.object({ url: z.string().min(4).max(2000) }).parse(await c.req.json())
     return c.json(await importWeb(ws(c), url))
   })
+  const chatBody = z.object({ text: z.string().min(1).max(MAX_CHAT_CHARS), folder: z.string().max(200).optional() })
+  app.post('/api/w/:ws/import/chat/check', need('write', o), async (c) => { const b = chatBody.parse(await c.req.json()); return c.json(checkChat(ws(c), b.text, b.folder)) })
+  app.post('/api/w/:ws/import/chat', need('write', o), async (c) => { const b = chatBody.parse(await c.req.json()); return c.json(importChat(ws(c), b.text, b.folder)) })
   app.post('/api/w/:ws/import/file', need('write', o), bodyLimit({ maxSize: MAX_IMPORT_BYTES, onError: (cx) => cx.json({ error: { code: 'too-large', message: 'That file is larger than 100 MB.' } }, 413) }), async (c) => {
     const h = ws(c)
     const body = await c.req.parseBody()
@@ -474,12 +525,14 @@ export function createApp(deps: Deps): Hono {
       z.object({ recipe: z.literal('lesson.improve'), lesson: z.string().min(1).max(1024), focus: z.enum(['questions', 'clarity', 'lint', 'all', 'leech']).default('all'), note: z.string().max(2000).default(''),
         card: z.object({ key: z.string().max(300), title: z.string().max(200), wrong: z.array(z.string().max(300)).max(5).default([]) }).optional() }),
       z.object({ recipe: z.literal('custom'), request: z.string().min(3).max(4000), scope: z.string().max(512).default('learn') }),
+      z.object({ recipe: z.literal('course.topic'), topic: z.string().trim().min(2).max(300), level: z.enum(['beginner', 'intermediate', 'advanced']).default('beginner'),
+        language: z.string().max(40).optional(), minutes: z.number().int().min(5).max(600).default(45), notes: z.string().max(1024).optional() }),
     ]).parse(await c.req.json())
     if (deps.claudeStatus && deps.engine?.().name === 'Claude Code') {
       const st = await deps.claudeStatus()
       if (!st.available) throw new UserError('engine', st.error ?? 'Claude Code is not available.')
     }
-    const r = body.recipe === 'course.create' ? createCourse(h, body.doc) : body.recipe === 'lesson.improve' ? improveLesson(h, body.lesson, body.focus, body.note, body.card ? { cardKey: body.card.key, title: body.card.title, wrong: body.card.wrong } : undefined) : customJob(h, body.request, body.scope)
+    const r = body.recipe === 'course.topic' ? topicCourse(h, body) : body.recipe === 'course.create' ? createCourse(h, body.doc) : body.recipe === 'lesson.improve' ? improveLesson(h, body.lesson, body.focus, body.note, body.card ? { cardKey: body.card.key, title: body.card.title, wrong: body.card.wrong } : undefined) : customJob(h, body.request, body.scope)
     const { jobs: jm, engine } = jobs()
     return c.json(jm.start(h, engine, r.spec, r.preWrite ? { preWrite: r.preWrite } : {}))
   })
@@ -537,6 +590,12 @@ export function createApp(deps: Deps): Hono {
   })
   app.get('/api/python/packages', need('read', o), (c) => c.json({ version: py().version, packages: py().packageNames() }))
   app.get('/sandbox/sim.js', (c) => { c.header('Content-Security-Policy', SANDBOX_CSP); c.header('Content-Type', 'text/javascript; charset=utf-8'); c.header('Cache-Control', 'no-cache'); return c.body(sandboxFile('sim.js')) })
+  // author HTML (:::html): inline scripts and styles run, but nothing loads from the network and the frame has
+  // an opaque origin (no cookies, no API, no access to the page); data: and blob: images only
+  const HTML_CSP = "default-src 'none'; script-src 'self' 'unsafe-inline' blob:; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; media-src data: blob:; worker-src blob:; frame-ancestors 'self'; base-uri 'none'; form-action 'none'"
+  for (const [file, type] of [['html.html', 'text/html'], ['html.js', 'text/javascript']] as const) {
+    app.get(`/sandbox/${file}`, (c) => { c.header('Content-Security-Policy', HTML_CSP); c.header('Content-Type', `${type}; charset=utf-8`); c.header('Cache-Control', 'no-cache'); return c.body(sandboxFile(file)) })
+  }
 
   // ---- live events
   app.get('/api/events', need('read', o), (c) => {

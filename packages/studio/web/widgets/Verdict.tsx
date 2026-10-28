@@ -2,12 +2,13 @@
 import { Check, CircleDashed, X } from 'lucide-react'
 import type { Checked } from '@mdlearn/core'
 import { Prose } from '../prose/Prose'
+import { t } from '../i18n'
 
 export function verdictOf(r: Checked, skipped = false): { word: string; tone: 'good' | 'warn' | 'bad' | 'neutral' } {
-  if (skipped) return { word: 'Answer shown', tone: 'neutral' }
-  if (r.correct === null) return { word: 'Compare with the key ideas', tone: 'neutral' }
-  if (r.correct && r.partial) return { word: 'Nearly right', tone: 'warn' }
-  return r.correct ? { word: 'Right', tone: 'good' } : { word: 'Not quite', tone: 'bad' }
+  if (skipped) return { word: t('Answer shown'), tone: 'neutral' }
+  if (r.correct === null) return { word: t('Compare with the key ideas'), tone: 'neutral' }
+  if (r.correct && r.partial) return { word: t('Nearly right'), tone: 'warn' }
+  return r.correct ? { word: t('Right'), tone: 'good' } : { word: t('Not quite'), tone: 'bad' }
 }
 export function Verdict({ result, skipped }: { result: Checked; skipped?: boolean }) {
   const v = verdictOf(result, skipped)

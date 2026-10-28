@@ -6,6 +6,7 @@ import { Prose, type ProseContext } from '../prose/Prose'
 import { Tex } from '../prose/Tex'
 import type { Draft } from './draft'
 import type { WidgetProps } from './WidgetView'
+import { t } from '../i18n'
 
 export function Gaps({ widget, draft, setDraft, result, autoFocus, onSubmit }: WidgetProps<Extract<Draft, { type: 'gaps' }>>) {
   if (widget.type !== 'cloze' && widget.type !== 'steps') return null
@@ -21,20 +22,20 @@ export function Gaps({ widget, draft, setDraft, result, autoFocus, onSubmit }: W
       <span key={id} className="inline-flex items-baseline gap-1 align-baseline">
         {blanks.length > 1 && <span className="font-ui text-[11px] font-semibold text-muted" aria-hidden>{n}</span>}
         <input value={draft.values[id] ?? ''} disabled={!!result} autoFocus={autoFocus && id === first}
-          aria-label={`Gap ${n}${kind === 'number' ? ' (a number)' : kind === 'math' ? ' (a formula)' : ''}`}
+          aria-label={kind === 'number' ? t('Gap {n} (a number)', { n }) : kind === 'math' ? t('Gap {n} (a formula)', { n }) : t('Gap {n}', { n })}
           onChange={(e) => setDraft({ type: 'gaps', values: { ...draft.values, [id]: e.target.value } })}
           onKeyDown={(e) => { if (e.key === 'Enter' && onSubmit) { e.preventDefault(); onSubmit() } }}
           inputMode={kind === 'number' ? 'decimal' : undefined} spellCheck={false} autoComplete="off"
           size={Math.max(6, Math.min(24, (draft.values[id] ?? '').length + 2))}
           className={`h-[1.75em] rounded-[5px] border bg-raised px-1.5 font-ui text-[15px] outline-none transition-colors focus:border-text disabled:opacity-100 ${
             v ? (v.ok ? 'border-good bg-good-soft' : 'border-bad bg-bad-soft') : 'border-border-strong'}`} />
-        {v && (v.ok ? <Check className="size-4 self-center text-good" aria-label="correct" /> : (
+        {v && (v.ok ? <Check className="size-4 self-center text-good" aria-label={t('correct')} /> : (
           <span className="inline-flex items-center gap-1 self-center font-ui text-[13px] text-text">
-            <X className="size-4 text-bad" aria-label="not correct" />
+            <X className="size-4 text-bad" aria-label={t('not correct')} />
             {v.kind === 'math' ? <Tex tex={v.expected} eager /> : <span className="font-medium">{v.expected}</span>}
           </span>
         ))}
-        {v?.ok && v.note === 'typo' && <span className="self-center font-ui text-[12px] text-muted">spelling: {v.expected}</span>}
+        {v?.ok && v.note === 'typo' && <span className="self-center font-ui text-[12px] text-muted">{t('spelling: {word}', { word: v.expected })}</span>}
       </span>
     )
   }
@@ -52,7 +53,7 @@ export function Gaps({ widget, draft, setDraft, result, autoFocus, onSubmit }: W
             {widget.steps.map((s, i) => (
               <li key={i} className="relative border-l border-border py-1.5 pl-5">
                 <span className="absolute -left-[11px] top-2.5 flex size-[21px] items-center justify-center rounded-full border border-border bg-bg font-ui text-[11px] font-semibold text-muted" aria-hidden>{i + 1}</span>
-                <span className="sr-only">Step {i + 1}. </span>
+                <span className="sr-only">{t('Step {n}.', { n: i + 1 })} </span>
                 <Prose nodes={s} cx={cx} />
               </li>
             ))}

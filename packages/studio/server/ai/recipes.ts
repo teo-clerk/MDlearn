@@ -2,7 +2,9 @@
 // and any files the server prepares first (lesson scaffolds), all inside the job's undo snapshot.
 import { existsSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
+import { coursePrompt } from '@mdlearn/core'
 import { findDoc, lessonDirFor, scaffoldLessons, loadDoc, inRoot } from '@mdlearn/core/node'
+import { slugify } from '../import/common.js'
 import type { Handle } from '../workspaces.js'
 import { UserError } from '../workspaces.js'
 import type { PreWrite } from './jobs.js'
@@ -98,6 +100,26 @@ export function customJob(h: Handle, request: string, scopeRel: string): Recipe 
       prompt: `${request.trim()}
 
 Context: this is a folder of Markdown notes used with MDlearn. Lessons are \`.learn.md\` files (mdlearn-course skill); you may create or edit Markdown files only inside ${posix(relative(h.root, scope)) || '.'}/. Check every lesson you write with lint_lesson until it has no errors or warnings. Finish with a short summary.`,
+    },
+  }
+}
+
+export interface TopicCourse { topic: string; level?: string; language?: string; minutes?: number; notes?: string }
+/** A course on any topic, from notes in the folder or from general knowledge, in a new folder of its own. */
+export function topicCourse(h: Handle, o: TopicCourse): Recipe {
+  if (o.notes && o.notes.split(/[\\/]/).some((p) => p.startsWith('.'))) throw new UserError('path', 'Hidden files and folders cannot be used as notes.')
+  if (o.notes && !existsSync(inRoot(h.root, o.notes) ?? '')) throw new UserError('not-found', `No file or folder ${o.notes} in this folder.`)
+  const base = slugify(o.topic, 48)
+  let folder = base
+  for (let n = 2; existsSync(join(h.root, folder)); n++) folder = `${base}-${n}`
+  const prompt = coursePrompt({ ...o, folder, save: 'write' })
+  return {
+    spec: {
+      recipe: 'course.topic', title: `Course: ${o.topic.slice(0, 70)}`, maxTurns: 40 + 12 * Math.max(1, Math.round((o.minutes ?? 45) / 12)),
+      writeScope: [join(h.root, folder)],
+      prompt: `${prompt}
+
+Context: this is a folder used with MDlearn Studio. Write only inside ${folder}/ (create it). ${o.notes ? `You may read ${o.notes} but never edit it.` : ''}`.trim(),
     },
   }
 }

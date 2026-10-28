@@ -10,7 +10,7 @@ import {
 import { loadCourse, loadProgress, loadGoals, appendProgress, type Workspace, type Progress } from '@mdlearn/core/node'
 import { bold, dim, out, wrap, plural } from './ui.js'
 
-const MINUTES: Record<string, number> = { quiz: 0.6, cloze: 0.8, order: 1, steps: 1.5, explain: 2, code: 3 }
+const MINUTES: Record<string, number> = { quiz: 0.6, cloze: 0.8, order: 1, steps: 1.5, explain: 2, code: 3, match: 1, sort: 1, speed: 1.5 }
 
 /** Lines from stdin, one at a time; works for a person at a terminal and for piped input. */
 function lineReader(rl: Interface) {

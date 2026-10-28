@@ -16,10 +16,11 @@ import { assetUrl, docRoute, lessonRoute } from '../lib/paths'
 import { useDebounced } from '../lib/hooks'
 import { Editor, type EditorHandle, type Problem } from './Editor'
 import { snippetsFor, type Snippet } from './snippets'
+import { t, locale } from '../i18n'
 
 type Status = 'clean' | 'dirty' | 'saving' | 'saved' | 'conflict' | 'error'
 const PREVIEW_DELAY = 450
-const at = (ms: number) => new Date(ms).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+const at = (ms: number) => new Date(ms).toLocaleString(locale(), { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
 
 export default function EditPage({ ws }: { ws: string }) {
   const path = new URLSearchParams(useSearch()).get('path') ?? undefined
@@ -29,9 +30,9 @@ export default function EditPage({ ws }: { ws: string }) {
     setFile(null); setLoadError(null)
     if (path) fileApi.get(ws, path).then(setFile, setLoadError)
   }, [ws, path])
-  if (!path) return <Empty title="No file selected">Choose a file in the sidebar, then Edit.</Empty>
+  if (!path) return <Empty title={t('No file selected')}>{t('Choose a file in the sidebar, then Edit.')}</Empty>
   if (loadError) return <ErrorNote error={loadError} />
-  if (!file) return <div className="p-10"><Spinner label="Opening file" /></div>
+  if (!file) return <div className="p-10"><Spinner label={t('Opening file')} /></div>
   return <Workbench key={`${ws}:${path}`} ws={ws} initial={file} />
 }
 
@@ -106,7 +107,7 @@ function Workbench({ ws, initial }: { ws: string; initial: FileInfo }) {
     const now = await fileApi.get(ws, path)
     savedText.current = now.text; baseMtime.current = now.mtime; handle.current?.setText(now.text); setText(now.text); setStatus('clean')
   }
-  const leave = () => { if (!dirty || window.confirm('Leave without saving your changes?')) navigate(back) }
+  const leave = () => { if (!dirty || window.confirm(t('Leave without saving your changes?'))) navigate(back) }
   const insert = (s: Snippet) => handle.current?.insert(s.text)
   const [versions, setVersions] = useState<HistoryEntry[] | null>(null)
   const restore = async (v: HistoryEntry) => {
@@ -116,70 +117,70 @@ function Workbench({ ws, initial }: { ws: string; initial: FileInfo }) {
 
   const env = useMemo<BlockEnv>(() => ({
     cx: { imageSrc: (url) => assetUrl(ws, path, url), linkTo: () => null },
-    check: async (_id: string, _a: WebAnswer): Promise<Checked> => { throw new Error('Save the file to try its questions.') },
+    check: async (_id: string, _a: WebAnswer): Promise<Checked> => { throw new Error(t('Save the file to try its questions.')) },
   }), [ws, path])
   const source = tree.data?.docs.find((d) => d.lessons.some((l) => l.path === path))
 
-  const statusText = { clean: 'Saved', dirty: 'Unsaved changes', saving: 'Saving…', saved: 'Saved', conflict: 'Changed elsewhere', error: 'Not saved' }[status]
+  const statusText = { clean: t('Saved'), dirty: t('Unsaved changes'), saving: t('Saving…'), saved: t('Saved'), conflict: t('Changed elsewhere'), error: t('Not saved') }[status]
   return (
     <div className="flex h-full min-h-0 flex-col">
       <TopLeft>
-        <nav aria-label="File" className="flex min-w-0 items-center gap-2 px-1 text-[13px]">
+        <nav aria-label={t('File')} className="flex min-w-0 items-center gap-2 px-1 text-[13px]">
           <span className="truncate text-muted">{path}</span>
           <span role="status" className={`shrink-0 text-[12px] ${status === 'dirty' || status === 'conflict' || status === 'error' ? 'text-warn' : 'text-subtle'}`}>{statusText}</span>
         </nav>
       </TopLeft>
       <TopActions>
-        <Menu label="Insert" icon={Plus}>
-          {(close) => (['Questions', 'Visuals', 'Text'] as const).map((g) => {
+        <Menu label={t('Insert')} icon={Plus}>
+          {(close) => ([t('Questions'), t('Visuals'), t('Text')] as const).map((g) => {
             const items = snippetsFor(kind).filter((s) => s.group === g)
             return items.length ? <div key={g}><MenuLabel>{g}</MenuLabel>{items.map((s) => <MenuItem key={s.id} hint={s.hint} onClick={() => { insert(s); close() }}>{s.label}</MenuItem>)}</div> : null
           })}
         </Menu>
-        <Menu label="History" icon={History} onOpen={() => { setVersions(null); fileApi.history(ws, path).then(setVersions, () => setVersions([])) }}>
+        <Menu label={t('History')} icon={History} onOpen={() => { setVersions(null); fileApi.history(ws, path).then(setVersions, () => setVersions([])) }}>
           {(close) => (
             <>
-              <MenuLabel>Earlier versions</MenuLabel>
-              {versions === null && <p className="px-2.5 py-2 text-[12.5px] text-muted">Loading…</p>}
-              {versions?.length === 0 && <p className="px-2.5 py-2 text-[12.5px] text-muted">Each save keeps the version before it. None yet.</p>}
+              <MenuLabel>{t('Earlier versions')}</MenuLabel>
+              {versions === null && <p className="px-2.5 py-2 text-[12.5px] text-muted">{t('Loading…')}</p>}
+              {versions?.length === 0 && <p className="px-2.5 py-2 text-[12.5px] text-muted">{t('Each save keeps the version before it. None yet.')}</p>}
               {versions?.map((v) => <MenuItem key={v.id} hint={`${(v.size / 1024).toFixed(1)} kB`} onClick={() => { void restore(v); close() }}>{at(v.at)}</MenuItem>)}
             </>
           )}
         </Menu>
-        <Button size="sm" variant="primary" icon={status === 'saved' ? Check : Save} busy={status === 'saving'} disabled={!dirty || !canWrite} onClick={() => void save()}>Save</Button>
-        <Button size="sm" variant="ghost" onClick={leave}>Done</Button>
+        <Button size="sm" variant="primary" icon={status === 'saved' ? Check : Save} busy={status === 'saving'} disabled={!dirty || !canWrite} onClick={() => void save()}>{t('Save')}</Button>
+        <Button size="sm" variant="ghost" onClick={leave}>{t('Done')}</Button>
       </TopActions>
 
       {status === 'conflict' && (
         <div role="alert" className="flex flex-wrap items-center gap-3 border-b border-border bg-warn-soft px-4 py-2 text-[13px]">
-          <AlertTriangle className="size-4 text-warn" aria-hidden /><span className="flex-1">This file changed on disk after you opened it. Saving now would overwrite that change.</span>
-          <Button size="sm" onClick={() => void reloadFromDisk()}>Load the file as it is now</Button>
-          <Button size="sm" variant="secondary" onClick={() => void save(true)}>Save mine over it</Button>
+          <AlertTriangle className="size-4 text-warn" aria-hidden /><span className="flex-1">{t('This file changed on disk after you opened it. Saving now would overwrite that change.')}</span>
+          <Button size="sm" onClick={() => void reloadFromDisk()}>{t('Load the file as it is now')}</Button>
+          <Button size="sm" variant="secondary" onClick={() => void save(true)}>{t('Save mine over it')}</Button>
         </div>
       )}
       {status === 'error' && error && <p role="alert" className="border-b border-border bg-bad-soft px-4 py-2 text-[13px]">{error}</p>}
-      {restored && <p role="status" className="border-b border-border bg-panel px-4 py-1.5 text-[12.5px] text-muted">Showing the version from {restored}. Save to keep it, or Undo (Ctrl+Z) to go back.</p>}
+      {restored && <p role="status" className="border-b border-border bg-panel px-4 py-1.5 text-[12.5px] text-muted">{t('Showing the version from {when}. Save to keep it, or Undo (Ctrl+Z) to go back.', { when: restored })}</p>}
 
-      <div className="flex shrink-0 gap-1 border-b border-border px-3 py-1.5 min-[1100px]:hidden" role="tablist" aria-label="Editor view">
-        {(['write', 'preview'] as const).map((p) => <button key={p} role="tab" aria-selected={pane === p} onClick={() => setPane(p)} className={`h-7 rounded-[6px] px-3 text-[12.5px] font-medium cursor-pointer ${pane === p ? 'bg-active' : 'text-muted hover:bg-hover'}`}>{p === 'write' ? 'Write' : 'Preview'}</button>)}
+      <div className="flex shrink-0 gap-1 border-b border-border px-3 py-1.5 min-[1100px]:hidden" role="tablist" aria-label={t('Editor view')}>
+        {(['write', 'preview'] as const).map((p) => <button key={p} role="tab" aria-selected={pane === p} onClick={() => setPane(p)} className={`h-7 rounded-[6px] px-3 text-[12.5px] font-medium cursor-pointer ${pane === p ? 'bg-active' : 'text-muted hover:bg-hover'}`}>{p === 'write' ? t('Write') : t('Preview')}</button>)}
       </div>
       <div className="grid min-h-0 flex-1 grid-cols-1 min-[1100px]:grid-cols-2">
-        <section aria-label="Source" className={`${pane === 'write' ? 'flex' : 'hidden'} min-h-0 flex-col border-border min-[1100px]:flex min-[1100px]:border-r`}>
+        <section aria-label={t('Source')} className={`${pane === 'write' ? 'flex' : 'hidden'} min-h-0 flex-col border-border min-[1100px]:flex min-[1100px]:border-r`}>
           <div className="min-h-0 flex-1 px-3">
-            <Editor ref={handle} initial={initial.text} onChange={setText} onSave={() => void saveRef.current()} problems={problems} ariaLabel={`Markdown source of ${path}`} />
+            <Editor ref={handle} initial={initial.text} onChange={setText} onSave={() => void saveRef.current()} problems={problems} ariaLabel={t('Markdown source of {path}', { path })} />
           </div>
           <div className="shrink-0 border-t border-border px-3 py-1.5 text-[12.5px]">
             <button type="button" onClick={() => setChecksOpen((o) => !o)} aria-expanded={checksOpen} className="inline-flex items-center gap-2 text-muted hover:text-text cursor-pointer">
-              {problems.length === 0 ? <span>No problems found</span> : <span className="tabular">{errors > 0 ? `${errors} ${errors === 1 ? 'error' : 'errors'}` : ''}{errors > 0 && problems.length > errors ? ', ' : ''}{problems.length > errors ? `${problems.length - errors} warnings` : ''}</span>}
+              {problems.length === 0 ? <span>{t('No problems found')}</span> : <span className="tabular">{errors > 0 ? `${errors} ${errors === 1 ? 'error' : 'errors'}` : ''}{errors > 0 && problems.length > errors ? ', ' : ''}{problems.length > errors ? `${problems.length - errors} warnings` : ''}</span>}
             </button>
             {checksOpen && problems.length > 0 && (
               <ul className="mt-1 max-h-40 overflow-y-auto">{problems.map((p, i) => <li key={i}><button type="button" onClick={() => handle.current?.jumpTo(p.line)} className="flex w-full gap-2 rounded px-1 py-0.5 text-left hover:bg-hover cursor-pointer"><span className="w-10 shrink-0 tabular text-subtle">line {p.line}</span><span className={p.severity === 'error' ? 'text-bad' : 'text-warn'}>{p.message}</span></button></li>)}</ul>
             )}
           </div>
         </section>
-        <section aria-label="Preview" className={`${pane === 'preview' ? 'block' : 'hidden'} min-h-0 overflow-y-auto bg-bg min-[1100px]:block`}>
+        <section aria-label={t('Preview')} className={`${pane === 'preview' ? 'block' : 'hidden'} min-h-0 overflow-y-auto bg-bg min-[1100px]:block`}>
           {previewError && <p role="alert" className="m-4 text-[13px] text-bad">{previewError}</p>}
-          {!preview && !previewError && <div className="p-6"><Spinner label="Preparing the preview" /></div>}
+          {!preview && !previewError && <div className="p-6"><Spinner label={t('Preparing the preview')} /></div>}
           {preview?.kind === 'doc' && preview.doc && (
             <article className="mx-auto max-w-[760px] px-5 pb-16 pt-2" lang={typeof preview.doc.frontmatter?.lang === 'string' ? preview.doc.frontmatter.lang : undefined}>
               <div className="read"><DocBlocks blocks={preview.doc.blocks} env={env} /></div>
@@ -187,7 +188,7 @@ function Workbench({ ws, initial }: { ws: string; initial: FileInfo }) {
           )}
           {preview?.kind === 'lesson' && (preview.lesson?.lesson
             ? <LessonArticle ws={ws} lesson={preview.lesson.lesson} source={source ? { path: source.path, title: source.title } : undefined} env={env} compact />
-            : <Empty title="This lesson cannot be shown yet">Fix the errors listed under the editor.</Empty>)}
+            : <Empty title={t('This lesson cannot be shown yet')}>{t('Fix the errors listed under the editor.')}</Empty>)}
         </section>
       </div>
     </div>

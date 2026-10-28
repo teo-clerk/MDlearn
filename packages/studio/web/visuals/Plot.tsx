@@ -7,6 +7,7 @@ import { Inline, Prose } from '../prose/Prose'
 import { Tex } from '../prose/Tex'
 import { ParamSliders, initialValues, type Values } from './ParamSliders'
 import { fmt, linearTicks, logTicks } from './format'
+import { t } from '../i18n'
 
 type PlotBlock = Extract<Visual, { type: 'plot' }>
 const DASH = ['', '6 4', '2 3', '8 3 2 3']
@@ -51,7 +52,7 @@ export function Plot({ b }: { b: PlotBlock }) {
   }, [b, fns, x])
   const finite = data.ys.flat().filter((v) => Number.isFinite(v) && (b.yScale !== 'log' || v > 0))
   const H = b.height, W = width
-  if (!finite.length || !range) return <Frame b={b}><p className="py-8 text-center font-ui text-[13px] text-muted">No values to draw with these settings.</p></Frame>
+  if (!finite.length || !range) return <Frame b={b}><p className="py-8 text-center font-ui text-[13px] text-muted">{t('No values to draw with these settings.')}</p></Frame>
   let lo = range.lo, hi = range.hi
   if (lo === hi) { lo -= Math.abs(lo) * 0.1 || 1; hi += Math.abs(hi) * 0.1 || 1 }
   if (b.yScale === 'linear') { const pad = (hi - lo) * 0.06; lo = lo >= 0 && lo - pad < 0 ? 0 : lo - pad; hi += pad }
@@ -78,7 +79,7 @@ export function Plot({ b }: { b: PlotBlock }) {
   return (
     <Frame b={b}>
       <div ref={box} className="relative">
-        <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} role="img" aria-label={`Plot of ${b.curves.map((c) => c.lhs ?? 'y').join(', ')} against ${x.sym}`}
+        <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} role="img" aria-label={t('Plot of {curves} against {x}', { curves: b.curves.map((c) => c.lhs ?? 'y').join(', '), x: x.sym })}
           onPointerMove={onMove} onPointerLeave={() => setHover(null)} className="block touch-none select-none font-ui">
           {yt.map((t) => <g key={`y${t}`}><line x1={M.l} x2={W - M.r} y1={sy(t)} y2={sy(t)} stroke="var(--border)" /><text x={M.l - 6} y={sy(t)} dy="0.32em" textAnchor="end" fontSize="11" fill="var(--muted)">{fmt(t, 2)}</text></g>)}
           {xt.map((t) => <g key={`x${t}`}><line x1={sx(t)} x2={sx(t)} y1={M.t} y2={H - M.b} stroke="var(--border)" strokeDasharray="2 3" /><text x={sx(t)} y={H - M.b + 15} textAnchor="middle" fontSize="11" fill="var(--muted)">{fmt(t, 2)}</text></g>)}
@@ -99,7 +100,7 @@ export function Plot({ b }: { b: PlotBlock }) {
         )}
         <div className="flex items-center justify-between gap-3 px-1 font-ui text-[12px] text-muted">
           <span>{b.curves.length > 1 && b.curves.map((c, i) => <span key={i} className="mr-3 inline-flex items-center gap-1"><svg width="22" height="6" aria-hidden><line x1="0" x2="22" y1="3" y2="3" stroke="var(--text)" strokeWidth="2" strokeDasharray={DASH[i]} /></svg>{c.lhs ? <Tex tex={c.lhs} eager /> : `curve ${i + 1}`}</span>)}</span>
-          <span><Tex tex={x.sym} eager />{x.unit ? ` (${x.unit.replace(/\$/g, '')})` : ''}{b.xScale === 'log' ? ', log scale' : ''}</span>
+          <span><Tex tex={x.sym} eager />{x.unit ? ` (${x.unit.replace(/\$/g, '')})` : ''}{b.xScale === 'log' ? `, ${t('log scale')}` : ''}</span>
         </div>
       </div>
       <ParamSliders params={b.params} values={values} onChange={setValues} exclude={b.x} />

@@ -12,6 +12,7 @@ import { DraftCard } from './DraftCard'
 import { VisualDraftCard } from './VisualDraftCard'
 import { CardDraft } from './CardDraft'
 import type { Note } from '../../shared/types'
+import { t } from '../i18n'
 
 interface Placed { note: Note; range: Range | null; y: number }
 const GAP = 8
@@ -114,8 +115,8 @@ export function NotesPanel({ ws, doc, article, mtime }: { ws: string; doc: strin
       {isEmpty && (
         <div className="px-5 py-6 text-[13px] leading-relaxed text-muted">
           <StickyNote className="mb-2 size-5 text-subtle" strokeWidth={1.6} aria-hidden />
-          Select any passage to leave a note{canAsk ? ' or ask the AI about it' : ''}. Notes are saved beside your files, never inside them.
-          {!canAsk && engines.data && <p className="mt-2 text-[12px]">Local AI: {engines.data.local.error ?? 'not available'}</p>}
+          {canAsk ? t('Select any passage to leave a note or ask the AI about it. Notes are saved beside your files, never inside them.') : t('Select any passage to leave a note. Notes are saved beside your files, never inside them.')}
+          {!canAsk && engines.data && <p className="mt-2 text-[12px]">{t('Local AI: {status}', { status: engines.data.local.error ?? t('not available') })}</p>}
         </div>
       )}
       {wide ? (
@@ -135,7 +136,7 @@ export function NotesPanel({ ws, doc, article, mtime }: { ws: string; doc: strin
       )}
       {detached.length > 0 && (
         <div className="absolute inset-x-0 bottom-0 max-h-[40%] overflow-y-auto border-t border-border bg-panel p-3">
-          <p className="mb-2 text-[12px] font-medium text-muted">Notes whose passage changed</p>
+          <p className="mb-2 text-[12px] font-medium text-muted">{t('Notes whose passage changed')}</p>
           <div className="flex flex-col gap-2">{detached.map((p) => <NoteCard key={p.note.id} note={p.note} active={active === p.note.id} onFocus={() => setActive(p.note.id)} actions={actionsFor(p.note)} quoteFound={false} />)}</div>
         </div>
       )}

@@ -6,6 +6,7 @@ import type { Checked, DocBlock, MdNode, PosedWidget, WebAnswer } from '@mdlearn
 import { Prose, Inline, type ProseContext } from '../prose/Prose'
 import { Practice } from '../widgets/Practice'
 import { VisualBlock, VISUAL_TYPES } from '../visuals/VisualBlock'
+import { t } from '../i18n'
 
 /** "3.1 Derivation" → number "3.1" shown quietly, text "Derivation" (the number is not repeated). */
 function splitNumber(num: string | null, text: MdNode[]): { num: string | null; text: MdNode[] } {
@@ -16,7 +17,7 @@ function splitNumber(num: string | null, text: MdNode[]): { num: string | null; 
   const m = new RegExp(`^(?:§\\s*)?${num.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[.:)]?\\s+`).exec(value)
   return m ? { num, text: [{ ...first, value: value.slice(m[0].length) }, ...text.slice(1)] } : { num, text }
 }
-const WIDGETS = new Set(['quiz', 'cloze', 'order', 'explain', 'steps', 'code'])
+const WIDGETS = new Set(['quiz', 'cloze', 'order', 'explain', 'steps', 'code', 'match', 'sort', 'speed'])
 export interface BlockEnv { cx: ProseContext; check: (widgetId: string, a: WebAnswer) => Promise<Checked>; hideTitle?: string }
 
 export const DocBlocks = memo(function DocBlocks({ blocks, env }: { blocks: DocBlock[]; env: BlockEnv }) {
@@ -31,7 +32,7 @@ function Block({ b, env }: { b: DocBlock; env: BlockEnv }) {
       <H id={b.anchor} data-line={b.line} data-num={b.num ?? undefined} className="group relative">
         {num && <span className="mr-2.5 tabular font-normal text-subtle">{num}</span>}
         <Inline nodes={text} cx={env.cx} />
-        <a href={`#${b.anchor}`} aria-label="Link to this section" className="ml-1.5 inline-flex align-middle text-subtle opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100">
+        <a href={`#${b.anchor}`} aria-label={t('Link to this section')} className="ml-1.5 inline-flex align-middle text-subtle opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100">
           <Link2 className="size-4" aria-hidden />
         </a>
       </H>
@@ -52,13 +53,13 @@ function Block({ b, env }: { b: DocBlock; env: BlockEnv }) {
     return (
       <div className="my-4 rounded-[8px] border border-dashed border-border-strong px-4 py-3 font-ui text-[13px]" data-line={b.line}>
         <p className="flex items-center gap-1.5 text-muted"><TriangleAlert className="size-4 text-warn" aria-hidden />
-          {b.codes.includes('E103') ? <>Unknown block <code className="font-mono">:::{b.kind}</code>; its content is shown as text.</> : <>This {b.kind} could not be shown ({b.codes.join(', ')}). Lint the file for details.</>}
+          {b.codes.includes('E103') ? <>{t('Unknown block')} <code className="font-mono">:::{b.kind}</code>{t('; its content is shown as text.')}</> : <>{t('This {kind} could not be shown ({codes}). Lint the file for details.', { kind: b.kind, codes: b.codes.join(', ') })}</>}
         </p>
         {b.fallback && <div className="read mt-2 text-[16.5px]"><Prose nodes={b.fallback} cx={env.cx} /></div>}
       </div>
     )
   }
-  if (VISUAL_TYPES.has(b.type)) return <VisualBlock b={b as never} />
+  if (VISUAL_TYPES.has(b.type)) return <VisualBlock b={b as never} cx={env.cx} />
   if (WIDGETS.has(b.type)) {
     const w = b as unknown as PosedWidget
     return <Practice widget={w} check={(a) => env.check(w.id, a)} />

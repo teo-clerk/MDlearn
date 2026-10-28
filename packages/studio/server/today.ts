@@ -84,6 +84,7 @@ export function today(h: Handle, now = Date.now()): TodayResponse {
     streak: reviewStreakFromLog(p.reviews, now),
     totals: rep.totals,
     nextDueText: rep.nextDue ? whenText(rep.nextDue, now) : null,
+    nextDue: rep.nextDue ?? null,
     suspended: goals.suspended.length,
   }
 }

@@ -1,12 +1,13 @@
 ---
 name: mdlearn-visuals
-description: Add interactive visuals to MDlearn lessons and notes — slider plots of a formula, formulas explained term by term, step-by-step animated derivations, and small canvas simulations — written as checked Markdown blocks. Use when a lesson or section would be clearer with a picture of how a quantity behaves, when the user asks to visualise, plot, animate or simulate something, or when building a course from math-heavy notes.
+description: Add interactive visuals to MDlearn lessons and notes — slider plots of a formula, formulas explained term by term, step-by-step animations of derivations or processes, small canvas simulations, and sandboxed HTML interactives — written as checked Markdown blocks. Use when a lesson or section would be clearer with a picture of how a quantity behaves, when the user asks to visualise, plot, animate or simulate something, or when building a course from math-heavy notes.
 ---
 
 # MDlearn visual blocks
 
-Four blocks, all plain Markdown, all checked by the compiler (`lint_lesson`). They explain; they are never
-graded. Full rules: DSL_SPECIFICATION.md §8.11 (in the mdlearn-course skill).
+Five blocks, all plain Markdown, all checked by the compiler (`lint_lesson`). They explain; they are never
+graded. Full rules: DSL_SPECIFICATION.md §8.11 and §8.14 (in the mdlearn-course skill). For practice with
+motion (matching, sorting, a true/false round) use the graded games `match`, `sort`, `speed` (§8.12) instead.
 
 ## When to add one (and when not)
 
@@ -14,9 +15,14 @@ graded. Full rules: DSL_SPECIFICATION.md §8.11 (in the mdlearn-course skill).
   distribution's shape. One clear relation per plot; sliders only for parameters the learner should feel.
 - **formula** — a dense equation whose *terms* each carry a meaning worth stating (radar equation,
   Bayes, a loss function). 2–5 terms.
-- **animate** — a *derivation* or a chain of substitutions the learner should see unfold, 2–6 frames.
+- **animate** — a *derivation* or a chain of substitutions the learner should see unfold, 2–6 frames; or,
+  with Markdown frames and `{replace}`, the *stages of a process* (transmit → scatter → receive → focus),
+  one frame at a time — a frame may hold text, an image, a small table or a diagram.
 - **sim** — a *process* only motion shows (random phasor sums, gradient descent, sampling). Last resort:
   most ideas are clearer as a plot.
+- **html** — a small interactive that none of the above can express (a band picker, a drag-the-satellite
+  geometry toy, a CSS animation). Your own HTML/CSS/JS in a sandbox; it is practice only (scores are shown,
+  never recorded). Prefer a plot, a sim or a graded game whenever one fits.
 - Never decorate: a visual must carry an idea the text cannot. At most one or two per lesson card; never
   inside a question (`:::quiz` etc.).
 
@@ -86,8 +92,41 @@ api.frame(() => {
 animation frame), `onParams(fn)`, `random()` (seeded), `theme.ink / theme.muted / theme.accent`. No network,
 no DOM, no imports. Keep it under 80 lines; draw in the theme colours so it works in light and dark.
 
+Markdown frames, one at a time:
+
+```markdown
+:::animate[One radar echo, step by step]{replace}
+1. **Transmit.** The antenna sends a short chirp towards the ground.
+2. **Scatter.** Every surface element sends part of it back.
+3. **Receive.** The echo arrives after $t = 2R/c$, which gives the range.
+:::
+```
+
+Your own interactive, in a sandbox (one ```` ```html ```` block, ≤ 64 KB, inline `<style>` and `<script>`):
+
+~~~markdown
+:::html[Pick the band]
+Choose the radar band that fits the job.
+```html
+<style> button { color: var(--text); background: var(--raised); border: 1px solid var(--border-strong); border-radius: 8px; padding: 8px 14px; } </style>
+<p>Map soil moisture under a forest canopy.</p>
+<button id="l">L-band</button> <button id="x">X-band</button>
+<script>
+  document.getElementById('l').addEventListener('click', () => mdlearn.done({ score: 1, total: 1 }))
+  document.getElementById('x').addEventListener('click', () => mdlearn.done({ score: 0, total: 1 }))
+</script>
+```
+:::
+~~~
+
+Inside: the Studio's colours as CSS variables (`--text`, `--bg`, `--raised`, `--border`, `--good`, `--bad`,
+`--font-read`, …, following light/dark), `mdlearn.reducedMotion`, `mdlearn.done({ score, total })`. No
+network, no external scripts or images (use `data:` URLs); respect `prefers-reduced-motion`; keep it short.
+`{height=N}` fixes the height, `{auto}` starts it without Play.
+
 ## Check
 
 Call `lint_lesson` after adding a visual. Fix every E (the block falls back to static text otherwise) and W:
 E903 lists undeclared symbols, E905 asks for an x axis, W907 means the curve is mostly undefined with your
-default values (check units and ranges).
+default values (check units and ranges). E924/E925: an `:::html` block needs exactly one `html` fence under
+64 KB; W926: it tries to reach the network.

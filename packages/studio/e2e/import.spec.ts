@@ -12,6 +12,7 @@ const openDialog = async (page: Page, ws: string) => {
 test('import a web page, then read it', async ({ page }) => {
   const ws = await openFolder(page)
   const dialog = await openDialog(page, ws)
+  await dialog.getByRole('radio', { name: /Web page/ }).click()
   await dialog.getByLabel('Address').fill(`http://127.0.0.1:${fakePagePort()}/page`)
   await dialog.getByRole('button', { name: 'Import', exact: true }).click()
   await expect(dialog.getByText('Imported.')).toBeVisible({ timeout: 20_000 })
@@ -60,4 +61,37 @@ test('a file that is not what it says is refused with a message', async ({ page 
   await dialog.getByLabel(/Choose a Notebook file/).setInputFiles({ name: 'x.ipynb', mimeType: 'application/json', buffer: Buffer.from('nope') })
   await dialog.getByRole('button', { name: 'Import', exact: true }).click()
   await expect(dialog.getByRole('alert')).toContainText('Jupyter notebook')
+})
+
+test('import lessons a chat wrote: checked first, saved in a new folder, errors become a fix request', async ({ page }) => {
+  const ws = await openFolder(page)
+  const dialog = await openDialog(page, ws)
+  const lesson = (title: string, extra = '') => `---\ntitle: ${title}\nlevel: beginner\n---\n\n## The idea\n\nTides follow the Moon.\n\n:::cloze\nTides follow the {{Moon}}.\n:::\n${extra}`
+  const answer = `Sure! Here is your course.
+
+<!-- file: tides/course.md -->
+~~~~markdown
+# Tides
+~~~~
+
+<!-- file: tides/01-why.learn.md -->
+~~~~markdown
+${lesson('Why tides')}
+~~~~
+
+<!-- file: tides/02-broken.learn.md -->
+~~~~markdown
+${lesson('Broken', '\n## A quiz\n\n:::quiz\nWhich?\n- [ ] a\n- [ ] b\n:::\n')}
+~~~~`
+  await dialog.getByLabel("The chat's whole answer").fill(answer)
+  const files = dialog.getByRole('list', { name: 'Files in the answer' })
+  await expect(files).toContainText('tides/01-why.learn.md')
+  await expect(files).toContainText('1 card')
+  await expect(files).toContainText('1 error')
+  await expect(dialog.getByRole('button', { name: 'Copy the fix request' })).toBeVisible()
+  await dialog.getByRole('button', { name: 'Import', exact: true }).click()
+  await expect(dialog.getByRole('status')).toContainText('1 lesson in tides/')
+  await expect(dialog.getByRole('status')).toContainText('tides/02-broken.learn.md was not saved')
+  await dialog.getByRole('link', { name: 'tides/01-why.learn.md' }).click()
+  await expect(page.getByRole('heading', { name: 'Why tides' })).toBeVisible()
 })

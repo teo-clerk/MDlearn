@@ -3,6 +3,7 @@
 // the same way, `[n]____`; answers never appear in the output.
 import type { MdNode } from './ast.js'
 import { texToUnicode } from './tex.js'
+import { htmlText } from './html.js'
 
 export interface MdOptions {
   /** Label for a blank id, e.g. `[2]____`. Default: `____`. */
@@ -42,6 +43,8 @@ function block(n: MdNode, o: MdOptions): string {
       const line = `| ${cells.join(' | ')} |`
       return r === 0 ? `${line}\n|${cells.map(() => '---').join('|')}|` : line
     }).join('\n')
+    case 'htmlBlock': return toMarkdown(kids, o)
+    case 'htmlRaw': return htmlText(String(n.value))
     case 'callout': return toMarkdown(kids, o).split('\n').map((l) => `> ${l}`.trimEnd()).join('\n').replace(/^> /, `> ${String(n.kind)}: `)
     default: return inline([n], o)
   }
@@ -65,6 +68,7 @@ function inline(nodes: MdNode[], o: MdOptions): string {
       case 'image': return `[image: ${String(n.alt ?? '')}]`
       case 'blank': return o.blankLabel ? o.blankLabel(String(n.id)) : '____'
       case 'strayBlank': return '____'
+      case 'htmlRaw': return htmlText(String(n.value))
       default: return kids.length ? inline(kids, o) : ''
     }
   }).join('')

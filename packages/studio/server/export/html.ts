@@ -1,6 +1,6 @@
 // CourseAST prose → the small HTML Anki cards use. Math stays TeX in Anki's own delimiters (\( … \) and
 // \[ … \]); gaps become what the caller asks for (nothing, a cloze, or the answer).
-import type { MdNode } from '@mdlearn/core'
+import { INLINE_TAGS, htmlText, type MdNode } from '@mdlearn/core'
 
 export interface HtmlOptions {
   /** What a gap (`blank` node, `\placeholder[id]{}` in math) turns into; `tex` is true inside a formula. */
@@ -30,6 +30,9 @@ function block(n: MdNode, o: HtmlOptions): string {
     }
     case 'thematicBreak': return '<hr>'
     case 'callout': return `<blockquote>${toHtml(kids(n), o)}</blockquote>`
+    case 'htmlBlock': return `<div>${toHtml(kids(n), o)}</div>`
+    // Anki runs scripts in cards: raw HTML from a document goes in as its text only
+    case 'htmlRaw': return `<p>${esc(htmlText(String(n.value))).replace(/\n/g, '<br>')}</p>`
     default: return inline(n, o)
   }
 }
@@ -49,6 +52,8 @@ function inline(n: MdNode, o: HtmlOptions): string {
     case 'blank': return o.blank?.(String(n.id), false) ?? '____'
     case 'strayBlank': return '____'
     case 'paragraph': return inlineHtml(kids(n), o)
+    case 'htmlInline': { const t = String(n.tag); return INLINE_TAGS.has(t) && t !== 'a' ? `<${t}>${inlineHtml(kids(n), o)}</${t}>` : inlineHtml(kids(n), o) }
+    case 'htmlRaw': return esc(htmlText(String(n.value)))
     default: return n.children ? inlineHtml(kids(n), o) : ''
   }
 }

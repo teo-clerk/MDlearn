@@ -28,7 +28,9 @@ packages/studio/
     insert.ts        insert a block after a passage (explicit "Insert" action; refuses stale views)
     ai/              ollama.ts · ask.ts · judge.ts · visualise.ts (local model)
                      claude.ts · jobs.ts · guard.ts · recipes.ts · fake.ts (course jobs)
-  sandbox/           sim.html + sim.js: the simulation runner · py.html + py.js: the Python runner (own origin, own CSP)
+  sandbox/           sim.html + sim.js: the simulation runner · py.html + py.js: the Python runner · html.html + html.js:
+                     the :::html runner (each its own origin and CSP)
+  help.md            the Help page (rendered through the document pipeline)
   shared/types.ts    the API contract (types only)
   web/               React 19 + Vite 8 + Tailwind 4 + TanStack Query + zustand + wouter
   e2e/               Playwright tests (desktop + phone viewport) against a demo server
@@ -57,7 +59,8 @@ atomically, so the CLI, the MCP tutor and the Studio can study at the same time 
 | Area | Routes |
 |---|---|
 | Session | `GET /api/session` (client local/lan, capabilities) · `GET /api/engines` (local model, Claude Code) |
-| Folders | `GET /api/workspaces` · `POST /api/workspaces/open` · `GET /api/fs/browse` · `POST /api/workspaces/upload` |
+| Folders | `GET /api/workspaces` · `POST /api/workspaces/open` · `GET /api/fs/browse` · `POST /api/workspaces/upload` · `POST /api/workspaces/tutorial` (copy the tutorial into the library and open it; `reset` starts over) |
+| Help | `GET/POST /api/onboarding` (welcome tour seen) · `GET /api/help` (the Help document) |
 | Reading | `GET /api/w/:ws/tree` · `doc?path=` (ETag) · `doc/section` · `raw` · `asset` · `lesson` · `search?q=` · `POST compile` · `POST doc/check` (practice) |
 | Today & goals | `GET today` · `GET/POST goals` (daily goal, deadlines, restore suspended cards) · `POST cards/suspend` |
 | Quick cards | `GET doc/passage?path&quote` (the passage's source) · `POST cards` (adds a card to the document's my-cards lesson) |
@@ -70,7 +73,7 @@ atomically, so the CLI, the MCP tutor and the Studio can study at the same time 
 | Notes & local AI | `GET/POST notes` · `POST notes/:id/update` · `notes/:id/delete` · `POST ai/ask` · `ai/cancel` · `ai/visualise` · `POST files/insert` |
 | Course jobs | `GET/POST ai/jobs` · `GET ai/jobs/:id` · `POST ai/jobs/:id/cancel` · `undo` · `followup` |
 | Live | `GET /api/events?ws=` (SSE: fs/tree/progress/notes changes, AI deltas, job events; replay by `Last-Event-ID`) |
-| Sandbox | `GET /sandbox/sim.html`, `/sandbox/sim.js`, `/sandbox/py.html`, `/sandbox/py.js`, `/sandbox/pyodide/:file` · `GET /api/python/packages` |
+| Sandbox | `GET /sandbox/sim.html`, `/sandbox/sim.js`, `/sandbox/py.html`, `/sandbox/py.js`, `/sandbox/html.html`, `/sandbox/html.js`, `/sandbox/pyodide/:file` · `GET /api/python/packages` |
 
 Errors are `{ "error": { "code", "message" } }` with a message written for the learner.
 
@@ -119,8 +122,36 @@ access to the app) whose page has its own CSP (`default-src 'none'`, scripts onl
 from blobs, no network); the lesson's code runs in a Worker with an OffscreenCanvas, and a watchdog
 terminates it when it stops sending heartbeats (≈3 s), so an endless loop never freezes the app.
 
+`:::html` blocks (DSL §8.14) run in `/sandbox/html.html`, also `<iframe sandbox="allow-scripts">` with an
+opaque origin, under a CSP that allows inline scripts and styles but no network (`default-src 'none'`,
+images from `data:`/`blob:` only). The bootstrap waits for the author's code by `postMessage`, writes it
+behind a prelude — the Studio's colours and fonts as CSS variables, `window.mdlearn` (`theme`,
+`reducedMotion`, `done()`, `resize()`) — and reports the content height, a heartbeat and uncaught errors.
+The block starts on Play (or `{auto}`) so a document never runs code on open, and a page that stops
+answering for 5 s is removed. `mdlearn.done()` scores are shown, never recorded.
+
+**HTML in documents and lessons** (DSL §8.13). The compiler pairs allowlisted inline tags and container
+blocks into `htmlInline` / `htmlBlock` nodes, which React renders as elements with filtered attributes;
+any other block arrives as `htmlRaw` and is cleaned by DOMPurify in `web/prose/SafeHtml.tsx` (HTML + SVG
+profiles, no `style`/`script`/forms/frames, no `class`/`id` except SVG ids prefixed per block, inline
+styles reduced to the compiler's safe list, relative images through the asset route). The page CSP still
+blocks inline scripts and handlers if anything slipped through.
+
+**Games** (DSL §8.12: `match`, `match{memory}`, `sort`, `speed`) are posed without keys like every
+widget. Each move — a pair, two flipped cards, one statement — is a partial answer (`null` = not yet)
+checked through `study/check` with `practice: true` or `doc/check`, neither of which logs; the result
+holds only what that move earned (no `expected` until the round is complete). Memory and speed rounds
+submit themselves when they end. Motion (lines, flips, FLIP moves, a countdown) uses transforms only and
+follows `prefers-reduced-motion`.
+
 
 ## 6. Study tools
+
+**First run.** A five-step welcome tour (`web/help/Tour.tsx`) outlines the sidebar parts it describes the
+first time a folder opens, as a bottom sheet on a phone; finishing or skipping saves
+`onboarding.tourDone` in `studio.json`. Help (`?`, the sidebar, the command palette) replays it, opens the
+interactive tutorial — `examples/showcase`, copied by the build to `dist/tutorial` and by the server into
+`<library>/MDlearn Tutorial` so answers and notes never touch the app's files — and renders `help.md`.
 
 **Today** (the home page of a folder) shows the session to do now with a Start button, how much of the
 daily goal is done, a 7-day forecast of reviews, a 26-week heatmap, minutes studied (attempt timestamps in
@@ -240,6 +271,7 @@ running MDlearn, not a phone on `--lan`.
 
 | Source | What happens |
 |---|---|
+| From a chat | Paste what ChatGPT, Gemini or Claude.ai wrote with the MDlearn prompt ([CHAT_PROMPT.md](CHAT_PROMPT.md)). The answer is split at its `<!-- file: path -->` lines (raw or fenced, chat text around it ignored; paths kept inside the folder and made `.learn.md`), every lesson is compiled where it will live **before anything is written**, and the dialog lists each file with its cards or errors. Import saves the files without errors in one new course folder (the chat's own folder name, made unique); files with errors are not saved, and **Copy the fix request** gives a message naming each flagged line with what it means, to paste back into the chat. `POST /api/w/:ws/import/chat/check` and `/import/chat` (`write`) |
 | Web page | The server fetches it (http/https, 5 MB, 15 s), keeps the article (Readability), writes KaTeX/MathJax back as `$…$`, keeps tables and code, saves up to 20 pictures into `assets/`, and writes `imports/<title>.md` with the source address |
 | PDF, quick | `pdftohtml -xml` (poppler): headings by font size, paragraphs by spacing, lists by indentation, running headers/footers and page numbers dropped, hyphenated words joined; formulas come out as plain text and the dialog says so |
 | PDF, high quality | The PDF is kept in `imports/source/` and a Claude job reads it in 20-page ranges and writes Markdown with LaTeX into one new file (it may write nothing else) |
@@ -248,7 +280,19 @@ running MDlearn, not a phone on `--lan`.
 
 Imports never replace a file (a second import gets `-2`). They need `write`; the high-quality PDF also needs `ai`.
 
-## 13. A course for the whole folder
+## 13. A course for the whole folder, or on any topic
+
+AI Studio → *Create a course* → **Any topic**: a topic, level, study time, language and optional notes. The job
+(`course.topic`) writes a `course.md` overview and the lessons into a new folder named after the topic, with
+the same fixed prompt the MCP server's `create_course` uses (`coursePrompt` in core): from the notes when
+given (read, never edited), otherwise from well-established knowledge with doubtful claims flagged
+`<!-- added: verify … -->` and sources listed. Its write scope is that new folder only.
+
+**Settings → Use MDlearn in other apps** (`GET /api/integrations`, files under `/api/integrations/…`) shows the
+Claude Code plugin's install commands (on the computer running Studio only), the Claude.ai skill download, and
+the prompt for other chats; `scripts/build-integrations.ts` builds them into `dist/integrations/` on every build.
+Studio's own AI jobs start the MCP server with `MDLEARN_READONLY=1`, so every write goes through the job's guard.
+
 
 AI Studio → *Whole folder* lists the documents without lessons (words, planned lessons), lets you tick them and
 choose Haiku, Sonnet or Opus, then builds them **one after another** as ordinary course jobs. The plan is saved in
@@ -256,27 +300,50 @@ choose Haiku, Sonnet or Opus, then builds them **one after another** as ordinary
 takes back the unfinished skeletons of cut-short jobs and does the rest — finished documents are not repeated.
 One batch runs at a time.
 
-## 14. Security
+## 14. Settings: appearance and language
+
+**Settings** (`/w/:ws/settings`, the gear in the sidebar footer, or Ctrl+K → *Settings*) holds the per-device
+choices; they live in `localStorage` and `public/theme.js` applies them before the first paint.
+
+- **Theme**: light, dark or the system's (the sidebar's three buttons do the same).
+- **Accent colour**: graphite (the default), blue, green, violet, amber, rose, or any colour from the picker.
+  `web/lib/accent.ts` turns one hue into `--accent`, `--accent-ink`, `--accent-soft`, `--on-accent` and `--focus`
+  for each theme (OKLCH, gamut-clamped), each checked for 4.5:1 contrast (3:1 for focus rings); they are set as
+  `--accent-l` / `--accent-d` … on `<html>`, and `app.css` falls back to graphite without them. Buttons, focus
+  rings, the text cursor, selections and the progress bars use it.
+- **Language**: English, Italiano, Español, Français, Català. `web/i18n/`: the English text is the key
+  (`t('Study now')`, `tp(n, '{n} card', '{n} cards')` with CLDR plurals); the dictionary loads before the app
+  module, and changing the language reloads the page. Dates and numbers follow it (`Intl` with `locale()`), the
+  Help page has a translation per language (`help.<lang>.md`, `GET /api/help?lang=`), and the server's fixed
+  error messages are translated by the web client. The course form and the copied chat prompt default to the
+  interface language. `test/i18n.test.ts` collects every key from the source and fails on a missing
+  translation, a lost `{placeholder}` or a missing plural form. The CLI, the MCP tutor and lesson content stay
+  in their own language.
+
+## 15. Security
 
 | Threat | Defence |
 |---|---|
 | Another website in your browser (CSRF, DNS rebinding) | Host allowlist; every change needs same-origin `Origin`/`Sec-Fetch-Site`, the `X-MDL: 1` header and a JSON (or multipart) body; no CORS; GET never changes anything |
 | Other devices on the network | off by default (bound to 127.0.0.1); `--lan` binds 0.0.0.0 and requires a 32-byte token (link/QR → HttpOnly, SameSite=Strict cookie); LAN clients can read, study, take notes and ask the local model — not open folders, write files or run Claude jobs (`--lan-full` to allow). Plain HTTP: use trusted networks |
-| Malicious Markdown / uploads | compiler drops raw HTML and unsafe URLs; React renders text; KaTeX trust allowlist; Mermaid `strict`; uploads limited to Markdown/text/images, 2 MB each, sanitised relative paths |
+| Malicious Markdown / uploads | the compiler keeps only allowlisted HTML tags and attributes (other blocks are sanitised by DOMPurify in the browser, scripts/styles/frames/forms/handlers removed, E107) and drops unsafe URLs; the page CSP forbids inline scripts and handlers; React renders text; KaTeX trust allowlist; Mermaid `strict`; uploads limited to Markdown/text/images, 2 MB each, sanitised relative paths |
 | Path traversal | every path goes through `realPath`-based `inRoot` (symlinks and dangling links resolved), hidden folders refused; job ids must be UUIDs; undo only restores files inside the folder |
 | AI jobs | scoped writes (folder or single file, `.md` only, `.git/.claude/.mdlearn` protected), folder-only reads, no shell, no network tools, snapshots + undo |
 | Imports | the web importer accepts only http/https without credentials, caps size and time, never follows into other schemes; files are written with `wx` (never replacing) inside `inRoot`; PDFs are parsed by poppler in a temp folder; uploads ≤ 100 MB, `write` capability; the editor only saves existing `.md` files inside the folder (hidden folders refused) with a stale-file check |
-| Simulations and Python | opaque-origin sandbox, own CSP without network, Worker + watchdog; the server only serves allow-listed Pyodide files and caches them atomically |
+| Simulations, Python and `:::html` | opaque-origin sandboxes, own CSP without network; simulations and Python in a Worker + watchdog, `:::html` started on demand + heartbeat watchdog; the server only serves allow-listed Pyodide files and caches them atomically |
+| Answer keys | games and questions reach the browser without keys; single moves are checked on the server and reveal only their own result |
 | Large inputs | JSON bodies ≤ 2 MB, uploads ≤ 200 MB / 2,000 files, answer and note sizes validated with zod, linear-time text normalisation |
 
-## 15. Tests
+## 16. Tests
 
-`npm test` (Vitest, ~390 tests: core incl. analytics and goals; CLI; MCP; the server — security headers, path
+`npm test` (Vitest, ~420 tests: core incl. analytics and goals; CLI; MCP; the server — security headers, path
 guards, redaction, study, Today, quick cards, the Python file cache, the knowledge index, Ask with a fake Ollama
 (download, indexing, retrieval, citations), cheat sheets, the Anki writer and importer (round trip), every
 importer, the editor's save/conflict/history rules, batches with the scripted engine; and the browser-side
-helpers: cloze blanks, term planning, map layout, Python error messages) and
+helpers: cloze blanks, term planning, map layout, Python error messages, every translation, accent contrast) and
 `npm run test:e2e -w @mdlearn/studio` (Playwright against a demo server with a stand-in Ollama, desktop and
 phone: reading, search, source view, study sessions, Today and deadlines, quick cards, Python blocks and graded
 exercises (including a runaway loop), formulas/glossary/hovers/links/map, Ask, cheat sheet and Anki download,
-editor save/conflict/insert/new note, the four importers, a batch course and its undo, notes, AI jobs, visuals).
+editor save/conflict/insert/new note, the four importers, a batch course and its undo, notes, AI jobs, visuals,
+the four games played to a verdict, safe HTML that must not execute, the `:::html` sandbox, the welcome tour,
+Help and the tutorial, the interface in Italian and accent colours in both themes, and a no-sideways-scrolling check of every page in light and dark).

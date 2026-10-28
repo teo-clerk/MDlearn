@@ -105,7 +105,10 @@ const ollama = createServer((req, res) => {
 }).listen(0)
 await new Promise((r) => ollama.once('listening', r))
 writeFileSync(join(here, '.ollama-port'), String(ollama.address().port))
-const settingsFile = join(mkdtempSync(join(tmpdir(), 'mdl-e2e-cfg-')), 's.json')
-writeFileSync(settingsFile, JSON.stringify({ ollama: { url: `http://127.0.0.1:${ollama.address().port}`, model: 'qwen3:8b', embedModel: 'embeddinggemma' } }))
+const cfgDir = mkdtempSync(join(tmpdir(), 'mdl-e2e-cfg-'))
+const settingsFile = join(cfgDir, 's.json')
+// the welcome tour is tested on its own (onboarding.spec); the library (tutorial, uploads) stays in the temp folder
+writeFileSync(settingsFile, JSON.stringify({ ollama: { url: `http://127.0.0.1:${ollama.address().port}`, model: 'qwen3:8b', embedModel: 'embeddinggemma' },
+  libraryDir: join(cfgDir, 'library'), onboarding: { tourDone: true } }))
 const s = await startStudio({ root, port: 4799, fakeAi: true, settingsFile })
 console.log(`e2e studio on ${s.url} (folder ${root})`)

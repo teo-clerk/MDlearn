@@ -8,6 +8,7 @@ import { DocBlocks, type BlockEnv } from '../reader/DocBlocks'
 import { Inline } from '../prose/Prose'
 import { docRoute } from '../lib/paths'
 import { prettyTitle } from '../lib/title'
+import { t } from '../i18n'
 
 type L = NonNullable<LessonResponse['lesson']>
 export function LessonArticle({ ws, lesson: l, source, env, compact }: { ws: string; lesson: L; source?: { path: string; title: string }; env: BlockEnv; compact?: boolean }) {
@@ -29,7 +30,7 @@ export function LessonArticle({ ws, lesson: l, source, env, compact }: { ws: str
           <section key={c.id} id={c.id} className="mt-10 border-t border-border pt-6">
             <h2 className="!mt-0"><Inline nodes={[{ type: 'text', value: prettyTitle(c.title) }]} /></h2>
             {reads.length > 0 && source && (
-              <p className="font-ui text-[12.5px] text-muted">From {reads.map((r, i) => <Link key={i} href={`${docRoute(ws, source.path)}&section=${encodeURIComponent(r.section)}`} className="underline decoration-border-strong underline-offset-2 hover:text-text">§{r.section}{r.title ? ` ${r.title}` : ''}</Link>).reduce<React.ReactNode[]>((acc, x, i) => (i ? [...acc, ', ', x] : [x]), [])}</p>
+              <p className="font-ui text-[12.5px] text-muted">{t('From')} {reads.map((r, i) => <Link key={i} href={`${docRoute(ws, source.path)}&section=${encodeURIComponent(r.section)}`} className="underline decoration-border-strong underline-offset-2 hover:text-text">§{r.section}{r.title ? ` ${r.title}` : ''}</Link>).reduce<React.ReactNode[]>((acc, x, i) => (i ? [...acc, ', ', x] : [x]), [])}</p>
             )}
             {env && <DocBlocks blocks={c.blocks.map((b) => ({ ...b, line: 0 })) as DocBlock[]} env={env} />}
           </section>

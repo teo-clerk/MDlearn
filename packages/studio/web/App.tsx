@@ -16,6 +16,8 @@ const MapPage = lazy(() => import('./knowledge/MapPage'))
 const AskPage = lazy(() => import('./knowledge/AskPage'))
 const SheetPage = lazy(() => import('./knowledge/SheetPage'))
 const EditPage = lazy(() => import('./editor/EditPage'))
+const HelpPage = lazy(() => import('./help/HelpPage'))
+const SettingsPage = lazy(() => import('./settings/SettingsPage'))
 
 function Workspace() {
   const { ws } = useParams<{ ws: string }>()
@@ -34,6 +36,8 @@ function Workspace() {
           <Route path="/w/:ws/formulas"><FormulasPage ws={ws} /></Route>
           <Route path="/w/:ws/glossary"><GlossaryPage ws={ws} /></Route>
           <Route path="/w/:ws/map"><MapPage ws={ws} /></Route>
+          <Route path="/w/:ws/help"><HelpPage ws={ws} /></Route>
+          <Route path="/w/:ws/settings"><SettingsPage /></Route>
           <Route><TodayPage ws={ws} /></Route>
         </Switch>
       </Suspense>

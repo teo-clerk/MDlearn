@@ -8,6 +8,7 @@ import type { Root, RootContent, PhrasingContent, Html } from 'mdast'
 import { stage0 } from './stage0.js'
 import { processor } from './parser.js'
 import { blockBuilder, type SourceResolver } from './blocks.js'
+import { CONTAINER_TAGS, groupFlowHtml, summaryMarkdown } from './html.js'
 import { outlineDoc, type DocOutline } from './importer.js'
 import type { Code, Diagnostic } from './registry.js'
 import type { DocBlock, MdNode } from './ast.js'
@@ -42,14 +43,17 @@ export function parseDocument(source: string, opts: ParseDocumentOptions = {}): 
   const lang = typeof frontmatter?.lang === 'string' ? frontmatter.lang : 'en'
   const outline = outlineDoc(source, path)
   const byLine = new Map(outline.sections.map((s) => [s.startLine, s]))
-  const { clean, toBlocks } = blockBuilder({ s0, macros, lang, diag, resolveSource: opts.resolveSource, document: true, ...(opts.checkJs ? { checkJs: opts.checkJs } : {}),
+  const { clean, cleanAll, toBlocks } = blockBuilder({ s0, macros, lang, diag, resolveSource: opts.resolveSource, document: true, ...(opts.checkJs ? { checkJs: opts.checkJs } : {}),
     ...(typeof frontmatter?.source === 'string' ? { source: frontmatter.source } : {}) })
   const slugger = new GithubSlugger()
 
   const tree = processor.parse(s0.text) as Root
   let section = 'intro'
-  const build = (nodes: RootContent[]): DocBlock[] => {
+  // <details> keeps its own handling below (its body may hold headings); other containers are paired here
+  const containers = new Set([...CONTAINER_TAGS].filter((t) => t !== 'details'))
+  const build = (all: RootContent[]): DocBlock[] => {
     const out: DocBlock[] = []
+    const nodes = groupFlowHtml(all, containers)
     for (let i = 0; i < nodes.length; i++) {
       const n = nodes[i]
       const line = lineOf(n)
@@ -57,7 +61,7 @@ export function parseDocument(source: string, opts: ParseDocumentOptions = {}): 
         const s = byLine.get(line)
         const anchor = s?.anchor ?? slugger.slug(toString(n))
         section = anchor
-        out.push({ type: 'heading', depth: n.depth, anchor, num: s?.num ?? null, text: n.children.flatMap((c) => clean(c, null)), line })
+        out.push({ type: 'heading', depth: n.depth, anchor, num: s?.num ?? null, text: cleanAll(n.children, null), line })
         continue
       }
       if (n.type === 'html' && /^\s*<details[\s>]/i.test(n.value)) {
@@ -95,9 +99,8 @@ export function parseDocument(source: string, opts: ParseDocumentOptions = {}): 
   }
   /** Summary HTML → phrasing: tags such as <strong> become Markdown first, then parsed. */
   function phrasing(html: string): MdNode[] {
-    const md = html.replace(/<\/?(strong|b)>/gi, '**').replace(/<\/?(em|i)>/gi, '*').replace(/<code>([\s\S]*?)<\/code>/gi, '`$1`').replace(/<[^>]+>/g, '').trim()
-    const para = (processor.parse(md) as Root).children[0]
-    return para && 'children' in para ? (para.children as PhrasingContent[]).flatMap((c) => clean(c, null)) : []
+    const para = (processor.parse(summaryMarkdown(html)) as Root).children[0]
+    return para && 'children' in para ? cleanAll(para.children as PhrasingContent[], null) : []
   }
 
   const blocks = build(tree.children)

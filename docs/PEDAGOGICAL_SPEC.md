@@ -258,8 +258,20 @@ Kim, Jia, McLaughlin, & Bier, 2015; correlational) **[E]**.
 | `explain` | self-explanation, free recall, prediction | Constructive | causal "why" knowledge, integration | typing or "Can't recall" required; idea-unit self-scoring |
 | `steps` | worked examples, fading, completion | Active → Constructive | procedures, derivations, calculations | revealed one step at a time; faded steps |
 | `code` | doing, generation, immediate test feedback | Constructive / Interactive | programming skills | tests per assertion; solution after an attempt |
+| `match` | paired-associate retrieval (recognition), discrimination between similar terms | Active → Constructive | symbols and meanings, terms and definitions, causes and effects | 3–8 pairs; seeded shuffle; one swap rated Hard |
+| `match{memory}` | the same pairs with a spatial-memory layer; a low-stakes warm-up **[H]** | Active | a first pass over new vocabulary | misses counted by the server; many misses rated Hard |
+| `sort` | categorisation; comparing items across categories, as in interleaved practice (Kornell & Bjork, 2008) | Constructive | classes, families, "which of these is…" | 2–4 groups, 4–12 items; one misplaced rated Hard |
+| `speed` | fast true/false retrieval with immediate feedback per statement **[H]** | Active | facts with common false versions (misconceptions) | untimed unless `{time}`; ≥ 80 % passes; feedback under false statements |
 | `::hint` | scaffolding; the assistance dilemma (Wood, Bruner, & Ross, 1976; Koedinger & Aleven, 2007) | — | a known stumbling block | progressive; author hints rate Hard |
 | callouts | signalling (`important`), misconception warning, optional elaboration (`tip{fold}`) | Passive | key point, pitfall, intuition | — |
+
+**Games are questions with motion, not rewards.** Match, sort and speed rounds are graded and scheduled
+exactly like the other widgets; their animation shows what happened (a pair joined, an item placed, a
+statement judged) and never stands in for feedback. No points, badges or leaderboards: extrinsic
+rewards for an activity people already find interesting can lower their interest in it (Deci, Koestner,
+& Ryan, 1999) **[E]**. A timer is opt-in (`{time}`) because time pressure helps fluency practice on
+known facts but hurts first learning and anxious learners **[H]**. Sandboxed `:::html` games and visual
+blocks are never graded: their score is self-reported by the page and cannot be checked.
 
 **Self-scoring with idea units.** Learners overrate their own recall; showing the correct answer split
 into idea units reduces that overconfidence (Lipko et al., 2009) but does not remove it (Dunlosky &

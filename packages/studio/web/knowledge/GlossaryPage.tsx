@@ -10,6 +10,7 @@ import { Empty, ErrorNote, Spinner } from '../ui/primitives'
 import { BuildNote, Frame, SearchField } from './Frame'
 import { useDebounced } from '../lib/hooks'
 import type { GlossaryTerm } from '../../shared/types'
+import { t, tp } from '../i18n'
 
 const letterOf = (t: string) => { const c = t.replace(/^[^\p{L}\p{N}]+/u, '').slice(0, 1).toUpperCase(); return /\p{L}/u.test(c) ? c : '#' }
 const plainStart = (t: string) => t.replace(/^[^\p{L}\p{N}]+/u, '')
@@ -29,21 +30,21 @@ export default function GlossaryPage({ ws }: { ws: string }) {
   }, [res.data])
   const total = res.data?.terms.length ?? 0
   return (
-    <Frame title="Glossary" hint={res.data ? <span className="tabular">{total} {total === 1 ? 'term' : 'terms'} defined in your documents</span> : undefined}>
+    <Frame title={t('Glossary')} hint={res.data ? <span className="tabular">{tp(total, '{n} term defined in your documents', '{n} terms defined in your documents')}</span> : undefined}>
       <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2">
-        <SearchField value={q} onChange={setQ} placeholder="Search terms and meanings" label="Search the glossary" />
-        <label className="flex cursor-pointer items-center gap-1.5 text-[13px] text-muted" title="Lines written as “term: text” are as often headings as definitions"><input type="checkbox" checked={loose} onChange={(e) => setLoose(e.target.checked)} className="accent-[var(--accent)]" />Include looser matches</label>
+        <SearchField value={q} onChange={setQ} placeholder={t('Search terms and meanings')} label={t('Search the glossary')} />
+        <label className="flex cursor-pointer items-center gap-1.5 text-[13px] text-muted" title={t('Lines written as “term: text” are as often headings as definitions')}><input type="checkbox" checked={loose} onChange={(e) => setLoose(e.target.checked)} className="accent-[var(--accent)]" />{t('Include looser matches')}</label>
       </div>
       <BuildNote status={res.data?.status} />
-      {res.isLoading && <Spinner label="Collecting terms" />}
+      {res.isLoading && <Spinner label={t('Collecting terms')} />}
       {res.error && <ErrorNote error={res.error} retry={() => res.refetch()} />}
       {res.data && total === 0 && !res.data.status.building && (
-        <Empty icon={BookA} title={query ? 'No term matches' : 'No definitions found'}>
-          {query ? 'Try another word.' : 'Terms written as “**term** is …”, “**term**: …” or in a Term | Meaning table appear here.'}
+        <Empty icon={BookA} title={query ? t('No term matches') : t('No definitions found')}>
+          {query ? t('Try another word.') : t('Terms written as “**term** is …”, “**term**: …” or in a Term | Meaning table appear here.')}
         </Empty>
       )}
       {groups.length > 1 && (
-        <nav aria-label="Letters" className="mb-4 flex flex-wrap gap-1">
+        <nav aria-label={t('Letters')} className="mb-4 flex flex-wrap gap-1">
           {groups.map(([l]) => <a key={l} href={`#g-${l === '#' ? 'other' : l}`} className="inline-flex h-6 min-w-6 items-center justify-center rounded-[5px] px-1 text-[12.5px] text-muted hover:bg-hover hover:text-text">{l}</a>)}
         </nav>
       )}

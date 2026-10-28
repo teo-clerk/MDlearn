@@ -23,6 +23,9 @@ interface UiState {
   togglePanel(open?: boolean): void
   setPanelTab(t: PanelTab): void
   setPalette(open: boolean): void
+  /** The welcome tour, open now (first run, or replayed from Help). */
+  tour: boolean
+  setTour(open: boolean): void
 }
 const saved = (): Theme => { try { const t = localStorage.getItem('mdl-theme'); return t === 'light' || t === 'dark' ? t : 'system' } catch { return 'system' } }
 const wide = () => typeof window === 'undefined' || window.matchMedia('(min-width: 1100px)').matches
@@ -33,6 +36,8 @@ export const useUi = create<UiState>((set) => ({
   panel: wide(),
   panelTab: 'outline',
   palette: false,
+  tour: false,
+  setTour: (tour) => set({ tour }),
   importOpen: false,
   setImportOpen: (importOpen) => set({ importOpen }),
   termHints: (() => { try { return localStorage.getItem('mdl-term-hints') !== '0' } catch { return true } })(),

@@ -74,6 +74,8 @@ export async function startStudio(opts: StudioOptions = {}): Promise<Studio> {
   if (!opts.dev) {
     app.get('*', (c) => {
       const p = new URL(c.req.url).pathname
+      // an unknown API address is an error, not the web app
+      if (p.startsWith('/api/')) return c.json({ error: { code: 'not-found', message: 'No such API route.' } }, 404)
       const file = join(WEB_DIST, p === '/' ? 'index.html' : p)
       const safe = file.startsWith(WEB_DIST) && existsSync(file) && statSync(file).isFile() ? file : join(WEB_DIST, 'index.html')
       if (!existsSync(safe)) return c.text('The web app is not built. Run `npm run build -w @mdlearn/studio`.', 500)

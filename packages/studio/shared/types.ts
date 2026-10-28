@@ -95,6 +95,8 @@ export interface TodayResponse {
   streak: number
   totals: { cards: number; seen: number; due: number; reviews: number }
   nextDueText: string | null
+  /** ISO time of the next review (the browser phrases it in the interface language). */
+  nextDue: string | null
   suspended: number
 }
 export interface GoalsInfo { dailyGoal: number; deadlines: { scope: string; date: string; label?: string }[]; suspended: string[] }
@@ -138,7 +140,15 @@ export interface PreviewResponse { kind: 'doc' | 'lesson'; doc?: DocResponse; le
 
 // ---- importers
 export interface ImportedFile { path: string; kind: 'document' | 'lesson' | 'asset' | 'job' }
-export interface ImportResult { files: ImportedFile[]; warnings: string[]; summary: string; /** A Claude job started for a high-quality import. */ jobId?: string }
+export interface ImportResult { files: ImportedFile[]; warnings: string[]; summary: string; /** A Claude job started for a high-quality import. */ jobId?: string; /** For a chat import with errors: the message that asks the chat to fix them. */ fix?: string }
+/** MDlearn for other assistants: the prompt for chats, where the Claude Code plugin is, what can be downloaded. */
+export interface Integrations { prompt: string; pluginDir?: string; skillZip: boolean; guide: boolean }
+/** A pasted chat answer, checked before anything is written. */
+export interface ChatCheck {
+  folder: string
+  files: { path: string; kind: 'lesson' | 'document'; cards: number; errors: number; warnings: number; lines: string[]; exists: boolean }[]
+  fix: string
+}
 
 // ---- course for a whole folder
 export interface BatchCandidate { path: string; title: string; words: number; lessons: number }

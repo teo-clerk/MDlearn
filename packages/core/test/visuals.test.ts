@@ -114,9 +114,12 @@ describe('animate', () => {
     expect(a.frames[1].tex).toContain('(4\\pi)^2 R^4')
     expect(JSON.stringify(a.frames[0].caption)).toContain('Power density at the target.')
   })
-  it('needs two frames, each with a formula', () => {
+  it('needs two frames; a frame is a formula with a caption or any Markdown (v1.3)', () => {
     expect(codes(':::animate\n1. $$x$$ one\n:::')).toContain('E911')
-    expect(codes(':::animate\n1. $$x$$ one\n2. just words\n:::')).toContain('E901')
+    expect(codes(':::animate\n1. $$x$$ one\n2. just words\n:::')).not.toContain('E901')
+    const b = blocks(':::animate[States]{replace}\n1. **Pulse** leaves the antenna.\n2. $$t = 2R/c$$ The echo returns.\n:::')[0]
+    expect(b).toMatchObject({ type: 'animate', replace: true, frames: [{ caption: [{ type: 'paragraph' }] }, { tex: 't = 2R/c' }] })
+    expect((b as { frames: { tex?: string }[] }).frames[0].tex).toBeUndefined()
   })
 })
 

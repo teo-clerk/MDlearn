@@ -35,7 +35,7 @@ describe('redactWidget', () => {
     const all = loadCourse(learn).flatMap((l) => l.lesson?.cards.flatMap((c) => c.blocks.filter(askable)) ?? [])
     expect(all.length).toBeGreaterThan(100)
     for (const w of all) expect(keysIn(redactWidget(w)), w.id).toEqual([])
-  })
+  }, 60_000) // compiles the whole curriculum (247 lessons)
   it('shows quiz options and order items in the same seeded order as the terminal', () => {
     const q = loc('quiz').widget as Extract<Block, { type: 'quiz' }>
     const r = redactWidget(q)

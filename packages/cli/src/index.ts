@@ -2,9 +2,10 @@
 // mdlearn — study from the terminal, and author lessons for MDlearn.
 import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync, readdirSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { parseArgs } from 'node:util'
-import { formatDiagnostic, severityOf, sectionText, studyQueue, report, whenText, displayTitle, leeches, type Lesson } from '@mdlearn/core'
-import { compileFile, workspace, curriculumStatus, findDoc, loadDoc, planFor, loadCourse, loadProgress, loadGoals, scaffoldLessons, type Workspace } from '@mdlearn/core/node'
+import { formatDiagnostic, severityOf, sectionText, studyQueue, report, whenText, displayTitle, leeches, splitBundle, planBundle, fixMessage, type Lesson } from '@mdlearn/core'
+import { compileFile, compileSource, inRoot, workspace, curriculumStatus, findDoc, loadDoc, planFor, loadCourse, loadProgress, loadGoals, scaffoldLessons, type Workspace } from '@mdlearn/core/node'
 import { outlineText } from './author.js'
 import { reviewSession } from './session.js'
 import { bold, dim, out, fail, plural, closest, wrap } from './ui.js'
@@ -30,6 +31,11 @@ Write lessons
   lint [file|folder]     Check lessons; shows errors and warnings (default: learn/)
   build <file>           Print a lesson as validated JSON
   errata                 Corrections to the source collected from lessons
+
+Use MDlearn from other assistants
+  setup                  How to add MDlearn to Claude Code, Claude.ai, ChatGPT or any chat
+  prompt [--full]        Print the prompt for chats without tools (--full: the whole guide)
+  import-chat <file|->   Save the lessons a chat wrote (checked first; prints a fix request)
 
 Run "mdlearn <command> --help" for its options.
 The curriculum root is the nearest folder with a learn/ folder, or --root <dir>, or $MDLEARN_ROOT.`
@@ -60,6 +66,14 @@ During a session: ? = hint, s = show the answer, q = finish now.`,
   Exit code 1 when there are errors.`,
   build: 'mdlearn build <file> [-o out.json]',
   errata: 'mdlearn errata [--kind fix|added] [--json]',
+  setup: 'mdlearn setup   prints the install steps for Claude Code, Claude.ai and other chats',
+  prompt: `mdlearn prompt [--full]
+  Prints the MDlearn prompt to paste into ChatGPT, Gemini, Claude.ai or a Custom GPT's instructions.
+  --full prints the whole guide instead (to attach as a file). e.g. mdlearn prompt | wl-copy`,
+  'import-chat': `mdlearn import-chat <file|-> [--to folder] [--root dir]
+  Reads a chat's answer (a file, or - for stdin), splits it at its <!-- file: path --> lines, checks every
+  lesson, and saves those without errors in a new course folder (never replacing a file).
+  When something must be fixed, prints the message to paste back into the chat.`,
 }
 
 const { values: opt, positionals } = parseArgs({
@@ -67,7 +81,7 @@ const { values: opt, positionals } = parseArgs({
   options: {
     root: { type: 'string' }, json: { type: 'boolean' }, verbose: { type: 'boolean' }, quiet: { type: 'boolean' }, all: { type: 'boolean' },
     o: { type: 'string' }, target: { type: 'string' }, limit: { type: 'string' }, scope: { type: 'string' }, 'max-words': { type: 'string' },
-    'new-cards': { type: 'string' }, due: { type: 'boolean' }, kind: { type: 'string' }, help: { type: 'boolean', short: 'h' },
+    'new-cards': { type: 'string' }, due: { type: 'boolean' }, kind: { type: 'string' }, help: { type: 'boolean', short: 'h' }, full: { type: 'boolean' }, to: { type: 'string' },
     port: { type: 'string' }, lan: { type: 'boolean' }, 'lan-full': { type: 'boolean' }, 'no-open': { type: 'boolean' }, dev: { type: 'boolean' }, 'fake-ai': { type: 'boolean' },
   },
 })
@@ -119,11 +133,61 @@ async function studio(): Promise<void> {
   await new Promise(() => {}) // keep running until stopped
 }
 
+/** The files scripts/build-integrations.ts wrote next to MDlearn Studio. */
+function integration(file: string): string {
+  let dir: string
+  try { dir = join(dirname(fileURLToPath(import.meta.resolve('@mdlearn/studio/server'))), '..', 'integrations') } catch { return fail('MDlearn Studio is not installed or not built (npm run build).') }
+  const p = join(dir, file)
+  return existsSync(p) ? p : fail(`${file} is missing; build MDlearn first (npm run build).`)
+}
+function setup(): void {
+  const plugin = integration('claude-plugin')
+  out(`${bold('Claude Code')} (any folder): install the plugin once
+  claude plugin marketplace add "${plugin}"
+  claude plugin install mdlearn@mdlearn
+then: /mdlearn:course <topic> writes a checked course into the current folder; /mdlearn:study quizzes you.
+
+${bold('Claude.ai')}: upload ${integration('mdlearn-skill.zip')}
+under Settings → Capabilities → Skills, then ask "Make an MDlearn course on …".
+
+${bold('ChatGPT, Gemini, any chat')}: paste the output of \`mdlearn prompt\` (or attach \`mdlearn prompt --full\`),
+ask for a course, save its answer to a file and run \`mdlearn import-chat answer.md\`.`)
+}
+async function importChat(): Promise<void> {
+  const src = args[0]
+  if (!src) fail('which answer? e.g. mdlearn import-chat answer.md (or - to read stdin)')
+  const text = src === '-' ? readFileSync(0, 'utf8') : existsSync(src) ? readFileSync(src, 'utf8') : fail(`no such file: ${src}`)
+  const root = resolve(opt.root ?? process.cwd())
+  let files
+  try { files = splitBundle(text) } catch (e) { return fail((e as Error).message) }
+  if (!files.length) fail('no lesson found in that answer.')
+  let plan
+  try { plan = planBundle(files, { folder: opt.to, exists: (rel) => existsSync(join(root, rel)) }) } catch (e) { return fail((e as Error).message) }
+  const checked = plan.files.map((f) => {
+    const abs = inRoot(root, f.target) ?? fail(`${f.target} is outside ${root}`)
+    const diagnostics = f.target.endsWith('.learn.md') ? compileSource(f.content, abs).diagnostics : []
+    return { ...f, abs, diagnostics, errors: diagnostics.filter((d) => severityOf(d.code) === 'error').length }
+  })
+  for (const f of checked) {
+    const rel = relative(process.cwd(), f.abs)
+    if (f.errors) { out(`✗ ${rel}: ${plural(f.errors, 'error')}, not saved`); continue }
+    if (existsSync(f.abs)) { out(`– ${rel}: already exists, left as it is`); continue }
+    mkdirSync(dirname(f.abs), { recursive: true })
+    writeFileSync(f.abs, f.content, { flag: 'wx' })
+    out(`✓ ${rel}`)
+  }
+  const fix = fixMessage(checked.map((f) => ({ path: f.path, diagnostics: f.diagnostics })))
+  if (fix) { out(`\nPaste this into the chat:\n\n${fix}`); process.exitCode = 1 }
+}
+
 async function main(): Promise<void> {
   if (!cmd) return out(HELP)
   if (opt.help) return out(COMMAND_HELP[cmd] ?? HELP)
   switch (cmd) {
     case 'studio': return studio()
+    case 'setup': return setup()
+    case 'prompt': return out(readFileSync(integration(opt.full ? 'MDLEARN_GUIDE.md' : 'MDLEARN_PROMPT.md'), 'utf8').trimEnd())
+    case 'import-chat': return importChat()
     case 'review': needLearn(); return reviewSession(ws, opt)
     case 'queue': {
       needLearn()

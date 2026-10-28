@@ -8,6 +8,7 @@ import { Tex } from '../prose/Tex'
 import { Frame } from './Plot'
 import { ParamSliders, initialValues, type Values } from './ParamSliders'
 import { fmt } from './format'
+import { t } from '../i18n'
 
 type FormulaBlock = Extract<Visual, { type: 'formula' }>
 export function ExplainedFormula({ b }: { b: FormulaBlock }) {
@@ -39,7 +40,7 @@ export function ExplainedFormula({ b }: { b: FormulaBlock }) {
       {live && (
         <>
           <ParamSliders params={b.params} values={values} onChange={setValues} />
-          <p className="mt-3 font-ui text-[14px]">{b.live!.lhs ? <Tex tex={b.live!.lhs} eager /> : 'Result'} = <span className="tabular font-semibold">{fmt(live(values), 4)}</span></p>
+          <p className="mt-3 font-ui text-[14px]">{b.live!.lhs ? <Tex tex={b.live!.lhs} eager /> : t('Result')} = <span className="tabular font-semibold">{fmt(live(values), 4)}</span></p>
         </>
       )}
     </Frame>

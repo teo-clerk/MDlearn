@@ -7,19 +7,13 @@ import { toMarkdown, inlineText, type MdOptions } from './md.js'
 import { prettyInline } from './tex.js'
 import { rate, type Help, type Rating } from './learn/session.js'
 import { deriveCards, retrievability, type ReviewEvent } from './learn/srs.js'
+import { seededOrder } from './seed.js'
+import { GAME_FORMAT, checkGame, fitsGame, parseGameText, poseGame, redactGame, type GameAnswer, type GameParts, type PosedGame } from './games.js'
 
 type W = Exclude<Widget, { type: 'unavailable' }>
 const DAY = 864e5
 
-/** Seeded shuffle (FNV-1a seed) — the same widget shows the same order everywhere. */
-export function seededOrder<T>(items: T[], seed: string): T[] {
-  let h = 2166136261
-  for (const ch of seed) h = Math.imul(h ^ ch.charCodeAt(0), 16777619)
-  const rnd = () => ((h = Math.imul(h ^ (h >>> 15), 2246822507) ^ Math.imul(h ^ (h >>> 13), 3266489909)) >>> 0) / 2 ** 32
-  const a = [...items]
-  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]] }
-  return a
-}
+export { seededOrder }
 
 /** Widgets the learner can be examined on (fully worked `steps` are exposition). */
 export const askable = (b: Block): b is W => isWidget(b) && !(b.type === 'steps' && b.blanks.length === 0)
@@ -113,6 +107,7 @@ const FORMAT: Record<Surface, (w: W, n: number) => string> = {
       case 'order': return 'Type the numbers in the right order, e.g. "3 1 4 2".'
       case 'explain': return 'Explain in a sentence or two. Press Enter on an empty line if you can\'t recall.'
       case 'code': return 'Describe or paste your solution, or press Enter to see the reference.'
+      case 'match': case 'sort': case 'speed': return GAME_FORMAT[w.type].terminal
     }
   },
   chat: (w, n) => {
@@ -122,6 +117,7 @@ const FORMAT: Record<Surface, (w: W, n: number) => string> = {
       case 'order': return 'The item numbers in the right order, e.g. "3 1 4 2".'
       case 'explain': return 'A short explanation in your own words (or "can\'t recall").'
       case 'code': return `Your ${w.lang} code, or a description of your approach.`
+      case 'match': case 'sort': case 'speed': return GAME_FORMAT[w.type].chat
     }
   },
 }
@@ -146,6 +142,7 @@ export function pose(loc: Located, opts: PoseOptions = {}): Posed {
       question = `${toMarkdown(w.problem, mo)}\n\n${w.steps.map((st, i) => `  Step ${i + 1}. ${toMarkdown(st, mo).replace(/\n+/g, ' ')}`).join('\n')}`
       break
     case 'code': question = `${toMarkdown(w.prompt, mo)}\n\n\`\`\`${w.lang}\n${w.starter}\n\`\`\``; break
+    case 'match': case 'sort': case 'speed': question = poseGame(w, mo); break
   }
   const reads = card.blocks.flatMap((b) => (b.type === 'read' ? b.refs : []))
   return { widgetId: w.id, cardKey: cardKey(lesson, card), kind: w.type, title: `${displayTitle(lesson.title)} › ${displayTitle(card.title)}`,
@@ -176,7 +173,8 @@ export type PosedWidget = PosedBase & (
   | { type: 'steps'; problem: Flow; steps: Flow[]; blanks: { id: string; kind: Blank['kind'] }[] }
   | { type: 'code'; prompt: Flow; lang: string; starter: string; hasTests: boolean; hasSolution: boolean
       /** Runnable exercises: the checks to run in the browser (shown only when one fails). The solution never leaves the server. */
-      runnable: boolean; testSource?: string })
+      runnable: boolean; testSource?: string }
+  | PosedGame)
 const gaps = (bs: Blank[]) => bs.map((b) => ({ id: b.id, kind: b.kind }))
 /** Options and order items appear in the same seeded order as on every other surface (display index = letter). */
 export function redactWidget(w: W): PosedWidget {
@@ -188,6 +186,7 @@ export function redactWidget(w: W): PosedWidget {
     case 'explain': return { ...base, type: 'explain', prompt: w.prompt, ideaCount: w.ideas.length }
     case 'steps': return { ...base, type: 'steps', problem: w.problem, steps: w.steps, blanks: gaps(w.blanks) }
     case 'code': return { ...base, type: 'code', prompt: w.prompt, lang: w.lang, starter: w.starter, hasTests: !!w.tests, hasSolution: !!w.solution, runnable: w.mode === 'run' && !!w.tests, ...(w.mode === 'run' && w.tests ? { testSource: w.tests } : {}) }
+    case 'match': case 'sort': case 'speed': return { ...base, ...redactGame(w) }
   }
 }
 
@@ -198,6 +197,8 @@ export type WebAnswer =
   | { type: 'order'; order: number[] }
   /** `tests`: the result of running a runnable exercise's checks in the browser. */
   | { type: 'explain' | 'code'; text: string; tests?: { passed: number; total: number } }
+  /** Games: `null` marks a part not answered yet (a move checked on its own). */
+  | GameAnswer
   | { type: 'skip' }
 
 const MAX_BLANK = 500, MAX_TEXT = 4000
@@ -206,6 +207,9 @@ const WebAnswerSchema = z.discriminatedUnion('type', [
   z.object({ type: z.enum(['cloze', 'steps']), values: z.array(z.string().max(MAX_BLANK)).max(64) }),
   z.object({ type: z.literal('order'), order: z.array(z.number().int().min(0)).max(64) }),
   z.object({ type: z.enum(['explain', 'code']), text: z.string().max(MAX_TEXT), tests: z.object({ passed: z.number().int().min(0).max(1000), total: z.number().int().min(1).max(1000) }).refine((t) => t.passed <= t.total).optional() }),
+  z.object({ type: z.literal('match'), pairs: z.array(z.number().int().min(0).nullable()).max(16), log: z.array(z.tuple([z.number().int().min(0), z.number().int().min(0)])).max(400).optional() }),
+  z.object({ type: z.literal('sort'), groups: z.array(z.number().int().min(0).nullable()).max(32) }),
+  z.object({ type: z.literal('speed'), answers: z.array(z.boolean().nullable()).max(32), ms: z.number().int().min(0).max(36e5).optional(), done: z.boolean().optional() }),
   z.object({ type: z.literal('skip') }),
 ])
 /**
@@ -223,6 +227,7 @@ export function parseWebAnswer(w: W, raw: unknown): WebAnswer | null {
     case 'quiz': return distinct(a.picked, (w as Extract<W, { type: 'quiz' }>).options.length) ? a : null
     case 'cloze': case 'steps': return a.values.length === (w as Extract<W, { type: 'cloze' }>).blanks.length ? a : null
     case 'order': { const n = (w as Extract<W, { type: 'order' }>).items.length; return a.order.length === n && distinct(a.order, n) ? a : null }
+    case 'match': case 'sort': case 'speed': return fitsGame(w as Extract<W, { type: typeof a.type }>, a) ? a : null
     default: return a
   }
 }
@@ -251,7 +256,7 @@ export interface Checked {
     /** Checks that passed when the exercise ran in the browser. */
     tests?: { passed: number; total: number }
     reveal?: Flow
-  }
+  } & GameParts
 }
 /**
  * Split a learner's reply into one answer per gap. Labelled replies ("1: a; 2: b", "[2] b", "1) a",
@@ -291,6 +296,7 @@ export function check(loc: Located, answer: string, lessonsForTypos: Lesson[] = 
     case 'cloze': case 'steps': return checkStructured(loc, { type: w.type, values: parseBlankAnswers(answer, w.blanks.length) }, lessonsForTypos, opts)
     case 'order': return checkStructured(loc, { type: 'order', order: (answer.match(/\d+/g) ?? []).map((d) => Number(d) - 1) }, lessonsForTypos, opts)
     case 'explain': case 'code': return checkStructured(loc, answer.trim() ? { type: w.type, text: answer } : { type: 'skip' }, lessonsForTypos, opts)
+    case 'match': case 'sort': case 'speed': return checkStructured(loc, answer.trim() ? parseGameText(w, answer) : { type: 'skip' }, lessonsForTypos, opts)
   }
 }
 
@@ -365,6 +371,12 @@ export function checkStructured(loc: Located, given: WebAnswer, lessonsForTypos:
         return { correct: all, partial: !all && t.passed > 0, feedback: all ? `All ${t.total} ${t.total === 1 ? 'check passes' : 'checks pass'}.` : `${t.passed} of ${t.total} checks pass.`, answer: solution, reveal, rubric, parts }
       }
       return { correct: skip ? false : null, partial: false, feedback: skip ? 'Skipped.' : w.tests ? 'Check your code against each test.' : 'Compare with the reference solution.', answer: solution, reveal, rubric, parts }
+    }
+    case 'match': case 'sort': case 'speed': {
+      const g = checkGame(w, given.type === w.type || given.type === 'skip' ? given as GameAnswer : { type: 'skip' }, mo)
+      // the answer is shown only once the round is over (a single move must not reveal the rest)
+      return { correct: g.correct, partial: g.partial, feedback: g.feedback, answer: g.complete ? g.answer : '', reveal: g.complete ? reveal : '',
+        parts: { ...g.parts, ...(g.complete ? revealFlow : {}) } }
     }
   }
 }

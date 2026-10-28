@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { ChartSpline, Layers, MessageSquarePlus, Sparkles, StickyNote } from 'lucide-react'
 import { anchorFromSelection } from '../lib/anchor'
 import type { NoteAnchor } from '../../shared/types'
+import { t } from '../i18n'
 
 export type SelectionKind = 'note' | 'ask' | 'explain' | 'visual' | 'card'
 export interface SelectionAction { (kind: SelectionKind, anchor: NoteAnchor): void }
@@ -29,14 +30,14 @@ export function SelectionToolbar({ root, onAction, canAsk }: { root: HTMLElement
   const act = (k: SelectionKind) => { onAction(k, at.anchor); window.getSelection()?.removeAllRanges(); setAt(null) }
   const btn = 'flex h-8 items-center gap-1.5 px-2.5 text-[13px] font-medium hover:bg-hover cursor-pointer'
   return (
-    <div role="toolbar" aria-label="Selected text" style={{ left: at.x, top: Math.max(8, at.y - 44) }}
+    <div role="toolbar" aria-label={t('Selected text')} style={{ left: at.x, top: Math.max(8, at.y - 44) }}
       className="fixed z-40 flex -translate-x-1/2 items-center divide-x divide-border overflow-hidden rounded-[8px] border border-border bg-raised shadow-pop"
       onMouseDown={(e) => e.preventDefault()}>
-      <button className={btn} onClick={() => act('note')}><StickyNote className="size-4 text-muted" strokeWidth={1.8} aria-hidden />Note</button>
-      <button className={btn} onClick={() => act('card')}><Layers className="size-4 text-muted" strokeWidth={1.8} aria-hidden />Card</button>
-      {canAsk && <button className={btn} onClick={() => act('ask')}><MessageSquarePlus className="size-4 text-muted" strokeWidth={1.8} aria-hidden />Ask</button>}
-      {canAsk && <button className={btn} onClick={() => act('explain')}><Sparkles className="size-4 text-muted" strokeWidth={1.8} aria-hidden />Explain</button>}
-      {canAsk && <button className={btn} onClick={() => act('visual')}><ChartSpline className="size-4 text-muted" strokeWidth={1.8} aria-hidden />Visualise</button>}
+      <button className={btn} onClick={() => act('note')}><StickyNote className="size-4 text-muted" strokeWidth={1.8} aria-hidden />{t('Note')}</button>
+      <button className={btn} onClick={() => act('card')}><Layers className="size-4 text-muted" strokeWidth={1.8} aria-hidden />{t('Card')}</button>
+      {canAsk && <button className={btn} onClick={() => act('ask')}><MessageSquarePlus className="size-4 text-muted" strokeWidth={1.8} aria-hidden />{t('Ask')}</button>}
+      {canAsk && <button className={btn} onClick={() => act('explain')}><Sparkles className="size-4 text-muted" strokeWidth={1.8} aria-hidden />{t('Explain')}</button>}
+      {canAsk && <button className={btn} onClick={() => act('visual')}><ChartSpline className="size-4 text-muted" strokeWidth={1.8} aria-hidden />{t('Visualise')}</button>}
     </div>
   )
 }

@@ -72,6 +72,17 @@ describe('AI jobs (scripted engine)', () => {
     expect(undo.skipped).toEqual([])
     expect(created.every((f) => !existsSync(f))).toBe(true)
   })
+  it('a course on a topic goes into a new folder of its own, with or without notes', async () => {
+    const { root, post, finished } = setup()
+    const r = await (await post('/ai/jobs', { recipe: 'course.topic', topic: 'Ocean tides', minutes: 20 })).json() as JobSummary
+    const job = await finished(r.id)
+    expect(job.status).toBe('done')
+    expect(job.files.map((f) => f.path)).toEqual(['ocean-tides/01-demo.learn.md'])
+    expect(existsSync(join(root, 'ocean-tides/01-demo.learn.md'))).toBe(true)
+    const again = await (await post('/ai/jobs', { recipe: 'course.topic', topic: 'Ocean tides', notes: '00_FOUNDATIONS/04_radar.md' })).json() as JobSummary
+    expect((await finished(again.id)).files.map((f) => f.path)).toEqual(['ocean-tides-2/01-demo.learn.md'])
+    expect((await post('/ai/jobs', { recipe: 'course.topic', topic: 'Tides', notes: 'nope.md' })).status).toBe(404)
+  })
   it('undo leaves a file you edited after the job alone', async () => {
     const { root, post, finished } = setup()
     const lesson = 'learn/00_FOUNDATIONS/04_radar/01-radar-equation.learn.md'

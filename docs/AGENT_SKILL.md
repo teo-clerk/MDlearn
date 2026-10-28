@@ -88,6 +88,9 @@ reads the document; the lesson supplies retrieval, worked practice and misconcep
 | confusable ideas, a misconception | `quiz` |
 | a why/how explanation | `explain` |
 | a coding skill | `code` |
+| symbols, terms or names with their meaning (3–8 of them) | `match` (`{memory}` for a light first pass) |
+| members of 2–4 categories | `sort` |
+| facts with tempting false versions | `speed` (a true/false round) |
 
 ## Syntax
 
@@ -200,6 +203,14 @@ Callouts: `note` (side detail), `tip` (intuition; `[label]{fold}` = optional dep
   example (fade the step that practises the card's idea, starting from the last).
 - **order**: ≥ 3 items, written in the correct order.
 - **code**: starter with the signature, 2–4 `assert`s including an edge case, a solution.
+- **match**: 3–8 items `- left :: right` (spaces around `::`); keep the right sides the same kind and
+  length so none gives itself away. `{memory}` turns the same pairs into a memory game: use it for a first
+  meeting with new vocabulary, the plain match later.
+- **sort**: a nested list — each top item a group (2–4), its sub-items the members (4–12 in all); include
+  an item that is easy to misplace.
+- **speed**: a task list of 4–10 short statements, `[x]` true and `[ ]` false, mixed; under every false
+  statement a 2-space-indented `> ` line with the correction. Add `{time=60}` only for facts already
+  practised.
 - A check tests what an earlier card or its own card taught; the player hides the card text while the
   learner answers.
 
@@ -214,7 +225,7 @@ Callouts: `note` (side detail), `tip` (intuition; `[label]{fold}` = optional dep
 ## Token discipline
 
 - Output only lesson files: no preface, no closing remarks, no wrapping code fence.
-- No ids except a scaffold's frontmatter `id`; attributes only `{fold}` and `{exact}`. `time` is your estimate in minutes (≈ 1 per card, more
+- No ids except a scaffold's frontmatter `id`; attributes only `{fold}`, `{exact}`, `{memory}` and `{time=N}`. `time` is your estimate in minutes (≈ 1 per card, more
   for `steps` and `code`); the compiler re-estimates it.
 - Math only as `$…$` and `$$…$$` (a one-line `$$…$$` is fine); money as `\$5`.
 - Everything is closed: each `:::` widget ends with its own `:::` line before the next `##`.
@@ -229,7 +240,8 @@ Callouts: `note` (side detail), `tip` (intuition; `[label]{fold}` = optional dep
 ## Checklist (when the CLI is unavailable)
 
 - [ ] Frontmatter: `title`, `level`, `lang`, `goals`; YAML TeX only in single quotes.
-- [ ] Every card starts with `## `; no `---` lines in the body; no HTML except `<!-- -->` notes.
+- [ ] Every card starts with `## `; no `---` lines in the body; HTML only where Markdown cannot say it
+      (`<sub>`, `<kbd>`, `<mark>`, `<details>`), never `<script>`/`<style>`/handlers (E107).
 - [ ] Never more than 3 cards in a row without a widget; every widget closed by `:::`; none nested.
 - [ ] Each quiz: one task list, ≥ 1 `[x]`, an indented `>` under every option, options of equal length.
 - [ ] Blanks only in `cloze`/`steps`; braces balanced.
@@ -239,6 +251,7 @@ Callouts: `note` (side detail), `tip` (intuition; `[label]{fold}` = optional dep
 
 ## Visuals
 
-When a card's idea is how a quantity behaves, a dense equation, or a derivation, a visual block can carry it:
-`:::plot`, `:::formula`, `:::animate`, `:::sim` (DSL §8.11). The `mdlearn-visuals` skill explains when and how;
-at most one or two per lesson, never inside a question.
+When a card's idea is how a quantity behaves, a dense equation, a derivation or a process, a visual block can
+carry it: `:::plot`, `:::formula`, `:::animate` (formula frames, or Markdown frames with `{replace}` for the
+stages of a process), `:::sim`, and `:::html` for a small interactive of your own (DSL §8.11, §8.14). The
+`mdlearn-visuals` skill explains when and how; at most one or two per lesson, never inside a question.

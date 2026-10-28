@@ -1,7 +1,7 @@
 // Open folders ("workspaces"): registry with recents, per-folder caches of parsed documents, the
 // library tree (documents, their companion lessons, study state) and uploads into the library.
 import { createHash } from 'node:crypto'
-import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync, realpathSync } from 'node:fs'
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync, realpathSync } from 'node:fs'
 import { basename, dirname, join, relative, resolve, sep } from 'node:path'
 import { homedir } from 'node:os'
 import { parseDocument, report, type Lesson, type DocModel } from '@mdlearn/core'
@@ -108,6 +108,17 @@ export class Workspaces {
   importsFolder(): Handle {
     const dir = join(this.settings.get().libraryDir, 'Imports')
     mkdirSync(dir, { recursive: true })
+    return this.open(dir)
+  }
+  /**
+   * The interactive tutorial (the feature tour and "Start here"), copied into the library so your answers and
+   * notes stay out of the app's own files. `reset` starts it over from a fresh copy.
+   */
+  tutorial(source: string, reset = false): Handle {
+    if (!existsSync(source)) throw new UserError('not-found', 'The tutorial is missing from this installation.')
+    const dir = join(this.settings.get().libraryDir, 'MDlearn Tutorial')
+    if (reset && existsSync(dir)) rmSync(dir, { recursive: true, force: true })
+    if (!existsSync(dir)) { mkdirSync(dirname(dir), { recursive: true }); cpSync(source, dir, { recursive: true, filter: (f) => !/[\\/]\.mdlearn([\\/]|$)/.test(f) }) }
     return this.open(dir)
   }
   upload(name: string, files: { path: string; data: Uint8Array }[]): Handle {

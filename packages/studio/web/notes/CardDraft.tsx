@@ -11,6 +11,7 @@ import { Button } from '../ui/primitives'
 import { blankable, buildCloze, countBlanks, tokenize } from '../lib/cloze'
 import { MiniMarkdown } from '../prose/MiniMarkdown'
 import { lessonRoute } from '../lib/paths'
+import { t } from '../i18n'
 
 type Mode = 'blank' | 'qa'
 export function CardDraft({ ws, doc }: { ws: string; doc: string }) {
@@ -49,44 +50,44 @@ export function CardDraft({ ws, doc }: { ws: string; doc: string }) {
   const toggle = (i: number) => setChosen((s) => { const n = new Set(s); if (n.has(i)) n.delete(i); else n.add(i); return n })
   return (
     <div className="rounded-[8px] border border-border-strong bg-raised p-3 text-[13px] shadow-pop">
-      <div role="tablist" aria-label="Kind of card" className="flex gap-1">
+      <div role="tablist" aria-label={t('Kind of card')} className="flex gap-1">
         {(['blank', 'qa'] as const).map((m) => (
           <button key={m} role="tab" aria-selected={mode === m} onClick={() => setMode(m)} className={`h-7 rounded-[6px] px-2.5 text-[12.5px] font-medium cursor-pointer ${mode === m ? 'bg-active text-text' : 'text-muted hover:bg-hover'}`}>
-            {m === 'blank' ? 'Hide words' : 'Question & answer'}
+            {m === 'blank' ? t('Hide words') : t('Question & answer')}
           </button>
         ))}
       </div>
-      {!passage && !error && <p className="mt-3 flex items-center gap-2 text-muted"><Loader2 className="size-4 animate-spin" aria-hidden />Finding the passage…</p>}
+      {!passage && !error && <p className="mt-3 flex items-center gap-2 text-muted"><Loader2 className="size-4 animate-spin" aria-hidden />{t('Finding the passage…')}</p>}
       {error && <p className="mt-2 text-bad" role="alert">{error}</p>}
       {saved ? (
         <div className="mt-3" role="status">
-          <p className="flex items-center gap-1.5 font-medium"><Check className="size-4 text-good" aria-hidden />Card saved</p>
-          <p className="mt-1 text-muted">It joins your study queue as a new card in <Link href={lessonRoute(ws, saved.path)} className="underline underline-offset-2 hover:text-text">My cards</Link>.</p>
-          <div className="mt-2 flex gap-2"><Button size="sm" variant="ghost" onClick={() => { setSaved(null); setChosen(new Set()); setQuestion(''); setAnswer(''); setTitle('') }}>Make another</Button><Button size="sm" variant="ghost" onClick={() => setDraft(null)}>Done</Button></div>
+          <p className="flex items-center gap-1.5 font-medium"><Check className="size-4 text-good" aria-hidden />{t('Card saved')}</p>
+          <p className="mt-1 text-muted">{t('It joins your study queue as a new card in')} <Link href={lessonRoute(ws, saved.path)} className="underline underline-offset-2 hover:text-text">{t('My cards')}</Link>.</p>
+          <div className="mt-2 flex gap-2"><Button size="sm" variant="ghost" onClick={() => { setSaved(null); setChosen(new Set()); setQuestion(''); setAnswer(''); setTitle('') }}>{t('Make another')}</Button><Button size="sm" variant="ghost" onClick={() => setDraft(null)}>{t('Done')}</Button></div>
         </div>
       ) : passage && mode === 'blank' ? (
         <>
-          <p className="mt-2 text-muted">Click the words or formulas you want to remember. They become blanks.</p>
-          <div className="read mt-2 max-h-[40vh] overflow-y-auto rounded-[6px] bg-bg p-2.5 text-[15px] leading-[1.9]" role="group" aria-label="Passage">
-            {toks.map((t, i) => blankable(t)
-              ? <button key={i} type="button" aria-pressed={chosen.has(i)} onClick={() => toggle(i)} className={`rounded-[4px] px-[2px] ${chosen.has(i) ? 'bg-text text-bg' : 'hover:bg-active'} cursor-pointer`}>{t.kind === 'math' ? <MiniMarkdown text={t.text} /> : t.text}</button>
-              : t.kind === 'display' ? <span key={i} className="mx-1 rounded bg-hover px-1 font-mono text-[12px] text-muted" title="Display formulas cannot be hidden here">formula</span> : <span key={i}>{t.text}</span>)}
+          <p className="mt-2 text-muted">{t('Click the words or formulas you want to remember. They become blanks.')}</p>
+          <div className="read mt-2 max-h-[40vh] overflow-y-auto rounded-[6px] bg-bg p-2.5 text-[15px] leading-[1.9]" role="group" aria-label={t('Passage')}>
+            {toks.map((tok, i) => blankable(tok)
+              ? <button key={i} type="button" aria-pressed={chosen.has(i)} onClick={() => toggle(i)} className={`rounded-[4px] px-[2px] ${chosen.has(i) ? 'bg-text text-bg' : 'hover:bg-active'} cursor-pointer`}>{tok.kind === 'math' ? <MiniMarkdown text={tok.text} /> : tok.text}</button>
+              : tok.kind === 'display' ? <span key={i} className="mx-1 rounded bg-hover px-1 font-mono text-[12px] text-muted" title={t('Display formulas cannot be hidden here')}>{t('formula')}</span> : <span key={i}>{tok.text}</span>)}
           </div>
-          <p className="mt-2 text-[12px] text-muted">{blanks ? `${blanks} ${blanks === 1 ? 'blank' : 'blanks'} — you will type them from memory.` : 'Nothing hidden yet.'}</p>
+          <p className="mt-2 text-[12px] text-muted">{blanks ? `${blanks} ${blanks === 1 ? 'blank' : 'blanks'} — you will type them from memory.` : t('Nothing hidden yet.')}</p>
         </>
       ) : passage ? (
         <div className="mt-2 flex flex-col gap-2">
           <blockquote className="line-clamp-3 border-l border-border-strong pl-2 text-[12.5px] text-muted">{draft.anchor.quote.exact}</blockquote>
-          <textarea value={question} onChange={(e) => setQuestion(e.target.value)} rows={2} placeholder="Question" aria-label="Question" className="resize-y rounded-[6px] border border-border-strong bg-bg px-2 py-1.5 outline-none focus:border-text" />
-          <textarea value={answer} onChange={(e) => setAnswer(e.target.value)} rows={3} placeholder="Answer — one idea per line" aria-label="Answer" className="resize-y rounded-[6px] border border-border-strong bg-bg px-2 py-1.5 outline-none focus:border-text" />
+          <textarea value={question} onChange={(e) => setQuestion(e.target.value)} rows={2} placeholder={t('Question')} aria-label={t('Question')} className="resize-y rounded-[6px] border border-border-strong bg-bg px-2 py-1.5 outline-none focus:border-text" />
+          <textarea value={answer} onChange={(e) => setAnswer(e.target.value)} rows={3} placeholder={t('Answer — one idea per line')} aria-label={t('Answer')} className="resize-y rounded-[6px] border border-border-strong bg-bg px-2 py-1.5 outline-none focus:border-text" />
         </div>
       ) : null}
       {passage && !saved && (
         <>
-          <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={`Title (optional)${passage.section ? ` · from §${passage.section.num ?? passage.section.title}` : ''}`} aria-label="Card title" className="mt-2 h-8 w-full rounded-[6px] border border-border-strong bg-bg px-2 outline-none focus:border-text" />
+          <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={`Title (optional)${passage.section ? ` · from §${passage.section.num ?? passage.section.title}` : ''}`} aria-label={t('Card title')} className="mt-2 h-8 w-full rounded-[6px] border border-border-strong bg-bg px-2 outline-none focus:border-text" />
           <div className="mt-2 flex gap-1.5">
-            <Button size="sm" variant="primary" disabled={!ready} busy={busy} onClick={save}>Save card</Button>
-            <Button size="sm" variant="ghost" onClick={() => setDraft(null)}>Cancel</Button>
+            <Button size="sm" variant="primary" disabled={!ready} busy={busy} onClick={save}>{t('Save card')}</Button>
+            <Button size="sm" variant="ghost" onClick={() => setDraft(null)}>{t('Cancel')}</Button>
           </div>
         </>
       )}

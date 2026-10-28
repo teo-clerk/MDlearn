@@ -5,8 +5,9 @@ import { useDocSummary } from '../api/queries'
 import { duration, prettyTitle } from '../lib/title'
 import { MemoryMark } from '../ui/primitives'
 import { Hoverable } from './HoverCard'
+import { t, tp } from '../i18n'
+import { levelName } from '../lib/title'
 
-const fmt = new Intl.NumberFormat()
 
 export function PreviewLink({ ws, from, url, children }: { ws: string; from: string; url: string; children: ReactNode }) {
   const target = resolveRel(from, url)?.split('#')[0]
@@ -16,10 +17,10 @@ export function PreviewLink({ ws, from, url, children }: { ws: string; from: str
 
 function DocCard({ ws, path }: { ws: string; path: string }) {
   const s = useDocSummary(ws, path)
-  if (s.isLoading) return <p className="text-muted">Opening…</p>
-  if (!s.data) return <p className="text-muted">{path} is not in this folder.</p>
+  if (s.isLoading) return <p className="text-muted">{t('Opening…')}</p>
+  if (!s.data) return <p className="text-muted">{t('{path} is not in this folder.', { path })}</p>
   const d = s.data
-  const meta = [d.level && d.level[0].toUpperCase() + d.level.slice(1), d.timeMin ? duration(d.timeMin) : null, `${fmt.format(d.words)} words`].filter(Boolean).join(' · ')
+  const meta = [d.level && levelName(d.level), d.timeMin ? duration(d.timeMin) : null, tp(d.words, '{n} word', '{n} words')].filter(Boolean).join(' · ')
   return (
     <>
       <p className="text-[14px] font-semibold">{prettyTitle(d.title)}</p>

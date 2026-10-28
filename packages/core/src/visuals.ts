@@ -11,11 +11,13 @@ import type { Block, MdNode, Param, VisualCurve } from './ast.js'
 import { compileExpr, freeSymbols, unknownHeads, type MathJson } from './mathfn.js'
 import { processor } from './parser.js'
 
-export const VISUAL_TYPES = ['plot', 'formula', 'animate', 'sim'] as const
-export const VISUAL_MINUTES: Record<string, number> = { plot: 0.5, formula: 0.3, animate: 0.5, sim: 1 }
+export const VISUAL_TYPES = ['plot', 'formula', 'animate', 'sim', 'html'] as const
+export const VISUAL_MINUTES: Record<string, number> = { plot: 0.5, formula: 0.3, animate: 0.5, sim: 1, html: 1 }
 type Positioned = { position?: { start: { line: number; column: number } } } | number
 export interface VisualContext {
   clean: (n: Nodes) => MdNode[]
+  /** Several siblings at once (pairs inline HTML tags). */
+  cleanAll: (ns: Nodes[]) => MdNode[]
   diag: (code: Code, node: Positioned, message?: string) => void
   id: (key: string) => string
   /** Node-only syntax check for simulation code (returns an error message or null). */
@@ -160,7 +162,7 @@ const attrs = (n: ContainerDirective) => (n.attributes ?? {}) as Record<string, 
 export function buildVisual(n: ContainerDirective, ctx: VisualContext): Block[] {
   const kind = n.name as (typeof VISUAL_TYPES)[number]
   const lab = label(n)
-  const caption = lab && 'children' in lab ? lab.children.flatMap((c) => ctx.clean(c)) : undefined
+  const caption = lab && 'children' in lab ? ctx.cleanAll(lab.children) : undefined
   const content = n.children.filter((c) => c !== lab)
   const a = attrs(n)
   const height = Math.max(160, Math.min(720, Number(a.height) || (kind === 'sim' ? 360 : 300)))
@@ -168,11 +170,24 @@ export function buildVisual(n: ContainerDirective, ctx: VisualContext): Block[] 
   const errors: Code[] = []
   const fail = (code: Code, node: Positioned, msg?: string) => { ctx.diag(code, node, msg); if (code.startsWith('E')) errors.push(code) }
   const lists = content.filter((c): c is List => c.type === 'list')
-  const body = content.filter((c) => c.type !== 'list' && c.type !== 'math' && c.type !== 'code').flatMap((c) => ctx.clean(c))
+  const body = ctx.cleanAll(content.filter((c) => c.type !== 'list' && c.type !== 'math' && c.type !== 'code') as Nodes[])
   const formulas = displayMath(content)
   const fallback = (): Block[] => [{ type: 'unavailable', id, kind, codes: [...new Set(errors)],
     fallback: [...(caption ? [{ type: 'paragraph', children: [{ type: 'strong', children: caption }] } as MdNode] : []), ...body, ...formulas.flatMap((f) => ctx.clean(f))] }]
-  for (const k of Object.keys(a)) if (!['id', 'x', 'y', 'height', 'auto'].includes(k) || (k === 'height' && kind !== 'plot' && kind !== 'sim') || ((k === 'x' || k === 'y') && kind !== 'plot')) ctx.diag('I919', n, `${k} on ${kind}`)
+  const used: Record<string, readonly string[]> = { height: ['plot', 'sim', 'html'], x: ['plot'], y: ['plot'], auto: ['animate', 'html'], replace: ['animate'], id: VISUAL_TYPES }
+  for (const k of Object.keys(a)) if (!used[k]?.includes(kind)) ctx.diag('I919', n, `${k} on ${kind}`)
+
+  if (kind === 'html') {
+    // author HTML, CSS and JavaScript: run by the player in a sandbox with no network and no access to the page
+    const fences = content.filter((c): c is Extract<RootContent, { type: 'code' }> => c.type === 'code' && /^html?$/i.test(c.lang ?? ''))
+    const text = ctx.cleanAll(content.filter((c) => !fences.includes(c as never)) as Nodes[])
+    if (fences.length !== 1) { fail('E924', n, `${fences.length} html blocks`); return [{ type: 'unavailable', id, kind, codes: ['E924'], fallback: [...(caption ? [{ type: 'paragraph', children: [{ type: 'strong', children: caption }] } as MdNode] : []), ...text] }] }
+    const code = fences[0].value
+    if (code.length > 65_536) { fail('E925', fences[0]); return [{ type: 'unavailable', id, kind, codes: ['E925'], fallback: text }] }
+    if (/\b(fetch|XMLHttpRequest|WebSocket|EventSource|importScripts|sendBeacon)\b|\bimport\s*\(|<(script|img|link|iframe)\b[^>]*\b(src|href)\s*=\s*["']?(https?:)?\/\//i.test(code)) ctx.diag('W926', fences[0])
+    const h = Number(a.height)
+    return [{ type: 'html', id, ...(caption ? { caption } : {}), body: text, code, ...(h > 0 ? { height: Math.max(80, Math.min(900, Math.round(h))) } : {}), auto: 'auto' in a }]
+  }
 
   // parameters / terms (unordered list items)
   const items = lists.filter((l) => !l.ordered).flatMap((l) => l.children.map((li) => parseItem(li, ctx.clean)).filter((x): x is Item => !!x))
@@ -261,18 +276,20 @@ export function buildVisual(n: ContainerDirective, ctx: VisualContext): Block[] 
       const kids = li.children as RootContent[]
       const para = kids.find((c) => c.type === 'paragraph')
       const mathNode = (kids.find((c) => c.type === 'math') ?? (para && 'children' in para ? (para.children as PhrasingContent[]).find((c) => c.type === 'inlineMath') : undefined)) as { value: string } | undefined
-      const rest: MdNode[] = kids.flatMap((c) => {
-        if (c.type === 'math') return []
-        if (c.type === 'paragraph') { const ch = c.children.filter((x) => x !== (mathNode as unknown)); return ch.length ? ctx.clean({ ...c, children: ch }) : [] }
-        return ctx.clean(c)
-      })
-      if (!mathNode) fail('E901', li, 'frame without a formula')
-      return { tex: mathNode?.value ?? '', caption: rest }
+      const rest: MdNode[] = ctx.cleanAll(kids.flatMap((c): Nodes[] => {
+        if (c !== mathNode && c.type !== 'paragraph') return [c]
+        if (c.type !== 'paragraph') return []
+        const ch = c.children.filter((x) => x !== (mathNode as unknown))
+        return ch.length ? [{ ...c, children: ch }] : []
+      }))
+      // a frame without a formula is a Markdown frame (text, image, diagram, table, HTML)
+      if (!mathNode && !rest.length) fail('E927', li)
+      return { ...(mathNode ? { tex: mathNode.value } : {}), caption: rest }
     })
     if (frames.length < 2) fail('E911', n)
     if (frames.length > 12) ctx.diag('W912', n, `${frames.length} frames`)
     if (errors.length) return fallback()
-    return [{ type: 'animate', id, ...(caption ? { caption } : {}), body, frames, auto: 'auto' in a }]
+    return [{ type: 'animate', id, ...(caption ? { caption } : {}), body, frames, auto: 'auto' in a, replace: 'replace' in a }]
   }
 
   // sim

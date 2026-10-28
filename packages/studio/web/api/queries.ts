@@ -1,7 +1,8 @@
 // Server state through TanStack Query: one query key per resource, invalidated by live events.
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { api, qs } from './client'
-import type { SessionInfo, WorkspaceSummary, Tree, DocResponse, LessonResponse, BrowseResult, StudyPlan, StudyItem, RecordResponse, SearchHit, Note, NoteAnchor, EnginesInfo, JobSummary, JobEvent, TodayResponse, GoalsInfo, FormulasResponse, GlossaryResponse, LinksResponse, MapResponse, DocSummary, AskStatus, AskEntry, SheetResponse, FileInfo, HistoryEntry, PreviewResponse, ImportResult, Batch, BatchCandidate } from '../../shared/types'
+import { currentLang } from '../i18n'
+import type { SessionInfo, WorkspaceSummary, Tree, DocResponse, LessonResponse, BrowseResult, StudyPlan, StudyItem, RecordResponse, SearchHit, Note, NoteAnchor, EnginesInfo, JobSummary, JobEvent, TodayResponse, GoalsInfo, FormulasResponse, GlossaryResponse, LinksResponse, MapResponse, DocSummary, AskStatus, AskEntry, SheetResponse, FileInfo, HistoryEntry, PreviewResponse, ImportResult, ChatCheck, Integrations, Batch, BatchCandidate } from '../../shared/types'
 import type { Checked, MdNode, WebAnswer, Outcome } from '@mdlearn/core'
 
 export const keys = {
@@ -84,6 +85,8 @@ export const importApi = {
     return api.upload<ImportResult>(`/api/w/${ws}/import/file`, form)
   },
   folder: () => api.post<{ id: string; name: string; root: string }>('/api/workspaces/imports', {}),
+  checkChat: (ws: string, text: string, folder?: string) => api.post<ChatCheck>(`/api/w/${ws}/import/chat/check`, { text, folder }),
+  chat: (ws: string, text: string, folder?: string) => api.post<ImportResult>(`/api/w/${ws}/import/chat`, { text, folder }),
 }
 
 // ---- a course for the whole folder
@@ -106,6 +109,7 @@ export type JobRequest =
   | { recipe: 'course.create'; doc: string }
   | { recipe: 'lesson.improve'; lesson: string; focus: 'questions' | 'clarity' | 'lint' | 'all' | 'leech'; note?: string; card?: { key: string; title: string; wrong: string[] } }
   | { recipe: 'custom'; request: string; scope?: string }
+  | { recipe: 'course.topic'; topic: string; level?: 'beginner' | 'intermediate' | 'advanced'; language?: string; minutes?: number; notes?: string }
 export const jobsApi = {
   start: (ws: string, req: JobRequest) => api.post<JobSummary>(`/api/w/${ws}/ai/jobs`, req),
   cancel: (ws: string, id: string) => api.post<{ stopped: boolean }>(`/api/w/${ws}/ai/jobs/${id}/cancel`, {}),
@@ -179,3 +183,11 @@ export interface ReportResponse {
 }
 export interface JudgeResult { ideas: { index: number; verdict: 'covered' | 'partly' | 'missing'; evidence?: string }[]; feedback: string }
 export interface Passage { text: string; startLine: number; endLine: number; section: { num: string | null; anchor: string; title: string } | null }
+// ---- help: the welcome tour (once), the tutorial folder, the help page
+export const useOnboarding = () => useQuery({ queryKey: ['onboarding'], queryFn: () => api.get<{ tourDone: boolean }>('/api/onboarding'), staleTime: Infinity })
+export const helpApi = {
+  tourDone: (tourDone: boolean) => api.post<{ tourDone: boolean }>('/api/onboarding', { tourDone }),
+  tutorial: (reset = false) => api.post<{ id: string; name: string; root: string }>('/api/workspaces/tutorial', { reset }),
+}
+export const useIntegrations = () => useQuery({ queryKey: ['integrations'], queryFn: () => api.get<Integrations>('/api/integrations'), staleTime: Infinity })
+export const useHelpDoc = () => useQuery({ queryKey: ['help', currentLang()], queryFn: () => api.get<{ doc: import('@mdlearn/core').DocModel }>(`/api/help?lang=${currentLang()}`), staleTime: Infinity })

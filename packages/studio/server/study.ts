@@ -12,7 +12,7 @@ import type { Handle } from './workspaces.js'
 import { UserError } from './workspaces.js'
 import type { StudyPlan, StudyItem, RecordResponse } from '../shared/types.js'
 
-const MINUTES: Record<string, number> = { quiz: 0.6, cloze: 0.8, order: 1, steps: 1.5, explain: 2, code: 3 }
+const MINUTES: Record<string, number> = { quiz: 0.6, cloze: 0.8, order: 1, steps: 1.5, explain: 2, code: 3, match: 1, sort: 1, speed: 1.5 }
 const posix = (p: string) => p.split(sep).join('/')
 
 export function course(h: Handle): { lessons: Lesson[]; pathOf: Map<string, string> } {
@@ -86,6 +86,9 @@ function answerText(a: WebAnswer): string {
     case 'cloze': case 'steps': return a.values.join(' ; ')
     case 'order': return a.order.join(' ')
     case 'explain': case 'code': return a.text
+    case 'match': return a.pairs.map((j) => (j === null ? '-' : j)).join(' ')
+    case 'sort': return a.groups.map((g) => (g === null ? '-' : g)).join(' ')
+    case 'speed': return a.answers.map((x) => (x === null ? '-' : x ? 'T' : 'F')).join('')
     case 'skip': return ''
   }
 }
