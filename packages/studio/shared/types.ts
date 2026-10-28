@@ -1,5 +1,5 @@
 // Contract between the MDlearn Studio server and web app (imported with `import type` on both sides).
-import type { DocModel, DocOutline, Diagnostic, Lesson, Block, PosedWidget, QueueItem, Checked, ReadRef, MdNode, ExamAnswer, ExamSummary } from '@mdlearn/core'
+import type { DocModel, DocOutline, Diagnostic, Lesson, Block, PosedWidget, QueueItem, Checked, ReadRef, MdNode, ExamAnswer, ExamSummary, ReviewEvent } from '@mdlearn/core'
 
 export type Capability = 'read' | 'study' | 'notes' | 'askLocal' | 'write' | 'ai' | 'fs'
 export interface SessionInfo {
@@ -38,6 +38,15 @@ export interface StudyPlan { items: QueueItem[]; due: number; fresh: number; min
 /** `video`: the video this question pauses at in the lesson (its title, the time, a link that starts there when online). */
 export interface StudyItem { item: QueueItem; title: string; widget: PosedWidget; exposition: MdNode[]; reads: ReadRef[]; lessonPath: string; video?: { title: string; at: string; link?: string } }
 export interface CheckResponse { checked: Checked }
+/** Cards for a device with no connection to this computer: their lessons (trimmed to these cards, answers included,
+ *  so the device can mark them), the study order, and their review history (to know when each is due). */
+export interface OfflinePack {
+  id: string; ws: string; name: string; createdAt: number; days: number; newPerDay: number
+  lessons: Lesson[]
+  cards: { cardKey: string; widgetId: string; isNew: boolean }[]
+  reviews: ReviewEvent[]
+}
+export interface SyncResult { reviews: number; attempts: number; rejected: number }
 /** Teach-back feedback: each key idea judged (from the lesson, or listed by the AI when the text has none), errors, one next question. */
 export interface TeachResult {
   title: string

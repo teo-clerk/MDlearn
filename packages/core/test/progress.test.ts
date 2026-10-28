@@ -32,6 +32,13 @@ describe('progress file is safe for several writers', () => {
     expect(loadProgress(ws).attempts.map((a) => a.id)).toEqual(['other'])
   })
 
+  it('a resent batch with keepExisting never changes what was recorded first', () => {
+    const ws = workspace(sandbox())
+    appendProgress(ws, { reviews: [{ id: 'exam:1:l/c', t: 10, key: 'l/c', rating: 1 }] }, { keepExisting: true })
+    appendProgress(ws, { reviews: [{ id: 'exam:1:l/c', t: 99, key: 'l/c', rating: 3 }, { id: 'new', t: 100, key: 'l/c', rating: 3 }] }, { keepExisting: true })
+    expect(loadProgress(ws).reviews.map((r) => [r.id, r.t, r.rating])).toEqual([['exam:1:l/c', 10, 1], ['new', 100, 3]])
+  })
+
   it('a stale lock left by a crashed process is recovered', () => {
     const ws = workspace(sandbox())
     mkdirSync(join(ws.learnDir, '.mdlearn'), { recursive: true })

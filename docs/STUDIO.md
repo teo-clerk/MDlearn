@@ -69,7 +69,7 @@ atomically, so the CLI, the MCP tutor and the Studio can study at the same time 
 | Import & export | `POST import/web` · `import/file` (multipart: pdf-fast, pdf-quality, anki, notebook) · `GET export/anki?scope=` · `GET sheet?path` · `POST sheet/ideas` |
 | Batch courses | `GET ai/batch/candidates` · `POST ai/batches` · `GET ai/batches[/:id]` · `POST ai/batches/:id/stop` · `resume` |
 | Library | `GET formulas?q&doc&limit` · `glossary?q&compact` · `links?path` · `doc/summary?path` · `map` · `knowledge/status` |
-| Study | `GET study/queue` · `study/item` · `POST study/check` · `study/hint` · `study/record` · `study/judge` · `GET study/report` · `study/map` |
+| Study | `GET study/queue` (`?widgets=` for chosen questions) · `study/item` · `POST study/check` · `study/hint` · `study/record` · `study/judge` · `GET study/report` (with the confidence check) · `study/map` · `GET exam/plan?count&doc` · `POST exam/grade` · `POST teachback` · `GET study/pack?days=1\|3\|7` · `POST study/sync` |
 | Notes & local AI | `GET/POST notes` · `POST notes/:id/update` · `notes/:id/delete` · `POST ai/ask` · `ai/cancel` · `ai/visualise` · `POST files/insert` |
 | Course jobs | `GET/POST ai/jobs` · `GET ai/jobs/:id` · `POST ai/jobs/:id/cancel` · `undo` · `followup` |
 | Live | `GET /api/events?ws=` (SSE: fs/tree/progress/notes changes, AI deltas, job events; replay by `Last-Event-ID`) |
@@ -179,6 +179,42 @@ as a sentence), the leeches and the documents with how well each is remembered. 
 whole folder. New cards per day = cards not yet started ÷ days left; the study queue uses it as its default
 number of new cards (minus those already started today), and Today says "on track", "2 days behind — 14 new
 cards a day to finish by 15 Nov" or "overdue".
+
+**Confidence check** (Progress). Before an answer is checked you say whether you were sure; `confidence()` in
+`learn/analytics.ts` splits the last 30 days into sure/not sure × right/wrong, gives "right when sure" for each
+of the last 8 weeks (weeks start on Monday) and lists the cards you were sure about and got wrong, most often
+first; a card leaves the list once you are sure and right about it again. *Review these* starts a session on
+exactly those questions (`study/queue?widgets=`, at most 20, early reviews allowed). Typed wrong answers are
+shown; a picked option's number is not.
+
+**Mock exam** (`/exam`). `examQueue()` in `learn/exam.ts` samples one question per *studied* card (quiz, cloze,
+order, steps: marked on the server in one go, with no feedback move by move), seeded by the exam id, across
+the folder or a document's lessons, interleaved by lesson. The paper goes out redacted; each answer is handed
+in as Sure / Not sure with nothing marked until the end (optional time limit; when it runs out what is written
+counts and the rest is unanswered). `exam/grade` marks it, records attempts and one review per answered card
+with the study rating table (unanswered questions are shown with their answer but not recorded) and returns
+the score, lessons weakest first, time per question and every answer. Event ids are `exam:<id>:…`, and the first
+recording is kept, so a resent paper changes nothing.
+
+**Teach-back** (`/teach`, the Feynman technique). From a lesson, or a section of a document, you explain it for
+a beginner; `ai/teachback.ts` sends the explanation with the key ideas (the lesson's goals and `explain` ideas,
+or the ideas of the lessons that read the section; the model lists them itself when there are none) and the
+text to the local model (JSON schema) or, when chosen on this computer, to Claude as a one-shot call (one turn,
+no tools, no MCP, run from the temp directory). Back come each idea covered / partly / missing with the
+learner's words, what to correct, and one question a beginner would ask next. Ideas the model skipped count
+as missing; nothing is graded or scheduled. The draft is kept in the browser.
+
+**Study offline** (`/offline/:ws`, outside the main layout). For a phone on the LAN, where plain HTTP allows no
+service worker: `study/pack` returns the cards due by the end of 1, 3 or 7 days and the new ones for those days
+(code exercises left out: no Python offline), their lessons trimmed to those cards *with* the answers, and their
+review history. The browser keeps the pack and the unsynced answers in IndexedDB and marks, rates and schedules
+with the same core functions (`checkStructured`, `ratingFor`, FSRS replay); UUIDs come from
+`crypto.getRandomValues` (`randomUUID` needs a secure context). The server remembers the packs it gave out
+(`learn/.mdlearn/offline-packs.json`: the last 30, for 60 days), and `study/sync` accepts only reviews and attempts
+about a card of one of them, made after that pack was taken (an hour's slack for the phone's clock) and at most
+10 minutes ahead, about a card that still exists. They are stored as `off:<device id>`, and what is recorded first
+is kept (`appendProgress(…, { keepExisting: true })`), so resending is harmless and can never change history. A web manifest
+(`start_url: /offline`, the latest pack) puts it on the home screen; the page must stay open while offline.
 
 **Leeches.** A card is a leech after four failures once it has been reviewed (unless the last two ratings were
 good), or three "again" in a row. Today lists them with the last wrong answers, and offers *Reread* (the
@@ -361,14 +397,18 @@ choices; they live in `localStorage` and `public/theme.js` applies them before t
 | Imports | the web importer accepts only http/https without credentials, caps size and time, never follows into other schemes; files are written with `wx` (never replacing) inside `inRoot`; PDFs are parsed by poppler in a temp folder; uploads ≤ 100 MB, `write` capability; the editor only saves existing `.md` files inside the folder (hidden folders refused) with a stale-file check |
 | Videos | page CSP `media-src 'self'`; `frame-src` only `'self'`, `https://www.youtube-nocookie.com` and `https://player.vimeo.com`; the compiler accepts only relative video files and YouTube/Vimeo ids (validated by pattern) and builds the embed address itself; embeds load on Play, in `sandbox` frames without top navigation, `referrerpolicy="strict-origin-when-cross-origin"` (the page itself sends no referrer); video files go through the same `inRoot` asset route |
 | Simulations, Python and `:::html` | opaque-origin sandboxes, own CSP without network; simulations and Python in a Worker + watchdog, `:::html` started on demand + heartbeat watchdog; the server only serves allow-listed Pyodide files and caches them atomically |
-| Answer keys | games and questions reach the browser without keys; single moves are checked on the server and reveal only their own result |
+| Answer keys | games and questions reach the browser without keys; single moves are checked on the server and reveal only their own result; a mock exam is marked on the server after the whole paper is in; an offline pack does carry the answers (that is the point), so it is served only to clients with the `study` capability, and the page says so |
+| Offline sync and exams | ids validated (UUIDs), device events prefixed `off:` and exam events derived from the exam id; both are written first-write-wins, so a resend can never change recorded history; sync accepts only cards of a pack this server issued, timed after that pack, whose widget belongs to the card, ≤ 2,000 events per sync |
+| Teach-back load | at most two feedback requests at once (`busy` otherwise); Claude one-shots time out after two minutes |
+| Teach-back with Claude | only from this computer (`ai` capability); one turn, no tools, no MCP servers, no setting sources, cwd = the temp directory; the notes and the explanation are marked as data in the prompt; the reply is parsed as JSON and rendered as text |
 | Large inputs | JSON bodies ≤ 2 MB, uploads ≤ 200 MB / 2,000 files, answer and note sizes validated with zod, linear-time text normalisation |
 
 ## 16. Tests
 
-`npm test` (Vitest, ~420 tests: core incl. analytics and goals; CLI; MCP; the server — security headers, path
+`npm test` (Vitest, ~520 tests: core incl. analytics and goals; CLI; MCP; the server — security headers, path
 guards, redaction, study, Today, quick cards, the Python file cache, the knowledge index, Ask with a fake Ollama
-(download, indexing, retrieval, citations), cheat sheets, the Anki writer and importer (round trip), every
+(download, indexing, retrieval, citations), cheat sheets, the Anki writer and importer (round trip), the confidence check, mock exams (sampling,
+marks, idempotent recording), teach-back with a stand-in Ollama and Claude, offline packs and sync, every
 importer, the editor's save/conflict/history rules, batches with the scripted engine; and the browser-side
 helpers: cloze blanks, term planning, map layout, graph data and highlighting, Python error messages, every translation, accent contrast) and
 `npm run test:e2e -w @mdlearn/studio` (Playwright against a demo server with a stand-in Ollama, desktop and
@@ -376,4 +416,4 @@ phone: reading, search, source view, study sessions, Today and deadlines, quick 
 exercises (including a runaway loop), formulas/glossary/hovers/links/map, Ask, cheat sheet and Anki download,
 editor save/conflict/insert/new note, the four importers, a batch course and its undo, notes, AI jobs, visuals,
 the four games played to a verdict, safe HTML that must not execute, the `:::html` sandbox, the welcome tour,
-Help and the tutorial, the interface in Italian and accent colours in both themes, the graph (search, hover, open, tap on a phone, the 3D chunk only on demand), and a no-sideways-scrolling check of every page in light and dark).
+Help and the tutorial, the interface in Italian and accent colours in both themes, the graph (search, hover, open, tap on a phone, the 3D chunk only on demand), a mock exam to its marks and the confidence check after it, a timed exam running out, teach-back on a lesson and a section, an offline pack studied with the network cut and synced when it returns, and a no-sideways-scrolling check of every page in light and dark).

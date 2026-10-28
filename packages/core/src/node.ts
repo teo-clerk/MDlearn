@@ -279,13 +279,15 @@ function breakIfStale(lock: string): void {
     if (again.ino === st.ino && again.mtimeMs === st.mtimeMs) unlinkSync(lock)
   } catch (e) { if (errno(e) !== 'ENOENT') throw e } // released meanwhile: just retry
 }
-function writeMerged(ws: Workspace, add: Pick<Progress, 'reviews' | 'attempts'>): Progress {
+function writeMerged(ws: Workspace, add: Pick<Progress, 'reviews' | 'attempts'>, keepExisting = false): Progress {
   const p = progressPath(ws)
   mkdirSync(dirname(p), { recursive: true })
   return withLock(p, () => {
     const disk = loadProgress(ws)
     // validated before writing: one malformed event must fail this call, never corrupt the history
-    const merged = ProgressSchema.parse({ version: 1, reviews: mergeLogs(disk.reviews, add.reviews), attempts: mergeLogs(disk.attempts, add.attempts) }) as Progress
+    // an id already on disk normally takes the new event; with keepExisting the recorded one stays (first write wins)
+    const join = <E extends { id: string; t: number }>(old: E[], neu: E[]) => (keepExisting ? mergeLogs(neu, old) : mergeLogs(old, neu))
+    const merged = ProgressSchema.parse({ version: 1, reviews: join(disk.reviews, add.reviews), attempts: join(disk.attempts, add.attempts) }) as Progress
     const tmp = `${p}.${process.pid}.tmp`
     writeFileSync(tmp, JSON.stringify(merged, null, 1))
     renameSync(tmp, p)
@@ -296,9 +298,13 @@ function writeMerged(ws: Workspace, add: Pick<Progress, 'reviews' | 'attempts'>)
 export function saveProgress(ws: Workspace, progress: Progress): Progress {
   return writeMerged(ws, progress)
 }
-/** Append events to the history (the usual way to record an attempt or a review). Returns the merged history. */
-export function appendProgress(ws: Workspace, events: { reviews?: ReviewEvent[]; attempts?: AttemptEvent[] }): Progress {
-  return writeMerged(ws, { reviews: events.reviews ?? [], attempts: events.attempts ?? [] })
+/**
+ * Append events to the history (the usual way to record an attempt or a review). Returns the merged history.
+ * `keepExisting`: events whose id is already recorded are ignored, so a resent batch (an exam paper, an offline
+ * sync) can never change what was recorded the first time.
+ */
+export function appendProgress(ws: Workspace, events: { reviews?: ReviewEvent[]; attempts?: AttemptEvent[] }, opts: { keepExisting?: boolean } = {}): Progress {
+  return writeMerged(ws, { reviews: events.reviews ?? [], attempts: events.attempts ?? [] }, opts.keepExisting)
 }
 
 // ---------------------------------------------------------------- goals file (personal, beside progress)

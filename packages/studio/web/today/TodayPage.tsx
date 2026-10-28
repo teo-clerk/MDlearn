@@ -66,6 +66,7 @@ export default function TodayPage({ ws }: { ws: string }) {
             <div className="mt-1.5 h-[3px] overflow-hidden rounded-full bg-hover" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={d.goal.percent}><div className="h-full bg-accent transition-[width] duration-300" style={{ width: `${d.goal.percent}%` }} /></div>
           </div>
           {d.paces.length > 0 && <ul className="mt-4 flex flex-col gap-1 text-[13.5px]">{d.paces.map((p) => <li key={`${p.scope}${p.deadline}`}>{paceText(p)}</li>)}</ul>}
+          <p className="mt-4 text-[12.5px] text-muted">{t('Away from the computer?')} <Link href={`/offline/${ws}`} className="underline underline-offset-2 hover:text-text">{t('Take the next days’ cards offline')}</Link></p>
         </section>
       ) : (
         <section className="mt-6 rounded-[10px] border border-border p-5">

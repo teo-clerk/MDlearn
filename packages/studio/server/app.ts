@@ -16,6 +16,7 @@ import { Workspaces, UserError, browse, type Handle } from './workspaces.js'
 import { redactLesson, redactDoc, findDocWidget } from './redact.js'
 import * as study from './study.js'
 import { examPlan, examGrade } from './exam.js'
+import { offlinePack, syncOffline, PACK_DAYS } from './offline.js'
 import { today } from './today.js'
 import { passageFor, addCard } from './cards.js'
 import { notesStore, AnchorSchema } from './notes.js'
@@ -276,6 +277,18 @@ export function createApp(deps: Deps): Hono {
     return c.json(study.record(ws(c), cardKey, outcome))
   })
   app.get('/api/w/:ws/study/report', need('study', o), (c) => c.json(study.progressReport(ws(c))))
+  // offline packs carry the answers: only for devices that may study here (the LAN default does)
+  app.get('/api/w/:ws/study/pack', need('study', o), (c) => c.json(offlinePack(ws(c), z.coerce.number().int().refine((d) => (PACK_DAYS as readonly number[]).includes(d)).parse(c.req.query('days') ?? 3))))
+  app.post('/api/w/:ws/study/sync', need('study', o), async (c) => {
+    const id = z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/)
+    const t = z.number().int().nonnegative()
+    const body = z.object({
+      reviews: z.array(z.object({ id, t, key: z.string().min(1).max(300), rating: z.union([z.literal(1), z.literal(2), z.literal(3)]) })).max(2000),
+      attempts: z.array(z.object({ id, t, widget: z.string().min(1).max(300), card: z.string().min(1).max(300), kind: z.enum(['attempt', 'hint', 'reveal']),
+        correct: z.boolean().optional(), sure: z.boolean().optional(), answer: z.string().max(2000).optional() })).max(2000),
+    }).parse(await c.req.json())
+    return c.json(syncOffline(ws(c), body))
+  })
   app.get('/api/w/:ws/exam/plan', need('study', o), (c) => c.json(examPlan(ws(c), {
     count: z.coerce.number().int().min(1).max(MAX_EXAM_QUESTIONS).parse(c.req.query('count') ?? 20), doc: c.req.query('doc') || undefined, lesson: c.req.query('lesson') || undefined,
   })))

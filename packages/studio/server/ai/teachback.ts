@@ -11,7 +11,10 @@ import type { Handle, Workspaces } from '../workspaces.js'
 import { UserError } from '../workspaces.js'
 import type { TeachResult } from '../../shared/types.js'
 
-export type OneShot = (req: { system: string; prompt: string }) => Promise<string>
+export type OneShot = (req: { system: string; prompt: string; signal?: AbortSignal }) => Promise<string>
+/** Feedback requests at once (each one keeps the local model or a Claude process busy), and how long Claude may take. */
+const MAX_RUNNING = 2, CLAUDE_TIMEOUT = 120_000
+let running = 0
 export interface TeachInput { lesson?: string; doc?: string; section?: string; text: string; lang: string; engine: 'local' | 'claude' }
 const MAX_SOURCE = 9000
 const MAX_IDEAS = 10
@@ -63,13 +66,22 @@ function material(h: Handle, workspaces: Workspaces, i: TeachInput): Material {
 }
 
 export async function teachBack(h: Handle, workspaces: Workspaces, engines: { local: OllamaConfig; claude?: OneShot }, i: TeachInput): Promise<TeachResult> {
+  if (running >= MAX_RUNNING) throw new UserError('busy', 'The AI is still giving feedback on another explanation. Try again in a moment.')
+  running++
+  try { return await judgeExplanation(h, workspaces, engines, i) } finally { running-- }
+}
+
+async function judgeExplanation(h: Handle, workspaces: Workspaces, engines: { local: OllamaConfig; claude?: OneShot }, i: TeachInput): Promise<TeachResult> {
   const m = material(h, workspaces, i)
   const ideas = m.ideas.length ? `Key ideas:\n${m.ideas.map((x, k) => `${k + 1}. ${x}`).join('\n')}` : 'Key ideas: none given. First list the 3 to 6 key ideas of the source text (as "idea", no index), then judge each.'
   const prompt = `Write every text field in ${LANGS[i.lang] ?? 'English'}.\n\nTopic: ${m.title}\n\n${ideas}\n\nSource text:\n"""\n${m.source}\n"""\n\nStudent explanation:\n"""\n${i.text.slice(0, 6000)}\n"""`
   let raw: string
   if (i.engine === 'claude') {
     if (!engines.claude) throw new UserError('engine', 'Claude is not available here. Use the local AI.')
-    raw = await engines.claude({ system: TEACH_SYSTEM, prompt })
+    try { raw = await engines.claude({ system: TEACH_SYSTEM, prompt, signal: AbortSignal.timeout(CLAUDE_TIMEOUT) }) } catch (e) {
+      if ((e as Error).name === 'TimeoutError' || (e as Error).name === 'AbortError') throw new UserError('engine', 'Claude took too long to answer. Try again, or use the local AI.')
+      throw e
+    }
   } else {
     raw = await ollamaChat(engines.local, { format: SCHEMA, temperature: 0.1, messages: [{ role: 'system', content: TEACH_SYSTEM }, { role: 'user', content: prompt }] })
   }

@@ -16,8 +16,10 @@ Vos notes restent de simples fichiers Markdown. Les **leçons** (`learn/*.learn.
 |---|---|
 | **Aujourd'hui** | Votre session quotidienne : d'abord les fiches à réviser, puis quelques nouvelles. Les objectifs et les échéances sont ici aussi. |
 | **Réviser** | Une fiche à la fois : répondez, dites si vous étiez sûr, lisez le retour. |
+| **Examen blanc** | Des questions sur ce que vous avez étudié, mélangées entre les leçons, chronométrées si vous voulez, corrigées seulement à la fin. |
 | **Demander** | Une question sur tout le dossier, à laquelle le modèle local répond avec vos propres passages. |
-| **Progrès** | Ce que vous avez vu, à quel point vous retenez chaque leçon, votre précision et votre série. |
+| **Progrès** | Ce que vous avez vu, à quel point vous retenez chaque leçon, votre précision et votre série. Et le **contrôle de confiance** : les fiches dont vous étiez sûr mais que vous avez ratées, prêtes à revoir. |
+| **Étudier hors ligne** | Sur un téléphone : emportez les fiches des prochains jours (Aujourd’hui → *Emporter hors ligne les cartes des prochains jours*), étudiez sans connexion, et les réponses se synchronisent quand l’ordinateur est joignable. Gardez la page ouverte hors ligne. |
 | **AI Studio** | Claude Code écrit ou améliore des leçons à partir d'une note (utilise votre abonnement Claude). |
 | **Formules** · **Glossaire** · **Carte** | Chaque formule, chaque terme défini, et quelles notes s'appuient sur lesquelles : un graphe en 2D ou en 3D, coloré selon ce que vous retenez de chaque note. |
 
@@ -26,6 +28,8 @@ Vos notes restent de simples fichiers Markdown. Les **leçons** (`learn/*.learn.
 - **Sélectionnez du texte** pour la barre d'outils : **Note** (à côté du passage), **Fiche** (une question rapide),
   **Demander**, **Expliquer** et **Visualiser** (modèle local).
 - Les mots soulignés sont des termes définis dans vos notes : survolez-les. Les liens vers d'autres notes s'affichent en aperçu au survol.
+- **Expliquez-le** (dans une leçon, ou dans le menu `…` pour une section) : expliquez-le avec vos mots ; le
+  modèle local (ou Claude) vous dit quelles idées clés vous avez abordées, quoi corriger, et vous pose une question.
 - Le **plan** du panneau de droite suit la section que vous lisez ; le menu `…` contient
   l'aide-mémoire et la source.
 

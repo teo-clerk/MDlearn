@@ -40,7 +40,7 @@ const PKG = ((): string => {
 })()
 const VERSION = (JSON.parse(readFileSync(join(PKG, 'package.json'), 'utf8')) as { version: string }).version
 const WEB_DIST = join(PKG, 'dist', 'web')
-const STATIC_TYPES: Record<string, string> = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.png': 'image/png', '.json': 'application/json', '.wasm': 'application/wasm' }
+const STATIC_TYPES: Record<string, string> = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.png': 'image/png', '.json': 'application/json', '.wasm': 'application/wasm', '.webmanifest': 'application/manifest+json' }
 
 export async function startStudio(opts: StudioOptions = {}): Promise<Studio> {
   const bus = new EventBus()
@@ -54,7 +54,7 @@ export async function startStudio(opts: StudioOptions = {}): Promise<Studio> {
   const engine = () => (opts.fakeAi ? new FakeEngine() : new ClaudeEngine(settings.get().claude))
   const deps = { version: VERSION, security, settings, workspaces, bus, serverId: randomUUID(), jobs, engine,
     claudeStatus: () => (opts.fakeAi ? Promise.resolve({ available: true, version: 'demo' }) : claudeStatus(settings.get().claude)),
-    claudeOnce: opts.fakeAi ? fakeOnce : (req: { system: string; prompt: string }) => claudeOnce(settings.get().claude, req) }
+    claudeOnce: opts.fakeAi ? fakeOnce : (req: { system: string; prompt: string; signal?: AbortSignal }) => claudeOnce(settings.get().claude, req) }
   const app = createApp(deps)
   const api = getRequestListener(app.fetch)
 

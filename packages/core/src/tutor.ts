@@ -403,6 +403,20 @@ const shown = (b: Blank) => (b.kind === 'math' ? prettyInline(`$${b.answers[0]}$
 /** Spelling-tolerant comparison helper for free answers in chat (e.g. a single term). */
 export const sameTerm = (a: string, b: string, lang = 'en') => checkText(a, [b], lang).ok
 
+/** What the learner answered, as text for the attempt log. */
+export function answerText(a: WebAnswer): string {
+  switch (a.type) {
+    case 'quiz': return a.picked.join(',')
+    case 'cloze': case 'steps': return a.values.join(' ; ')
+    case 'order': return a.order.join(' ')
+    case 'explain': case 'code': return a.text
+    case 'match': return a.pairs.map((j) => (j === null ? '-' : j)).join(' ')
+    case 'sort': return a.groups.map((g) => (g === null ? '-' : g)).join(' ')
+    case 'speed': return a.answers.map((x) => (x === null ? '-' : x ? 'T' : 'F')).join('')
+    case 'skip': return ''
+  }
+}
+
 // ---------------------------------------------------------------- recording
 export interface Outcome { correct: boolean; sure?: boolean; partial?: boolean; help?: Help; revealed?: boolean }
 export function ratingFor(o: Outcome): Rating {

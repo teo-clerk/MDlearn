@@ -31,7 +31,7 @@ beforeAll(async () => {
 afterAll(() => { ollama.close() })
 
 const LESSON = `---\ntitle: Speckle\nid: speckle\ngoals:\n  - Say where speckle comes from\n---\n## What it is\n\nSpeckle is granular noise from the coherent sum of many echoes.\n\n:::explain\nWhy does multi-looking reduce speckle?\n> - Averaging independent looks lowers the variance.\n> - The price is a coarser resolution.\n:::\n`
-function setup(claudeOnce?: (r: { system: string; prompt: string }) => Promise<string>) {
+function setup(claudeOnce?: (r: { system: string; prompt: string; signal?: AbortSignal }) => Promise<string>) {
   const root = tmp('mdl-teach-'); cpSync(fixture, root, { recursive: true })
   mkdirSync(join(root, 'learn/speckle'), { recursive: true })
   writeFileSync(join(root, 'learn/speckle/01-speckle.learn.md'), LESSON)
@@ -82,6 +82,23 @@ describe('teach-back', () => {
     reply = 'not json at all'
     const bad = await (await post({ lesson: 'learn/speckle/01-speckle.learn.md', text: EXPLANATION })).json() as { error: { code: string } }
     expect(bad.error.code).toBe('engine')
+  })
+  it('runs two at a time at most, and gives Claude a time limit', async () => {
+    const waiting: (() => void)[] = []
+    let signal: AbortSignal | undefined
+    const { post } = setup((r) => { signal = r.signal; return new Promise((done) => waiting.push(() => done('{"ideas":[],"misconceptions":[],"followUp":"","feedback":"ok"}'))) })
+    const ask = () => post({ lesson: 'learn/speckle/01-speckle.learn.md', text: EXPLANATION, engine: 'claude' })
+    const first = [ask(), ask()]
+    await new Promise((r) => setTimeout(r, 20))
+    const third = await (await ask()).json() as { error: { code: string } }
+    expect(third.error.code).toBe('busy')
+    expect(signal).toBeInstanceOf(AbortSignal)
+    waiting.forEach((done) => done())
+    expect((await Promise.all(first)).map((r) => r.status)).toEqual([200, 200])
+    const again = ask() // the two are done: there is room again
+    await new Promise((r) => setTimeout(r, 20))
+    waiting.at(-1)!()
+    expect((await again).status).toBe(200)
   })
   it('refuses a one-line explanation, Claude where it is not set up, and a lesson that is gone', async () => {
     const { post } = setup()

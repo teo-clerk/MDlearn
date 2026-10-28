@@ -16,8 +16,10 @@ Tus apuntes siguen siendo archivos Markdown normales. Las **lecciones** (`learn/
 |---|---|
 | **Hoy** | Tu sesión diaria: primero las tarjetas pendientes, luego algunas nuevas. Aquí están también los objetivos y las fechas límite. |
 | **Estudiar** | Una tarjeta cada vez: responde, di si estabas seguro, lee la valoración. |
+| **Simulacro de examen** | Preguntas sobre lo que has estudiado, mezcladas entre lecciones, con tiempo si quieres, corregidas solo al final. |
 | **Preguntar** | Una pregunta sobre toda la carpeta, que el modelo local responde con tus propios pasajes. |
-| **Progreso** | Lo que has visto, cuánto recuerdas de cada lección, tu precisión y tu racha. |
+| **Progreso** | Lo que has visto, cuánto recuerdas de cada lección, tu precisión y tu racha. Y el **control de seguridad**: las tarjetas de las que estabas seguro pero fallaste, listas para repasar. |
+| **Estudiar sin conexión** | En el móvil: llévate las tarjetas de los próximos días (Hoy → *Llévate sin conexión las tarjetas de los próximos días*), estudia sin conexión y las respuestas se sincronizan cuando el ordenador está a tu alcance. Deja la página abierta mientras no tengas conexión. |
 | **AI Studio** | Claude Code escribe o mejora lecciones a partir de un apunte (usa tu suscripción de Claude). |
 | **Fórmulas** · **Glosario** · **Mapa** | Cada fórmula, cada término definido y qué apuntes se basan en cuáles: un grafo en 2D o 3D, coloreado según lo bien que recuerdas cada apunte. |
 
@@ -26,6 +28,8 @@ Tus apuntes siguen siendo archivos Markdown normales. Las **lecciones** (`learn/
 - **Selecciona texto** para ver la barra de herramientas: **Nota** (junto al pasaje), **Tarjeta** (una pregunta rápida),
   **Preguntar**, **Explicar** y **Visualizar** (modelo local).
 - Las palabras subrayadas son términos que definen tus apuntes: pasa el cursor por encima. Los enlaces a otros apuntes muestran una vista previa.
+- **Explícalo tú** (en una lección, o en el menú `…` para una sección): explícalo con tus palabras; el modelo
+  local (o Claude) te dice qué ideas clave trataste, qué corregir, y te hace una pregunta.
 - El **índice** del panel derecho sigue la sección que estás leyendo; el menú `…` tiene la
   hoja resumen y el código fuente.
 

@@ -186,6 +186,10 @@ Start `claude` in the folder and approve the `mdlearn` server when asked. Then t
 - **Study:** the coach flow above. **Today** also shows a 7-day forecast, a heatmap, how well your
   confidence matches your results, **deadlines** (turned into new cards per day) and the cards you keep
   failing, with a one-click AI fix.
+- **Exam practice:** a **mock exam** (questions on what you studied, mixed across lessons, optionally timed,
+  marked only at the end, then every answer); the **confidence check** on Progress (the cards you were sure
+  about and got wrong, one click to review them); **teach-back** (explain a lesson or a section in your own
+  words; the local model or Claude says which key ideas you covered, what to correct, and asks one question).
 - **Notes and AI beside the text:** select a passage to leave a note, ask the local model about it,
   have it explained or **visualised** (a plot, an explained formula, an animation), or turn it into a
   **quick card**.
@@ -198,7 +202,9 @@ Start `claude` in the folder and approve the `mdlearn` server when asked. Then t
 - **Edit, import, export:** a built-in editor with live preview and history; import web pages, PDFs,
   Anki decks and Jupyter notebooks; **export to Anki** to study on your phone anywhere.
 - **On your phone at home:** `mdlearn studio --lan` prints a private link and a QR code (reading,
-  studying and notes; no file changes or AI jobs unless you add `--lan-full`).
+  studying and notes; no file changes or AI jobs unless you add `--lan-full`). **Study offline** takes the
+  next 1, 3 or 7 days of cards onto the phone, marks them there with no connection, and syncs the answers
+  when the computer is reachable again (keep the page open while offline; add it to the home screen).
 - **Your language and colours:** *Settings* switches the interface to Italiano, Español, Français or
   Català (help included), and picks the theme and an accent colour (presets or your own, always readable).
 

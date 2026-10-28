@@ -16,8 +16,10 @@ I tuoi appunti restano semplici file Markdown. Le **lezioni** (`learn/*.learn.md
 |---|---|
 | **Oggi** | La tua sessione giornaliera: prima le carte da ripassare, poi qualche carta nuova. Qui ci sono anche obiettivi e scadenze. |
 | **Studia** | Una carta alla volta: rispondi, di' se eri sicuro, leggi il riscontro. |
+| **Simulazione d’esame** | Domande su ciò che hai studiato, mescolate tra le lezioni, a tempo se vuoi, corrette solo alla fine. |
 | **Chiedi** | Una domanda su tutta la cartella, a cui il modello locale risponde con i tuoi passaggi. |
-| **Progressi** | Cosa hai visto, quanto ricordi ogni lezione, la tua precisione e la tua serie. |
+| **Progressi** | Cosa hai visto, quanto ricordi ogni lezione, la tua precisione e la tua serie. E la **verifica della sicurezza**: le carte di cui eri sicuro ma che hai sbagliato, pronte da ripassare. |
+| **Studia offline** | Sul telefono: porta con te le carte dei prossimi giorni (Oggi → *Porta offline le carte dei prossimi giorni*), studia senza connessione e le risposte si sincronizzano quando il computer è raggiungibile. Tieni aperta la pagina mentre sei offline. |
 | **AI Studio** | Claude Code scrive o migliora lezioni a partire da un appunto (usa il tuo abbonamento Claude). |
 | **Formule** · **Glossario** · **Mappa** | Ogni formula, ogni termine definito e quali appunti si basano su quali: un grafo in 2D o 3D, colorato secondo quanto ricordi ogni appunto. |
 
@@ -26,6 +28,8 @@ I tuoi appunti restano semplici file Markdown. Le **lezioni** (`learn/*.learn.md
 - **Seleziona del testo** per la barra degli strumenti: **Nota** (accanto al passaggio), **Carta** (una domanda veloce),
   **Chiedi**, **Spiega** e **Visualizza** (modello locale).
 - Le parole sottolineate sono termini definiti nei tuoi appunti: passaci sopra. I link ad altri appunti mostrano un'anteprima al passaggio del mouse.
+- **Spiegalo tu** (in una lezione, o nel menu `…` per una sezione): spiegalo con parole tue; il modello
+  locale (o Claude) ti dice quali idee chiave hai trattato, cosa correggere, e ti fa una domanda.
 - L'**indice** nel pannello di destra segue la sezione che stai leggendo; il menu `…` contiene la
   scheda riassuntiva e il sorgente.
 

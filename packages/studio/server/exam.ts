@@ -1,13 +1,13 @@
 // Mock exams over HTTP. The questions go out without their answers; the whole paper comes back at the end and
-// is marked here, then recorded at once. Event ids are derived from the exam id, so sending the same paper
-// twice (a retry after a dropped connection) records it once.
+// is marked here, then recorded at once. Event ids are derived from the exam id and what is recorded first is
+// kept, so sending the same paper again (a retry after a dropped connection) changes nothing.
 import { randomUUID } from 'node:crypto'
 import {
-  examQueue, examSummary, examOutcome, locate, redactWidget, parseWebAnswer, checkStructured, ratingFor, ratingWords, scheduleAfter, EXAM_KINDS,
+  examQueue, examSummary, examOutcome, locate, redactWidget, parseWebAnswer, checkStructured, ratingFor, ratingWords, scheduleAfter, answerText, EXAM_KINDS,
   type ExamAnswer, type WebAnswer, type Checked,
 } from '@mdlearn/core'
 import { appendProgress, loadGoals, type AttemptEvent } from '@mdlearn/core/node'
-import { course, progressOf, lessonsOfDoc, answerText } from './study.js'
+import { course, progressOf, lessonsOfDoc } from './study.js'
 import type { Handle } from './workspaces.js'
 import { UserError } from './workspaces.js'
 import type { ExamPlan, ExamResult } from '../shared/types.js'
@@ -47,7 +47,7 @@ export function examGrade(h: Handle, examId: string, paper: PaperAnswer[]): Exam
   const attempts: AttemptEvent[] = done.map(({ ex, checked, given }) => ({ id: `exam:${examId}:${ex.widgetId}`, t: now, widget: ex.widgetId, card: ex.cardKey,
     kind: ex.skipped ? 'reveal' : 'attempt', ...(checked.correct !== null ? { correct: checked.correct } : {}), ...(ex.sure !== undefined ? { sure: ex.sure } : {}), answer: answerText(given as WebAnswer).slice(0, 2000) }))
   const reviews = done.map(({ ex }) => ({ id: `exam:${examId}:${ex.cardKey}`, t: now, key: ex.cardKey, rating: ratingFor(examOutcome(ex)) }))
-  const saved = done.length ? appendProgress(h.ws, { attempts, reviews }) : null
+  const saved = done.length ? appendProgress(h.ws, { attempts, reviews }, { keepExisting: true }) : null
   return {
     summary: examSummary(marked.map((m) => m.ex)),
     results: marked.map(({ ex, checked, given }): ExamResult['results'][number] => {

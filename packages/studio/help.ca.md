@@ -16,8 +16,10 @@ Els teus apunts continuen sent fitxers Markdown normals. Les **lliçons** (`lear
 |---|---|
 | **Avui** | La teva sessió diària: primer les targetes pendents, després unes quantes de noves. Aquí també hi ha els objectius i les dates límit. |
 | **Estudia** | Una targeta cada vegada: respon, digues si n'estaves segur, llegeix la valoració. |
+| **Simulacre d’examen** | Preguntes sobre el que has estudiat, barrejades entre lliçons, amb temps si vols, corregides només al final. |
 | **Pregunta** | Una pregunta sobre tota la carpeta, que el model local respon amb els teus propis passatges. |
-| **Progrés** | El que has vist, com recordes cada lliçó, la teva precisió i la teva ratxa. |
+| **Progrés** | El que has vist, com recordes cada lliçó, la teva precisió i la teva ratxa. I el **control de seguretat**: les targetes de les quals n’estaves segur però vas fallar, a punt per repassar. |
+| **Estudia sense connexió** | Al mòbil: emporta’t les targetes dels propers dies (Avui → *Emporta’t sense connexió les targetes dels propers dies*), estudia sense connexió i les respostes se sincronitzen quan l’ordinador és a l’abast. Deixa la pàgina oberta mentre no tinguis connexió. |
 | **AI Studio** | Claude Code escriu o millora lliçons a partir d'un apunt (fa servir la teva subscripció de Claude). |
 | **Fórmules** · **Glossari** · **Mapa** | Cada fórmula, cada terme definit i quins apunts es basen en quins: un graf en 2D o 3D, acolorit segons com recordes cada apunt. |
 
@@ -26,6 +28,8 @@ Els teus apunts continuen sent fitxers Markdown normals. Les **lliçons** (`lear
 - **Selecciona text** per veure la barra d'eines: **Nota** (al costat del passatge), **Targeta** (una pregunta ràpida),
   **Pregunta**, **Explica** i **Visualitza** (model local).
 - Les paraules subratllades són termes que defineixen els teus apunts: passa-hi el cursor per sobre. Els enllaços a altres apunts en mostren una previsualització.
+- **Explica-ho tu** (en una lliçó, o al menú `…` per a una secció): explica-ho amb les teves paraules; el model
+  local (o Claude) et diu quines idees clau has tractat, què has de corregir, i et fa una pregunta.
 - L'**índex** del tauler dret segueix la secció que llegeixes; el menú `…` té el
   full resum i el codi font.
 

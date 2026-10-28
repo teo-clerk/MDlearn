@@ -16,8 +16,10 @@ Your notes stay plain Markdown files. **Lessons** (`learn/*.learn.md`) hold shor
 |---|---|
 | **Today** | Your daily session: cards due first, then a few new ones. Goals and deadlines live here too. |
 | **Study** | One card at a time: answer, say whether you were sure, read the feedback. |
+| **Mock exam** | Questions on what you have studied, mixed across lessons, timed if you like, marked only at the end. |
 | **Ask** | A question about the whole folder, answered by the local model from your own passages. |
-| **Progress** | What you have seen, how well you remember each lesson, your accuracy and streak. |
+| **Progress** | What you have seen, how well you remember each lesson, your accuracy and streak, and the **confidence check**: the cards you were sure about and got wrong, ready to review. |
+| **Study offline** | On a phone: take the next days' cards (Today → *Take the next days' cards offline*), study with no connection, and the answers sync when the computer is reachable. Keep the page open while offline. |
 | **AI Studio** | Claude Code writes or improves lessons from a note (uses your Claude subscription). |
 | **Formulas** · **Glossary** · **Map** | Every formula, every defined term, and which notes build on which: a graph in 2D or 3D, coloured by how well you remember each note. |
 
@@ -26,6 +28,8 @@ Your notes stay plain Markdown files. **Lessons** (`learn/*.learn.md`) hold shor
 - **Select text** for the toolbar: **Note** (beside the passage), **Card** (a quick question),
   **Ask**, **Explain** and **Visualise** (local model).
 - Underlined words are terms your notes define: hover them. Links to other notes preview on hover.
+- **Teach it back** (on a lesson, or in the `…` menu for a section): explain it in your own words; the
+  local model (or Claude) says which key ideas you covered, what to correct, and asks one question back.
 - The **outline** in the right panel follows the section you are reading; the `…` menu has the
   cheat sheet and the raw source.
 

@@ -1,7 +1,7 @@
 // Ctrl+K: jump to a document or lesson, run an action, or search inside every document.
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation } from 'wouter'
-import { BookA, BookOpenCheck, ChartNoAxesColumn, ClipboardCheck, FileText, FolderOpen, GraduationCap, MessageSquareText, Network, Search, Settings, Sigma, TextSearch, LifeBuoy } from 'lucide-react'
+import { BookA, BookOpenCheck, ChartNoAxesColumn, ClipboardCheck, CloudOff, FileText, FolderOpen, GraduationCap, MessageSquareText, Network, Search, Settings, Sigma, TextSearch, LifeBuoy } from 'lucide-react'
 import { search, useTree } from '../api/queries'
 import { Kbd } from '../ui/primitives'
 import { useUi } from '../state/ui'
@@ -40,6 +40,7 @@ export function CommandPalette({ ws }: { ws: string }) {
   const items = useMemo<Item[]>(() => {
     const actions: Item[] = [
       { id: 'a-study', icon: BookOpenCheck, title: t('Study now'), detail: tree.data?.totals.due ? tp(tree.data.totals.due, '{n} due', '{n} due') : undefined, href: `/w/${ws}/study`, group: t('Actions') },
+      { id: 'a-offline', icon: CloudOff, title: t('Study offline'), detail: t('Take the next days’ cards to a phone'), href: `/offline/${ws}`, group: t('Actions') },
       { id: 'a-exam', icon: ClipboardCheck, title: t('Mock exam'), href: `/w/${ws}/exam`, group: t('Actions') },
       { id: 'a-progress', icon: ChartNoAxesColumn, title: t('Progress'), href: `/w/${ws}/progress`, group: t('Actions') },
       { id: 'a-ask', icon: MessageSquareText, title: t('Ask your folder'), href: `/w/${ws}/ask`, group: t('Actions') },

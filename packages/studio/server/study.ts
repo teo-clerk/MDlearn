@@ -3,7 +3,7 @@
 import { randomUUID } from 'node:crypto'
 import { relative, sep } from 'node:path'
 import {
-  studyQueue, locate, checkStructured, parseWebAnswer, redactWidget, ratingFor, ratingWords, scheduleAfter, whenText, report, deriveCards, retrievability, askable, videoMoment, confidence,
+  studyQueue, locate, checkStructured, parseWebAnswer, redactWidget, ratingFor, ratingWords, scheduleAfter, whenText, report, deriveCards, retrievability, askable, videoMoment, confidence, answerText,
   type QueueItem,
   type Lesson, type Outcome, type MdNode, type Block, type WebAnswer,
 } from '@mdlearn/core'
@@ -95,20 +95,6 @@ export function check(h: Handle, body: { widgetId: string; answer: unknown; sure
       kind: answer.type === 'skip' ? 'reveal' : 'attempt', ...(checked.correct !== null ? { correct: checked.correct } : {}), ...(body.sure !== undefined ? { sure: body.sure } : {}), answer: text.slice(0, 2000) }] })
   }
   return checked
-}
-
-/** What the learner answered, as text for the attempt log. */
-export function answerText(a: WebAnswer): string {
-  switch (a.type) {
-    case 'quiz': return a.picked.join(',')
-    case 'cloze': case 'steps': return a.values.join(' ; ')
-    case 'order': return a.order.join(' ')
-    case 'explain': case 'code': return a.text
-    case 'match': return a.pairs.map((j) => (j === null ? '-' : j)).join(' ')
-    case 'sort': return a.groups.map((g) => (g === null ? '-' : g)).join(' ')
-    case 'speed': return a.answers.map((x) => (x === null ? '-' : x ? 'T' : 'F')).join('')
-    case 'skip': return ''
-  }
 }
 
 export function hint(h: Handle, widgetId: string, n: number): MdNode[] | null {

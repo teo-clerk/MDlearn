@@ -10,6 +10,8 @@ const LessonView = lazy(() => import('./lesson/LessonView'))
 const StudyPage = lazy(() => import('./study/StudyPage'))
 const ExamPage = lazy(() => import('./exam/ExamPage'))
 const TeachPage = lazy(() => import('./teach/TeachPage'))
+const OfflinePage = lazy(() => import('./offline/OfflinePage'))
+const OfflineHome = lazy(() => import('./offline/OfflinePage').then((m) => ({ default: m.OfflineHome })))
 const ProgressPage = lazy(() => import('./progress/ProgressPage'))
 const StudioPage = lazy(() => import('./studio/StudioPage'))
 const FormulasPage = lazy(() => import('./knowledge/FormulasPage'))
@@ -51,6 +53,8 @@ function Workspace() {
 export function App() {
   return (
     <Switch>
+      <Route path="/offline/:ws"><Suspense fallback={<div className="p-10"><Spinner /></div>}><OfflinePage /></Suspense></Route>
+      <Route path="/offline"><Suspense fallback={<div className="p-10"><Spinner /></div>}><OfflineHome /></Suspense></Route>
       <Route path="/w/:ws" nest={false}><Workspace /></Route>
       <Route path="/w/:ws/*"><Workspace /></Route>
       <Route><Home /></Route>
