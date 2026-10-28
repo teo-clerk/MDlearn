@@ -47,6 +47,7 @@ tarjetas de repaso. El tutorial muestra cada uno en directo con su código.
 | `:::speed` con afirmaciones `- [x]` / `- [ ]` | una ronda de verdadero/falso (`{time=60}` para una cuenta atrás) |
 | `:::plot`, `:::formula`, `:::animate`, `:::sim` | gráficas interactivas, fórmulas explicadas, animaciones, simulaciones |
 | `:::html` con un bloque `html` | tu propio HTML, CSS y JavaScript, en un entorno aislado |
+| `::video[clip.mp4]` o un enlace de YouTube/Vimeo | un vídeo; las preguntas que lo siguen con `{at=4:15}` lo pausan ahí |
 | `<mark>`, `<kbd>`, `<sub>`, `<details>`, `<figure>`, `<svg>`… | HTML en su sitio (los scripts siempre se eliminan) |
 | `:::note`, `:::tip`, `:::important`, `:::warning` | recuadros (`{fold}` para plegarlos) |
 

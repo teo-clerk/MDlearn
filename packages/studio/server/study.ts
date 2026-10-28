@@ -3,7 +3,7 @@
 import { randomUUID } from 'node:crypto'
 import { relative, sep } from 'node:path'
 import {
-  studyQueue, locate, checkStructured, parseWebAnswer, redactWidget, ratingFor, ratingWords, scheduleAfter, whenText, report, deriveCards, retrievability, askable,
+  studyQueue, locate, checkStructured, parseWebAnswer, redactWidget, ratingFor, ratingWords, scheduleAfter, whenText, report, deriveCards, retrievability, askable, videoMoment,
   type Lesson, type Outcome, type MdNode, type Block, type WebAnswer,
 } from '@mdlearn/core'
 import { loadCourse, loadProgress, loadGoals, appendProgress, findDoc, loadDoc, lessonDirFor } from '@mdlearn/core/node'
@@ -61,6 +61,7 @@ export function item(h: Handle, widgetId: string): StudyItem {
     exposition,
     reads: loc.card.blocks.flatMap((b) => (b.type === 'read' ? b.refs : [])),
     lessonPath: pathOf.get(loc.lesson.id) ?? '',
+    ...(() => { const video = videoMoment(loc.card, widgetId); return video ? { video } : {} })(),
   }
 }
 

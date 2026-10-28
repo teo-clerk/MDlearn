@@ -13,6 +13,7 @@ import { useNotesUi } from '../notes/store'
 import { useUi } from '../state/ui'
 import type { NoteAnchor } from '../../shared/types'
 import { assetUrl, linkTarget } from '../lib/paths'
+import { anchorForMoment } from '../lib/anchor'
 import { DocBlocks, type BlockEnv } from './DocBlocks'
 import { Outline } from './Outline'
 import { LinksPanel } from '../knowledge/LinksPanel'
@@ -81,7 +82,8 @@ export default function Reader({ ws }: { ws: string }) {
       decorateText: decorate(plan), wrapLink: (url, a) => <PreviewLink ws={ws} from={path} url={url}>{a}</PreviewLink>,
     },
     check: async (widgetId: string, answer: WebAnswer) => (await api.post<{ checked: Checked }>(`/api/w/${ws}/doc/check`, { path, widgetId, answer })).checked,
-  }), [ws, path, plan])
+    ...(!source && article ? { noteAt: (label: HTMLElement, at: number) => { const a = anchorForMoment(article, label, at); if (a) void onSelection('note', a) } } : {}),
+  }), [ws, path, plan, source, article]) // eslint-disable-line react-hooks/exhaustive-deps -- onSelection reads only stable setters
 
   if (!path) return <Empty icon={FileText} title={t('No document selected')}>{t('Choose a file in the sidebar.')}</Empty>
   const crumbs = path.split('/')

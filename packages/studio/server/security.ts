@@ -86,7 +86,10 @@ export function security(o: SecurityOptions): MiddlewareHandler {
 export function pageCsp(dev: boolean): string {
   return [
     "default-src 'self'", `script-src 'self'${dev ? " 'unsafe-inline'" : ''}`, "style-src 'self' 'unsafe-inline'", "img-src 'self' data: blob:",
-    "font-src 'self' data:", `connect-src 'self'${dev ? ' ws: wss:' : ''}`, "frame-src 'self'", "worker-src 'self' blob:",
+    "font-src 'self' data:", `connect-src 'self'${dev ? ' ws: wss:' : ''}`, "media-src 'self'",
+    // the only outside pages a document can open in place: YouTube (privacy-enhanced domain) and Vimeo players,
+    // loaded only when the reader presses play
+    "frame-src 'self' https://www.youtube-nocookie.com https://player.vimeo.com", "worker-src 'self' blob:",
     "object-src 'none'", "base-uri 'none'", "form-action 'self'", "frame-ancestors 'self'",
   ].join('; ')
 }

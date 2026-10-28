@@ -5,6 +5,7 @@ import { streamSSE } from 'hono/streaming'
 import { compress } from 'hono/compress'
 import { bodyLimit } from 'hono/body-limit'
 import { readFileSync, statSync, existsSync } from 'node:fs'
+import { MEDIA_TYPES, mediaResponse } from './media.js'
 import { extname, relative, join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { z } from 'zod'
@@ -217,12 +218,16 @@ export function createApp(deps: Deps): Hono {
     c.header('Content-Type', 'text/markdown; charset=utf-8')
     return c.body(readFileSync(abs, 'utf8'))
   })
+  // images (read whole, ≤ 20 MB) and, since v1.4, video and caption files (streamed in ranges, any size)
   app.get('/api/w/:ws/asset', need('read', o), (c) => {
-    const h = ws(c), abs = deps.workspaces.resolve(h, pathParam(c), /\.(png|jpe?g|gif|webp)$/i)
-    if (statSync(abs).size > 20 * 1024 * 1024) throw new UserError('too-large', 'Image too large.')
-    c.header('Content-Type', IMAGE_TYPES[extname(abs).toLowerCase()] ?? 'application/octet-stream')
+    const h = ws(c), abs = deps.workspaces.resolve(h, pathParam(c), /\.(png|jpe?g|gif|webp|mp4|m4v|webm|ogv|mov|vtt)$/i)
+    const st = statSync(abs), ext = extname(abs).toLowerCase(), size = st.size
+    if (!st.isFile()) throw new UserError('not-found', 'File not found.')
     c.header('Content-Security-Policy', "default-src 'none'; sandbox")
     c.header('Cache-Control', 'no-cache')
+    if (MEDIA_TYPES[ext]) return mediaResponse(c, abs, size, MEDIA_TYPES[ext])
+    if (size > 20 * 1024 * 1024) throw new UserError('too-large', 'Image too large.')
+    c.header('Content-Type', IMAGE_TYPES[ext] ?? 'application/octet-stream')
     return c.body(readFileSync(abs))
   })
   app.get('/api/w/:ws/lesson', need('read', o), (c) => {

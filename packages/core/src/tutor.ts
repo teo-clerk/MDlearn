@@ -1,6 +1,7 @@
 // Tutor engine — pure functions behind the MCP tools and the CLI: what to study next, how to pose it
 // without leaking the answer, how to check it, and how to record the result as an FSRS review.
 import { z } from 'zod'
+import { formatTime } from './video.js'
 import { isWidget, type Lesson, type Card, type Widget, type Block, type ReadRef, type Blank, type MdNode } from './ast.js'
 import { checkBlank, checkText, type Verdict } from './checkers.js'
 import { toMarkdown, inlineText, type MdOptions } from './md.js'
@@ -98,6 +99,8 @@ export interface Posed {
   hintsAvailable: number
   /** Source sections behind this card (companion lessons). */
   reads: ReadRef[]
+  /** The video this question pauses at (v1.4): its title, the time, and a link that starts there when it is online. */
+  video?: { title: string; at: string; link?: string }
 }
 const FORMAT: Record<Surface, (w: W, n: number) => string> = {
   terminal: (w, n) => {
@@ -145,8 +148,21 @@ export function pose(loc: Located, opts: PoseOptions = {}): Posed {
     case 'match': case 'sort': case 'speed': question = poseGame(w, mo); break
   }
   const reads = card.blocks.flatMap((b) => (b.type === 'read' ? b.refs : []))
+  const video = videoMoment(card, w.id)
   return { widgetId: w.id, cardKey: cardKey(lesson, card), kind: w.type, title: `${displayTitle(lesson.title)} › ${displayTitle(card.title)}`,
-    question, answerFormat: FORMAT[surface](w, ids.length), hintsAvailable: w.hints.length, reads }
+    question, answerFormat: FORMAT[surface](w, ids.length), hintsAvailable: w.hints.length, reads, ...(video ? { video } : {}) }
+}
+/** The video of the card that pauses at this question, described for a surface that cannot play it. */
+export function videoMoment(card: Card, widgetId: string): Posed['video'] {
+  for (const b of card.blocks) {
+    if (b.type !== 'video') continue
+    const c = b.checkpoints.find((x) => x.widget === widgetId)
+    if (!c) continue
+    const s = b.source, at = Math.floor(c.at)
+    const link = s.kind === 'youtube' ? `https://youtu.be/${s.id}?t=${at}` : s.kind === 'vimeo' ? `https://vimeo.com/${s.id}${s.hash ? `/${s.hash}` : ''}#t=${at}s` : undefined
+    return { title: b.title ?? (s.kind === 'file' ? s.path.split('/').pop()! : `${s.kind === 'youtube' ? 'YouTube' : 'Vimeo'} video`), at: formatTime(c.at), ...(link ? { link } : {}) }
+  }
+  return undefined
 }
 /** A list item's flow content as phrasing (paragraph children), for one-line rendering. */
 const flat = (flow: { children?: unknown[] }[]) => flow.flatMap((b) => ((b as { type: string }).type === 'paragraph' ? ((b.children ?? []) as never[]) : [b as never]))

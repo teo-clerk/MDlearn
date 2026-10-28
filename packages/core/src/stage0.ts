@@ -423,6 +423,8 @@ function parseAttrs(s: string): string[] {
     else if (/^time\s*=\s*"?\d{1,4}"?$/.test(tok)) out.push(tok.replace(/\s|"/g, ''))
     else if (/^(x|y)\s*=\s*"?(log|lin|linear)"?$/.test(tok)) out.push(tok.replace(/\s|"/g, '').replace('linear', 'lin'))
     else if (/^height\s*=\s*"?\d{2,4}"?$/.test(tok)) out.push(tok.replace(/\s|"/g, ''))
+    // a checkpoint time (v1.4), kept even when unreadable so the compiler can report it (E930)
+    else if (/^at\s*=/.test(tok)) out.push(`at="${tok.replace(/^at\s*=\s*/, '').replace(/"/g, '').slice(0, 20)}"`)
     else if (/^collapse\s*=\s*"?true/.test(tok)) out.push('fold')
   }
   return out

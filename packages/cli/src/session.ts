@@ -89,6 +89,7 @@ async function askOne(lessons: Lesson[], item: QueueItem, position: string, ask:
   out()
   out(dim(`${position} · ${record ? (item.reason === 'due' ? 'review' : 'new') : 'practice'}`) + '  ' + bold(p.title))
   if (reads) out(dim(`Source: ${reads}`))
+  if (p.video) out(dim(`From the video "${p.video.title}" at ${p.video.at}${p.video.link ? ` (${p.video.link})` : ''}`))
   out()
   out(wrap(p.question))
   out()

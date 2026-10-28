@@ -33,6 +33,11 @@ describe('Anki export', () => {
     expect(all).not.toMatch(/<script|onerror/i)
     for (const n of notes) { expect(n.fields.every((f) => typeof f === 'string')).toBe(true); expect(n.guid).toMatch(/^[A-Za-z0-9]{6,10}$/) }
   })
+  it('says which video and when for a question a video pauses at, with a link that starts there', () => {
+    const l = compileSource('---\ntitle: Video\n---\n## Card\n\n::video[https://youtu.be/dQw4w9WgXcQ]{title="Speckle <basics>"}\n\n:::quiz{at=1:05}\nWhich band?\n- [x] C\n- [ ] L\n  > No.\n:::\n', join(fixtures, 'v.learn.md')).lesson!
+    const [n] = notesOf([l])
+    expect(n.fields[0]).toMatch(/^<p><small>From the video <a href="https:\/\/youtu\.be\/dQw4w9WgXcQ\?t=65">Speckle &lt;basics&gt; at 1:05<\/a><\/small><\/p>/)
+  })
   it('hides every gap of a cloze card together, including a gap inside a formula', () => {
     const clozes = notes.filter((n) => n.model === 'cloze').map((n) => n.fields[0])
     expect(clozes.length).toBeGreaterThanOrEqual(3)

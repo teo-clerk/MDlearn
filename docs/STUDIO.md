@@ -112,6 +112,10 @@ context, then without, then a unique match; otherwise it is listed as "passage c
 the CSS Custom Highlight API, so the document's DOM is never modified. On wide screens each card sits next
 to its passage and follows the scroll; the card you are working on keeps its place.
 
+Under a video, **Note at 4:15** pins a note to a moment: the anchor quotes the video's title and adds
+`t` (seconds), so the card sits beside the player, and its time button plays the video from there (the
+note panel sends the player a `mdl-video-seek` event).
+
 ## 5. Visuals runtime
 
 Formulas arrive as MathJSON and are evaluated by `@mdlearn/core/eval` (no `eval`, no parser in the
@@ -143,6 +147,18 @@ checked through `study/check` with `practice: true` or `doc/check`, neither of w
 holds only what that move earned (no `expected` until the round is complete). Memory and speed rounds
 submit themselves when they end. Motion (lines, flips, FLIP moves, a countdown) uses transforms only and
 follows `prefers-reduced-motion`.
+
+**Video** (DSL §8.15, `web/visuals/VideoBlock.tsx`). Files play in a native `<video>` with a WebVTT
+`<track>`; the segment is a media fragment (`#t=start,end`). The asset route serves mp4/m4v/webm/ogv/mov
+and `.vtt` in byte ranges (`Range` → 206 with `Content-Range`, 416 outside the file, `no-transform` so
+compression never breaks a range); images keep their 20 MB cap. YouTube (`youtube-nocookie.com`) and Vimeo
+(`dnt=1`) start as a plain box with Play: no frame and no thumbnail, so nothing is fetched from them until
+the reader asks. The frames are driven with the players' own `postMessage` protocol (`web/visuals/videoPlayers.ts`),
+not their script libraries; messages count only from that frame's window and that site's origin. A
+checkpoint is reached when two time reports of ordinary playback (≤ 2 s apart) span its time, so seeking
+past one does not stop there; the video pauses, leaves fullscreen and the question opens below it with
+focus. The checkpoint questions are taken out of the page flow and reached through the chips under the
+player. Study cards and the Anki export say which video and time a checkpoint comes from.
 
 
 ## 6. Study tools
@@ -343,6 +359,7 @@ choices; they live in `localStorage` and `public/theme.js` applies them before t
 | Path traversal | every path goes through `realPath`-based `inRoot` (symlinks and dangling links resolved), hidden folders refused; job ids must be UUIDs; undo only restores files inside the folder |
 | AI jobs | scoped writes (folder or single file, `.md` only, `.git/.claude/.mdlearn` protected), folder-only reads, no shell, no network tools, snapshots + undo |
 | Imports | the web importer accepts only http/https without credentials, caps size and time, never follows into other schemes; files are written with `wx` (never replacing) inside `inRoot`; PDFs are parsed by poppler in a temp folder; uploads ≤ 100 MB, `write` capability; the editor only saves existing `.md` files inside the folder (hidden folders refused) with a stale-file check |
+| Videos | page CSP `media-src 'self'`; `frame-src` only `'self'`, `https://www.youtube-nocookie.com` and `https://player.vimeo.com`; the compiler accepts only relative video files and YouTube/Vimeo ids (validated by pattern) and builds the embed address itself; embeds load on Play, in `sandbox` frames without top navigation, `referrerpolicy="strict-origin-when-cross-origin"` (the page itself sends no referrer); video files go through the same `inRoot` asset route |
 | Simulations, Python and `:::html` | opaque-origin sandboxes, own CSP without network; simulations and Python in a Worker + watchdog, `:::html` started on demand + heartbeat watchdog; the server only serves allow-listed Pyodide files and caches them atomically |
 | Answer keys | games and questions reach the browser without keys; single moves are checked on the server and reveal only their own result |
 | Large inputs | JSON bodies ≤ 2 MB, uploads ≤ 200 MB / 2,000 files, answer and note sizes validated with zod, linear-time text normalisation |

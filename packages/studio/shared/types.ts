@@ -35,7 +35,8 @@ export interface SearchHit { doc: string; section: string; title: string; snippe
 
 // ---- study
 export interface StudyPlan { items: QueueItem[]; due: number; fresh: number; minutes: number }
-export interface StudyItem { item: QueueItem; title: string; widget: PosedWidget; exposition: MdNode[]; reads: ReadRef[]; lessonPath: string }
+/** `video`: the video this question pauses at in the lesson (its title, the time, a link that starts there when online). */
+export interface StudyItem { item: QueueItem; title: string; widget: PosedWidget; exposition: MdNode[]; reads: ReadRef[]; lessonPath: string; video?: { title: string; at: string; link?: string } }
 export interface CheckResponse { checked: Checked }
 export interface RecordResponse { rating: 1 | 2 | 3; word: string; meaning: string; next: { due: string; when: string } | null }
 
@@ -55,7 +56,8 @@ export type ServerEvent =
 export interface ApiError { error: { code: string; message: string } }
 
 // ---- notes & AI
-export interface NoteAnchor { section: string | null; quote: { exact: string; prefix: string; suffix: string } }
+/** `t`: a note on a moment of a video (seconds); the quote is then the video's label. */
+export interface NoteAnchor { section: string | null; quote: { exact: string; prefix: string; suffix: string }; t?: number }
 export interface NoteMessage { id: string; role: 'user' | 'ai'; text: string; engine?: string; at: number; error?: string; done: boolean }
 export interface Note { id: string; doc: string; anchor: NoteAnchor; body: string; thread: NoteMessage[]; created: number; updated: number }
 export interface EnginesInfo { local: { available: boolean; model: string; models: string[]; error?: string; busy: number }; claude: { available: boolean; version?: string; error?: string } }

@@ -24,6 +24,19 @@ function setup() {
   return { root, h, get, post, lessons }
 }
 
+describe('a question a video pauses at', () => {
+  it('says which video and when on the study card', async () => {
+    const { root, get } = setup()
+    const { mkdirSync, writeFileSync } = await import('node:fs')
+    mkdirSync(join(root, 'learn/video'), { recursive: true })
+    writeFileSync(join(root, 'learn/video/01-watch.learn.md'), '---\ntitle: Watch\nid: watch\n---\n## The talk\n\n::video[https://vimeo.com/76979871]{title="The talk"}\n\n:::quiz{at=2:30}\nWhich band?\n- [x] C\n- [ ] L\n  > No.\n:::\n')
+    const watch = loadCourse(workspace(root).learnDir).map((l) => l.lesson).find((l) => l?.id === 'watch')!
+    const quiz = watch.cards[0].blocks.find((b) => b.type === 'quiz') as { id: string }
+    const item = await get<StudyItem>(`/study/item?widget=${encodeURIComponent(quiz.id)}`)
+    expect(item.video).toEqual({ title: 'The talk', at: '2:30', link: 'https://vimeo.com/76979871#t=150s' })
+  })
+})
+
 describe('study over HTTP', () => {
   const { root, get, post, lessons } = setup()
   it('plans a session of new cards with a time estimate', async () => {

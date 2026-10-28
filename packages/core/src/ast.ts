@@ -74,6 +74,15 @@ export type VisualCurve = z.infer<typeof VisualCurveSchema>
 export type Visual = z.infer<typeof VisualSchema>
 
 export const ReadRefSchema = z.object({ doc: z.string(), section: z.string(), title: z.string().optional(), words: z.number().optional() })
+export const VideoSourceSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('file'), path: z.string() }),
+  z.object({ kind: z.literal('youtube'), id: z.string().regex(/^[A-Za-z0-9_-]{11}$/) }),
+  z.object({ kind: z.literal('vimeo'), id: z.string().regex(/^\d{1,12}$/), hash: z.string().regex(/^[0-9a-f]{6,20}$/i).optional() }),
+])
+/** A video (v1.4), never graded; `checkpoints` are questions of the same card it pauses for (seconds, widget id). */
+export const VideoBlockSchema = z.object({ type: z.literal('video'), id: z.string(), source: VideoSourceSchema, title: z.string().optional(),
+  start: z.number().optional(), end: z.number().optional(), captions: z.string().optional(),
+  checkpoints: z.array(z.object({ at: z.number(), widget: z.string() })) })
 export const BlockSchema = z.union([
   z.object({ type: z.literal('prose'), node: MdNodeSchema }),
   z.object({ type: z.literal('read'), refs: z.array(ReadRefSchema).min(1) }),
@@ -81,6 +90,7 @@ export const BlockSchema = z.union([
     summary: Phrasing.optional(), children: Flow }),
   WidgetSchema,
   VisualSchema,
+  VideoBlockSchema,
 ])
 export const CardSchema = z.object({ id: z.string(), title: z.string(), blocks: z.array(BlockSchema) })
 export const LessonSchema = z.object({
@@ -106,6 +116,7 @@ export type Block = z.infer<typeof BlockSchema>
 export type Card = z.infer<typeof CardSchema>
 export type Lesson = z.infer<typeof LessonSchema>
 export type ReadRef = z.infer<typeof ReadRefSchema>
+export type VideoBlock = z.infer<typeof VideoBlockSchema>
 
 /** Frontmatter: synonyms are mapped *before* strict validation. */
 export const FRONTMATTER_SYNONYMS: Record<string, string> = {

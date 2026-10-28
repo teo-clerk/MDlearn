@@ -11,6 +11,8 @@ import { UserError } from './workspaces.js'
 export const AnchorSchema = z.object({
   section: z.string().max(200).nullable(),
   quote: z.object({ exact: z.string().min(1).max(2000), prefix: z.string().max(64), suffix: z.string().max(64) }),
+  /** A moment of a video, in seconds (v1.4). */
+  t: z.number().min(0).max(100 * 3600).optional(),
 })
 const MessageSchema = z.object({ id: z.string(), role: z.enum(['user', 'ai']), text: z.string().max(40_000), engine: z.string().optional(), at: z.number(), error: z.string().optional(), done: z.boolean().default(true) })
 export const NoteSchema = z.object({

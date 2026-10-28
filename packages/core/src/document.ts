@@ -22,7 +22,7 @@ export interface DocModel {
   blocks: DocBlock[]
   diagnostics: Diagnostic[]
 }
-export interface ParseDocumentOptions { path?: string; resolveSource?: SourceResolver; checkJs?: (code: string) => string | null }
+export interface ParseDocumentOptions { path?: string; resolveSource?: SourceResolver; checkJs?: (code: string) => string | null; fileExists?: (path: string) => boolean }
 
 export function parseDocument(source: string, opts: ParseDocumentOptions = {}): DocModel {
   const path = opts.path ?? 'document.md'
@@ -43,7 +43,7 @@ export function parseDocument(source: string, opts: ParseDocumentOptions = {}): 
   const lang = typeof frontmatter?.lang === 'string' ? frontmatter.lang : 'en'
   const outline = outlineDoc(source, path)
   const byLine = new Map(outline.sections.map((s) => [s.startLine, s]))
-  const { clean, cleanAll, toBlocks } = blockBuilder({ s0, macros, lang, diag, resolveSource: opts.resolveSource, document: true, ...(opts.checkJs ? { checkJs: opts.checkJs } : {}),
+  const { clean, cleanAll, toBlocks } = blockBuilder({ s0, macros, lang, diag, resolveSource: opts.resolveSource, document: true, ...(opts.checkJs ? { checkJs: opts.checkJs } : {}), ...(opts.fileExists ? { fileExists: opts.fileExists } : {}),
     ...(typeof frontmatter?.source === 'string' ? { source: frontmatter.source } : {}) })
   const slugger = new GithubSlugger()
 

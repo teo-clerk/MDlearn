@@ -1,9 +1,10 @@
-# MDlearn DSL — Specification v1.3
+# MDlearn DSL — Specification v1.4
 
 > **Status:** normative for `format 1` lesson files (`*.learn.md`). v1.1 adds companion lessons
 > (`source:` and `::read`, §8.10); v1.2 adds visual blocks (`plot`, `formula`, `animate`, `sim`, §8.11);
 > v1.3 adds games (`match`, `sort`, `speed`, §8.12), safe HTML in place (§8.13), sandboxed `:::html`
-> blocks (§8.14) and Markdown animation frames (§8.11). Every earlier file is a valid v1.3 file.
+> blocks (§8.14) and Markdown animation frames (§8.11); v1.4 adds video with checkpoint questions
+> (`::video`, §8.15). Every earlier file is a valid v1.4 file.
 > **Conformance:** every example in this document is compiled by the reference prototype
 > (Stage 0 → remark → CourseAST) in the test suite: valid examples produce **0 errors**, invalid
 > ones produce exactly the diagnostics shown. The diagnostics catalogue (§12) is generated from the
@@ -224,6 +225,7 @@ GFM/Obsidian alerts `> [!TIP]-`.
 | `note`, `tip`, `important`, `warning` | callout | Side detail, intuition, key takeaway, misconception. |
 | `::hint[…]` | leaf | One progressive hint inside a widget (single line). |
 | `::read[§…]` | leaf | Companion lessons: link a card to source sections (§8.10). |
+| `::video[…]` | leaf | A video file, or a YouTube or Vimeo video, with checkpoint questions (§8.15, v1.4). |
 
 ### 7.3 Attributes
 
@@ -238,6 +240,8 @@ Attributes are few and named; anything else is ignored.
 | `{time=60}` | `speed` | Seconds for the whole round (5–3600); without it the round is untimed (v1.3). |
 | `{replace}` | `animate` | One frame at a time, crossfading, instead of frames accumulating (v1.3). |
 | `{auto}`, `{height=…}`, `{x=log}`, `{y=log}` | visuals | §8.11, §8.14. |
+| `{start=… end=… title="…" captions=…}` | `::video` | The segment to play, a title, a WebVTT captions file (§8.15, v1.4). |
+| `{at=4:15}` | widgets after a `::video` | A checkpoint: the video pauses there and asks this question (§8.15, v1.4). |
 
 Widgets never nest (E106: the inner widget is locked). Callouts may appear inside widgets.
 
@@ -429,7 +433,9 @@ Natural frequencies keep the base rate visible.
 ### 8.9 Diagrams, images, annotations
 
 - Images: `![alt](url)`; alt text is required (W604). Image URLs must be `https` or relative; link URLs
-  `http(s)`, `mailto` or relative. Anything else (`javascript:`, `data:`) is removed.
+  `http(s)`, `mailto` or relative. Anything else (`javascript:`, `data:`) is removed. An image whose
+  address is a video (`![Talk](clips/talk.mp4)`, `![](https://youtu.be/…)`) alone in its paragraph is a
+  video (§8.15); inside a sentence a YouTube or Vimeo address becomes a link and a file its title.
 - Diagrams: ` ```mermaid ` fences. Quote node labels that contain punctuation (`A["P(+) = 0.0594"]`).
   Explain the diagram in the adjacent text of the same card; the player uses the card title and that
   text as the diagram's accessible name and description (Mermaid `accTitle:`/`accDescr:` override them).
@@ -669,6 +675,37 @@ Choose the radar band that fits the job.
 | API | `mdlearn.theme` (the Studio's colours and fonts, also as CSS variables: `var(--text)`, `var(--bg)`, `var(--good)`, `var(--font-read)`, …, following light/dark), `mdlearn.reducedMotion`, `mdlearn.done({ score, total })` (shown as "Score 3 / 4" under the block, never recorded), `mdlearn.resize()`. |
 | Errors | Not exactly one `html` block: E924; over 64 KB: E925. Ordinary ```` ```html ```` fences elsewhere stay highlighted code and never run. |
 
+### 8.15 Video and checkpoints: `::video` (v1.4)
+
+`::video[address]{attrs}` puts a video in a card (or anywhere in a document). The address is a path
+relative to the file (mp4, m4v, webm, ogv or mov) or a YouTube or Vimeo link. A question later in the same
+card (in a document, the same section) with `{at=m:ss}` is a **checkpoint**: playback pauses there and the
+question opens under the player. That is interpolated testing: a question in the middle of a video keeps
+attention on it and improves what is remembered (Szpunar et al., 2013).
+
+~~~markdown
+## Speckle in one minute
+
+::video[https://youtu.be/dQw4w9WgXcQ?t=90]{end=4:30 title="Speckle, explained"}
+
+Watch until the first question; the video pauses there.
+
+:::quiz{at=2:15}
+Why does a SAR image of a uniform field look grainy?
+- [x] Many scatterers in each cell add up with random phases.
+- [ ] The radar transmits noise on purpose.
+  > The grain is an interference effect of the scene, not of the transmitter.
+:::
+~~~
+
+| Rule | Detail |
+|---|---|
+| Addresses | Relative video files, `youtube.com/watch?v=…`, `youtu.be/…`, `/embed/…`, `/shorts/…` and `vimeo.com/…` (an unlisted Vimeo hash is kept). Other sites, absolute paths and other schemes are refused (E928): nothing is embedded from servers the reader did not choose. YouTube's `t=` sets the start. |
+| Times | `start`, `end` and `at` as `4:15`, `1:02:03`, `90`, `90s` or `1m30s` (E930 if unreadable, or `start` not before `end`). An `at` at or before the start or after `end` (W931), or with no video before it (W932), is an ordinary question. |
+| Files | A local file and its `captions=file.vtt` must exist next to the lesson (E929). Captions are suggested for every local video (I933). MP4 (H.264) and WebM play in every browser. |
+| Players | Files play in the browser's own player, streamed so seeking works. YouTube (from `youtube-nocookie.com`) and Vimeo (`dnt=1`) load only when the reader presses Play; until then nothing is fetched from them. |
+| Elsewhere | The terminal and chat tutors say which video and time a checkpoint comes from, with a link that starts there; the Anki export does the same. A video adds its segment to the lesson's time estimate (2 minutes when its length is unknown). Videos are never graded, and never inside a question (W918). |
+
 ---
 
 ## 9. Answer semantics (summary)
@@ -857,7 +894,7 @@ Format of the compact report (one line per diagnostic, designed for an agent to 
 | E101 | error | `frontmatter-invalid` | Frontmatter is not valid YAML, or a key has the wrong type (that key is ignored). |
 | E102 | error | `title-missing` | No `title` in frontmatter and no leading `#` heading. |
 | E103 | error | `unknown-container` | Unknown `:::name`; block is locked (fail-closed). Use quiz\|cloze\|order\|explain\|steps\|code (questions), match\|sort\|speed (games), plot\|formula\|animate\|sim\|html (visuals), note\|tip\|important\|warning (callouts). |
-| E104 | error | `unknown-leaf` | Unknown `::name` leaf directive (only `::hint` exists); dropped. |
+| E104 | error | `unknown-leaf` | Unknown `::name` leaf directive (`::hint`, `::read` and `::video` exist); dropped. |
 | E105 | error | `unclosed-container` | Container not closed; auto-closed at the next `##` or end of file. |
 | E106 | error | `nested-widget` | A widget inside another widget; the inner one is locked. |
 | E107 | error | `unsafe-html` | Unsafe HTML was removed: scripts, styles, frames, forms, `on…=` handlers and script URLs never render (other HTML does). Put interactive HTML, CSS and JavaScript in an `:::html` block; it runs in a sandbox. |
@@ -996,6 +1033,12 @@ Format of the compact report (one line per diagnostic, designed for an agent to 
 | E925 | error | `html-too-large` | An `:::html` block is limited to 64 KB. |
 | W926 | warning | `html-network-api` | `:::html` runs offline in a sandbox: network requests, external scripts and external images do not load. |
 | E927 | error | `animate-empty-frame` | An animate frame is empty. |
+| E928 | error | `video-source` | `::video` needs a relative path to a video file (mp4, webm, ogv, m4v, mov), a YouTube link or a Vimeo link; other sites are not embedded. |
+| E929 | error | `video-file-missing` | The video file (or its `captions` file) does not exist next to this one. |
+| E930 | error | `video-time-invalid` | A `start`, `end` or `at` time is unreadable, or `start` is not before `end`. Write times as `4:15`, `1:02:03` or seconds (`90`). |
+| W931 | warning | `checkpoint-outside` | A question’s `{at=…}` is at or before the video’s start, or after its `end`, so playback never reaches it; it is shown as an ordinary question. |
+| W932 | warning | `checkpoint-no-video` | `{at=…}` on a question with no `::video` before it in the same card; the attribute is ignored. |
+| I933 | info | `video-no-captions` | A local video without `captions=file.vtt`: captions help everyone who cannot listen. |
 
 ---
 
@@ -1244,7 +1287,7 @@ Compiler output: **0 errors, 0 warnings**, two notes:
 
 ## 14. Versioning and extension
 
-- This document defines `format 1`, revision 1.1 (companion lessons). Additive revisions keep
+- This document defines `format 1`, revision 1.4 (video and checkpoints). Additive revisions keep
   `format 1` and every earlier file stays valid; an incompatible change adds `format: 2`.
 - New constructs are added as **new names**; existing names never change meaning. A proposal must
   state the learning mechanism (PEDAGOGICAL_SPEC §7), the tree grammar, the fail-closed behaviour, the
@@ -1262,6 +1305,10 @@ https://blog.dottxt.ai/say-what-you-mean.html
 Rodriguez, M. C. (2005). Three options are optimal for multiple-choice items: A meta-analysis of 80
 years of research. *Educational Measurement: Issues and Practice, 24*(2), 3–13.
 https://doi.org/10.1111/j.1745-3992.2005.00006.x
+
+Szpunar, K. K., Khan, N. Y., & Schacter, D. L. (2013). Interpolated memory tests reduce mind wandering and
+improve learning of online lectures. *Proceedings of the National Academy of Sciences, 110*(16), 6313–6317.
+https://doi.org/10.1073/pnas.1221764110
 
 Tam, Z. R., Wu, C.-K., Tsai, Y.-L., Lin, C.-Y., Lee, H.-Y., & Chen, Y.-N. (2024). Let me speak freely? A
 study on the impact of format restrictions on large language model performance. In *Proceedings of

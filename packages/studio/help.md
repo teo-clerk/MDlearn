@@ -47,6 +47,7 @@ review cards. The tutorial shows each one live with its source.
 | `:::speed` with `- [x]` / `- [ ]` statements | a true/false round (`{time=60}` for a countdown) |
 | `:::plot`, `:::formula`, `:::animate`, `:::sim` | interactive plots, explained formulas, animations, simulations |
 | `:::html` with an `html` fence | your own HTML, CSS and JavaScript, in a sandbox |
+| `::video[clip.mp4]` or a YouTube/Vimeo link | a video; questions after it with `{at=4:15}` pause it there |
 | `<mark>`, `<kbd>`, `<sub>`, `<details>`, `<figure>`, `<svg>`… | HTML in place (scripts are always removed) |
 | `:::note`, `:::tip`, `:::important`, `:::warning` | callouts (`{fold}` to fold them) |
 

@@ -42,12 +42,19 @@ export function resolverFor(lessonPath: string, seen?: Set<string>): SourceResol
   }
 }
 
+/** Whether a file named in a lesson or document (a `::video` and its captions) exists, relative to that file. */
+export function fileExistsFor(filePath: string): (rel: string) => boolean {
+  return (rel) => {
+    try { return statSync(resolve(dirname(filePath), ...rel.split('/').map(decodeURIComponent))).isFile() } catch { return false }
+  }
+}
+
 export function compileFile(path: string): CompileResult {
   return compileSource(readFileSync(path, 'utf8'), path)
 }
 /** Compile unsaved lesson source as if it were saved at `path` (so `::read` links resolve). */
 export function compileSource(source: string, path: string, seen?: Set<string>): CompileResult {
-  return compile(source, { path, resolveSource: resolverFor(path, seen), checkJs })
+  return compile(source, { path, resolveSource: resolverFor(path, seen), checkJs, fileExists: fileExistsFor(path) })
 }
 /** Syntax check for simulation code (compiled, never run). */
 export function checkJs(code: string): string | null {

@@ -16,6 +16,7 @@ export const SNIPPETS = (): Snippet[] => [
   { id: 'formula', group: 'Visuals', label: t('Explained formula'), hint: t('Hover a term to see what it means'), text: ':::formula[‸Title]\n$$E = m c^2$$\n- $E$ — energy\n- $m$ — mass\n- $c^2$ — speed of light, squared\n:::\n' },
   { id: 'animate', group: 'Visuals', label: t('Step-by-step derivation'), hint: t('One formula and sentence per step'), text: ':::animate[‸Title]\n1. $$a = b$$ First step.\n2. $$a + 1 = b + 1$$ Second step.\n:::\n' },
   { id: 'sim', group: 'Visuals', label: t('Simulation'), hint: t('JavaScript drawing on a canvas, in a sandbox'), text: ':::sim[‸Title]{height=200}\nWhat the simulation shows.\n```js\n// api.canvas, api.params, api.frame\n```\n:::\n' },
+  { id: 'video', group: 'Visuals', label: t('Video'), hint: t('A file beside your notes, or a YouTube or Vimeo link; questions after it with {at=4:15} pause it'), text: '::video[‸clips/talk.mp4]{start=0:00 end=5:00 title="…"}\n' },
   { id: 'math', group: 'Text', label: t('Display formula'), hint: '$$ … $$', text: '$$\n‸\n$$\n' },
   { id: 'tip', group: 'Text', label: t('Callout'), hint: t('note, tip, important or warning'), text: ':::tip[‸Title]\nText.\n:::\n' },
   { id: 'table', group: 'Text', label: t('Table'), hint: t('Term | Meaning feeds the glossary'), text: '| Term | Meaning |\n|---|---|\n| ‸ |  |\n' },

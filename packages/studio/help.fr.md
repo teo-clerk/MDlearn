@@ -47,6 +47,7 @@ des fiches de révision. Le tutoriel montre chacun en direct avec sa source.
 | `:::speed` avec des affirmations `- [x]` / `- [ ]` | une manche vrai/faux (`{time=60}` pour un compte à rebours) |
 | `:::plot`, `:::formula`, `:::animate`, `:::sim` | graphiques interactifs, formules expliquées, animations, simulations |
 | `:::html` avec un bloc `html` | votre propre HTML, CSS et JavaScript, dans un bac à sable |
+| `::video[clip.mp4]` ou un lien YouTube/Vimeo | une vidéo ; les questions qui suivent avec `{at=4:15}` la mettent en pause à ce moment |
 | `<mark>`, `<kbd>`, `<sub>`, `<details>`, `<figure>`, `<svg>`… | du HTML sur place (les scripts sont toujours retirés) |
 | `:::note`, `:::tip`, `:::important`, `:::warning` | des encadrés (`{fold}` pour les replier) |
 

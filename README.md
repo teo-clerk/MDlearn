@@ -98,7 +98,7 @@ Pick whichever fits:
 
   Then run `mdlearn lint` and fix anything it reports. Other question types (`order`, `explain`,
   `steps`, `code`), games (`match`, `sort`, `speed`), visuals (`plot`, `formula`, `animate`, `sim`,
-  sandboxed `html`) and HTML in Markdown are described in
+  sandboxed `html`), videos with checkpoint questions (`::video`) and HTML in Markdown are described in
   [docs/DSL_SPECIFICATION.md](docs/DSL_SPECIFICATION.md). To see them all working, run
   `mdlearn studio examples/showcase` (or *Help → Open the tutorial* in Studio).
 
@@ -178,6 +178,9 @@ Start `claude` in the folder and approve the `mdlearn` server when asked. Then t
 - **Games and HTML in your notes:** match pairs (or play them as a memory game), sort into groups,
   true/false speed rounds — graded and scheduled like the other questions — plus safe HTML in place
   (`<mark>`, `<kbd>`, `<details>`, animated SVG) and your own HTML/CSS/JS games in a sandbox.
+- **Videos with questions:** `::video[clip.mp4]` or a YouTube/Vimeo link (a plain `![](clip.mp4)` works
+  too). Questions after it with `{at=4:15}` pause the video and ask; notes can be pinned to a moment.
+  YouTube and Vimeo load only when you press Play.
 - **Read any Markdown:** math (KaTeX), tables, Mermaid diagrams, highlighted code, folded `<details>`,
   section numbers, an outline, full-text search (Ctrl+K) and the raw source. Changes on disk show up live.
 - **Study:** the coach flow above. **Today** also shows a 7-day forecast, a heatmap, how well your

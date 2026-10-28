@@ -1,11 +1,12 @@
 // A document's blocks: headings with § numbers and anchors, folded details, prose, callouts, and
 // authored questions you can try in place.
-import { memo } from 'react'
+import { memo, useMemo } from 'react'
 import { ChevronRight, Link2, TriangleAlert } from 'lucide-react'
 import type { Checked, DocBlock, MdNode, PosedWidget, WebAnswer } from '@mdlearn/core'
 import { Prose, Inline, type ProseContext } from '../prose/Prose'
 import { Practice } from '../widgets/Practice'
 import { VisualBlock, VISUAL_TYPES } from '../visuals/VisualBlock'
+import { VideoBlock, type Checkpoint } from '../visuals/VideoBlock'
 import { t } from '../i18n'
 
 /** "3.1 Derivation" → number "3.1" shown quietly, text "Derivation" (the number is not repeated). */
@@ -18,13 +19,30 @@ function splitNumber(num: string | null, text: MdNode[]): { num: string | null; 
   return m ? { num, text: [{ ...first, value: value.slice(m[0].length) }, ...text.slice(1)] } : { num, text }
 }
 const WIDGETS = new Set(['quiz', 'cloze', 'order', 'explain', 'steps', 'code', 'match', 'sort', 'speed'])
-export interface BlockEnv { cx: ProseContext; check: (widgetId: string, a: WebAnswer) => Promise<Checked>; hideTitle?: string }
+export interface BlockEnv {
+  cx: ProseContext; check: (widgetId: string, a: WebAnswer) => Promise<Checked>; hideTitle?: string
+  /** Documents: pin a note to a moment of a video (the label is the text the note is anchored to). */
+  noteAt?: (label: HTMLElement, t: number) => void
+}
+/** Each video's checkpoint questions (found among the same blocks), and those questions, which the player shows instead. */
+function checkpointsOf(blocks: DocBlock[]): { byVideo: Map<string, Checkpoint[]>; held: Set<string> } {
+  const widgets = new Map(blocks.filter((b) => WIDGETS.has(b.type)).map((b) => [(b as unknown as PosedWidget).id, b as unknown as PosedWidget]))
+  const byVideo = new Map<string, Checkpoint[]>(), held = new Set<string>()
+  for (const b of blocks) {
+    if (b.type !== 'video') continue
+    const found = b.checkpoints.flatMap((c) => { const w = widgets.get(c.widget); return w ? [{ at: c.at, widget: w }] : [] })
+    byVideo.set(b.id, found)
+    for (const c of found) held.add(c.widget.id)
+  }
+  return { byVideo, held }
+}
 
 export const DocBlocks = memo(function DocBlocks({ blocks, env }: { blocks: DocBlock[]; env: BlockEnv }) {
-  return <>{blocks.map((b, i) => <Block key={`${b.line}-${i}`} b={b} env={env} />)}</>
+  const cps = useMemo(() => checkpointsOf(blocks), [blocks])
+  return <>{blocks.map((b, i) => (WIDGETS.has(b.type) && cps.held.has((b as unknown as PosedWidget).id) ? null : <Block key={`${b.line}-${i}`} b={b} env={env} checkpoints={cps.byVideo} />))}</>
 })
 
-function Block({ b, env }: { b: DocBlock; env: BlockEnv }) {
+function Block({ b, env, checkpoints }: { b: DocBlock; env: BlockEnv; checkpoints: Map<string, Checkpoint[]> }) {
   if (b.type === 'heading') {
     const H = `h${Math.min(6, b.depth)}` as 'h2'
     const { num, text } = splitNumber(b.num, b.text)
@@ -60,6 +78,7 @@ function Block({ b, env }: { b: DocBlock; env: BlockEnv }) {
     )
   }
   if (VISUAL_TYPES.has(b.type)) return <VisualBlock b={b as never} cx={env.cx} />
+  if (b.type === 'video') return <VideoBlock b={b} cx={env.cx} checkpoints={checkpoints.get(b.id) ?? []} check={env.check} noteAt={env.noteAt} />
   if (WIDGETS.has(b.type)) {
     const w = b as unknown as PosedWidget
     return <Practice widget={w} check={(a) => env.check(w.id, a)} />

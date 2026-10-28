@@ -47,6 +47,7 @@ carte di ripasso. Il tutorial mostra ciascuno dal vivo con il suo sorgente.
 | `:::speed` con affermazioni `- [x]` / `- [ ]` | una gara vero/falso (`{time=60}` per un conto alla rovescia) |
 | `:::plot`, `:::formula`, `:::animate`, `:::sim` | grafici interattivi, formule spiegate, animazioni, simulazioni |
 | `:::html` con un blocco `html` | il tuo HTML, CSS e JavaScript, in una sandbox |
+| `::video[clip.mp4]` o un link YouTube/Vimeo | un video; le domande dopo con `{at=4:15}` lo mettono in pausa lì |
 | `<mark>`, `<kbd>`, `<sub>`, `<details>`, `<figure>`, `<svg>`… | HTML al suo posto (gli script vengono sempre rimossi) |
 | `:::note`, `:::tip`, `:::important`, `:::warning` | riquadri (`{fold}` per richiuderli) |
 

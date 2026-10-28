@@ -6,6 +6,7 @@ import { StickyNote } from 'lucide-react'
 import { keys, notesApi, useNotes, useEngines } from '../api/queries'
 import { useStream } from '../state/stream'
 import { locate, rangeFor, textOf } from '../lib/anchor'
+import { SEEK_EVENT } from '../visuals/VideoBlock'
 import { useNotesUi } from './store'
 import { NoteCard, type NoteActions } from './NoteCard'
 import { DraftCard } from './DraftCard'
@@ -106,6 +107,11 @@ export function NotesPanel({ ws, doc, article, mtime }: { ws: string; doc: strin
     ask: async (question) => { await notesApi.ask(ws, { doc, anchor: n.anchor, question, mode: 'ask', noteId: n.id }); await refresh() },
     stop: (id) => { void notesApi.cancel(ws, id); useStream.getState().finish(id) },
   })
+  // a note on a moment of a video: the player it sits beside goes back to that moment
+  const seekFor = (p: Placed) => {
+    const at = p.note.anchor.t, player = p.range?.startContainer.parentElement?.closest('[data-video]')
+    return at !== undefined && player ? () => player.dispatchEvent(new CustomEvent(SEEK_EVENT, { detail: at })) : undefined
+  }
   const focus = (n: Placed) => { setActive(n.note.id); if (!wide && n.range) n.range.startContainer.parentElement?.scrollIntoView({ block: 'center', behavior: 'smooth' }) }
 
   const detached = placed.filter((p) => p.y < 0)
@@ -124,14 +130,14 @@ export function NotesPanel({ ws, doc, article, mtime }: { ws: string; doc: strin
           {draft && <div ref={measure('draft')} className="absolute inset-x-3 z-10" style={{ top: tops.draft ?? draftY }}>{draftCard()}</div>}
           {placed.filter((p) => p.y >= 0).map((p) => (
             <div key={p.note.id} ref={measure(p.note.id)} className="absolute inset-x-3 transition-[top] duration-150" style={{ top: tops[p.note.id] ?? p.y }}>
-              <NoteCard note={p.note} active={active === p.note.id} onFocus={() => focus(p)} actions={actionsFor(p.note)} quoteFound />
+              <NoteCard note={p.note} active={active === p.note.id} onFocus={() => focus(p)} actions={actionsFor(p.note)} quoteFound onSeek={seekFor(p)} />
             </div>
           ))}
         </div>
       ) : (
         <div className="flex h-full flex-col gap-2 overflow-y-auto p-3">
           {draft && draftCard()}
-          {placed.filter((p) => p.y >= 0).map((p) => <NoteCard key={p.note.id} note={p.note} active={active === p.note.id} onFocus={() => focus(p)} actions={actionsFor(p.note)} quoteFound />)}
+          {placed.filter((p) => p.y >= 0).map((p) => <NoteCard key={p.note.id} note={p.note} active={active === p.note.id} onFocus={() => focus(p)} actions={actionsFor(p.note)} quoteFound onSeek={seekFor(p)} />)}
         </div>
       )}
       {detached.length > 0 && (

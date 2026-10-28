@@ -2,7 +2,7 @@
 // words, solid / shaky / again with the next review, missed cards revisited, then a short summary.
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useSearch } from 'wouter'
-import { BookOpenCheck, Check, Lightbulb, CircleCheckBig } from 'lucide-react'
+import { BookOpenCheck, Check, CircleCheckBig, Film, Lightbulb } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useStudySession, type SessionState } from './useSession'
 import { WidgetView } from '../widgets/WidgetView'
@@ -102,6 +102,12 @@ function Card({ ws, s }: { ws: string; s: ReturnType<typeof useStudySession> }) 
           <Link href={`${docRoute(ws, sourceDoc.path)}&section=${encodeURIComponent(item.reads[0].section)}`} className="text-[12px] text-muted underline decoration-border-strong underline-offset-2 hover:text-text">§{item.reads.map((r) => r.section).join(', §')}</Link>
         )}
       </header>
+      {item.video && (
+        <p className="-mt-2 mb-4 flex flex-wrap items-center gap-x-1.5 text-[12.5px] text-muted">
+          <Film className="size-3.5" aria-hidden />{t('From the video “{title}” at {time}', { title: item.video.title, time: item.video.at })}
+          {item.video.link && <a href={item.video.link} target="_blank" rel="noopener noreferrer" className="underline decoration-border-strong underline-offset-2 hover:text-text">{t('Watch from there')}</a>}
+        </p>
+      )}
       <WidgetView widget={item.widget} draft={draft} setDraft={setDraft} result={result} autoFocus onSubmit={() => void submit()}
         probe={async (a) => (await studyApi.check(ws, { widgetId: item.widget.id, answer: a, practice: true })).checked} />
       {st.hints.length > 0 && (

@@ -1,4 +1,5 @@
 // A note being written for a fresh selection: save it as a note, or send it as a question to the AI.
+import { formatTime } from '@mdlearn/core'
 import { useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { notesApi } from '../api/queries'
@@ -22,7 +23,7 @@ export function DraftCard({ ws, doc, canAsk, onDone }: { ws: string; doc: string
   }
   return (
     <form className="rounded-[8px] border border-border-strong bg-raised p-3 text-[13.5px] shadow-pop" onSubmit={(e) => { e.preventDefault(); if (text.trim()) void run(ask ? 'ask' : 'note') }}>
-      <blockquote className="line-clamp-2 border-l border-border-strong pl-2 text-[12.5px] text-muted">{draft.anchor.quote.exact}</blockquote>
+      <blockquote className="line-clamp-2 border-l border-border-strong pl-2 text-[12.5px] text-muted">{draft.anchor.quote.exact}{draft.anchor.t !== undefined && <span className="tabular"> · {formatTime(draft.anchor.t)}</span>}</blockquote>
       <textarea value={text} onChange={(e) => setText(e.target.value)} autoFocus rows={3} aria-label={ask ? t('Your question') : t('Your note')}
         placeholder={ask ? t('What would you like to know about this passage?') : t('Write a note…')}
         onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) e.currentTarget.form?.requestSubmit(); if (e.key === 'Escape') setDraft(null) }}

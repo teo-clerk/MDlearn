@@ -1,6 +1,7 @@
 // One note: the quoted passage, your text, and the conversation with the AI about it.
 import { useState } from 'react'
-import { ArrowUp, Loader2, Square, Trash2 } from 'lucide-react'
+import { ArrowUp, Loader2, Play, Square, Trash2 } from 'lucide-react'
+import { formatTime } from '@mdlearn/core'
 import type { Note, NoteMessage } from '../../shared/types'
 import { MiniMarkdown } from '../prose/MiniMarkdown'
 import { useStream } from '../state/stream'
@@ -14,7 +15,8 @@ export interface NoteActions {
   stop(messageId: string): void
   canAsk: boolean
 }
-export function NoteCard({ note, active, onFocus, actions, quoteFound }: { note: Note; active: boolean; onFocus(): void; actions: NoteActions; quoteFound: boolean }) {
+/** `onSeek`: a note on a moment of a video plays the video from there. */
+export function NoteCard({ note, active, onFocus, actions, quoteFound, onSeek }: { note: Note; active: boolean; onFocus(): void; actions: NoteActions; quoteFound: boolean; onSeek?: () => void }) {
   const [editing, setEditing] = useState(false)
   const [body, setBody] = useState(note.body)
   const [question, setQuestion] = useState('')
@@ -25,6 +27,12 @@ export function NoteCard({ note, active, onFocus, actions, quoteFound }: { note:
       <blockquote className={`line-clamp-2 border-l pl-2 text-[12.5px] text-muted ${quoteFound ? 'border-border-strong' : 'border-dashed border-warn'}`} title={note.anchor.quote.exact}>
         {note.anchor.quote.exact}
       </blockquote>
+      {note.anchor.t !== undefined && onSeek && (
+        <button type="button" onClick={(e) => { e.stopPropagation(); onSeek() }} aria-label={t('Play the video from {time}', { time: formatTime(note.anchor.t) })}
+          className="mt-1.5 inline-flex items-center gap-1 rounded-[5px] border border-border px-1.5 py-0.5 tabular text-[12px] text-muted hover:bg-hover hover:text-text cursor-pointer">
+          <Play className="size-3" aria-hidden />{formatTime(note.anchor.t)}
+        </button>
+      )}
       {!quoteFound && <p className="mt-1 text-[11.5px] text-warn">{t('This passage changed; the note is kept here.')}</p>}
       {editing ? (
         <form className="mt-2" onSubmit={async (e) => { e.preventDefault(); await actions.save(body); setEditing(false) }}>

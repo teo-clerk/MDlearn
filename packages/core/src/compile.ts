@@ -14,7 +14,11 @@ export { processor, remarkBlockDirectives } from './parser.js'
 
 export interface CompileResult { lesson: Lesson | null; diagnostics: Diagnostic[]; stage0: Stage0Result }
 export type { SourceResolver }
-export interface CompileOptions { path?: string; resolveSource?: SourceResolver; checkJs?: (code: string) => string | null }
+export interface CompileOptions {
+  path?: string; resolveSource?: SourceResolver; checkJs?: (code: string) => string | null
+  /** Whether a file exists, relative to the lesson (`::video`); without it files are not checked. */
+  fileExists?: (path: string) => boolean
+}
 /** Heuristic minutes per widget for the time estimate (reading is estimated at 180 words/min). */
 const WIDGET_MINUTES: Record<string, number> = { quiz: 0.5, cloze: 0.5, order: 0.75, explain: 1.5, steps: 1.5, code: 3, match: 1, sort: 1, speed: 1.5, ...VISUAL_MINUTES }
 
@@ -65,7 +69,7 @@ export function compile(source: string, opts: CompileOptions = {}): CompileResul
   }
 
   // ---- blocks
-  const { toBlocks } = blockBuilder({ s0, macros: meta.macros, source: meta.source, lang, diag, resolveSource: opts.resolveSource, ...(opts.checkJs ? { checkJs: opts.checkJs } : {}) })
+  const { toBlocks } = blockBuilder({ s0, macros: meta.macros, source: meta.source, lang, diag, resolveSource: opts.resolveSource, ...(opts.checkJs ? { checkJs: opts.checkJs } : {}), ...(opts.fileExists ? { fileExists: opts.fileExists } : {}) })
   const slugger = new GithubSlugger()
 
   // ---- cards
@@ -107,7 +111,7 @@ export function compile(source: string, opts: CompileOptions = {}): CompileResul
   }
 
   const estimate = Math.max(1, Math.round(
-    cards.reduce((t, c) => t + c.blocks.reduce((s, b) => s + (WIDGET_MINUTES[b.type] ?? 0), 0), 0) +
+    cards.reduce((t, c) => t + c.blocks.reduce((s, b) => s + blockMinutes(b), 0), 0) +
     toString(tree).split(/\s+/).length / 180))
   if (meta.time && Math.abs(meta.time - estimate) / estimate > 0.5) diag('I607', s0.frontmatter?.line ?? 1, `declared ${meta.time}, estimated ${estimate}`)
 
@@ -120,6 +124,12 @@ export function compile(source: string, opts: CompileOptions = {}): CompileResul
   if (!checked.success) throw new Error('compiler produced invalid CourseAST: ' + checked.error.message)
   // only a missing title or a truncated file stops the whole lesson; everything else fails closed per widget
   return { lesson: diagnostics.some((d) => d.code === 'E102' || d.code === 'E109') ? null : checked.data, diagnostics, stage0: s0 }
+}
+
+/** Minutes a block adds to the estimate: a video its segment when its length is known (else 2). */
+function blockMinutes(b: Block): number {
+  if (b.type !== 'video') return WIDGET_MINUTES[b.type] ?? 0
+  return b.end !== undefined ? (b.end - (b.start ?? 0)) / 60 : 2
 }
 
 /** Heading text that keeps inline math as `$…$`, so surfaces can render it (ids still use plain text). */

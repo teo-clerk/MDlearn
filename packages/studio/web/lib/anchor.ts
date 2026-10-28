@@ -34,6 +34,16 @@ export function anchorFromSelection(root: HTMLElement): { anchor: NoteAnchor; ra
   if (!sel || sel.isCollapsed || !sel.rangeCount) return null
   const range = sel.getRangeAt(0)
   if (!root.contains(range.commonAncestorContainer)) return null
+  return anchorForRange(root, range)
+}
+/** A note on a moment of a video: anchored to the video's label (so it sits beside the player) with the time. */
+export function anchorForMoment(root: HTMLElement, label: HTMLElement, t: number): NoteAnchor | null {
+  const range = document.createRange()
+  range.selectNodeContents(label)
+  const r = anchorForRange(root, range)
+  return r ? { ...r.anchor, t: Math.max(0, Math.floor(t)) } : null
+}
+function anchorForRange(root: HTMLElement, range: Range): { anchor: NoteAnchor; range: Range } | null {
   const text = textOf(root)
   const start = offsetOf(root, range.startContainer, range.startOffset)
   const end = offsetOf(root, range.endContainer, range.endOffset)

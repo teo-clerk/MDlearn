@@ -60,6 +60,13 @@ describe('notes', () => {
     await post(`/notes/${n.id}/delete`, { doc: DOC })
     expect(await (await get(`/notes?path=${encodeURIComponent(DOC)}`)).json()).toEqual([])
   })
+  it('keep the moment of a video a note is about, and refuse impossible times', async () => {
+    const { post } = setup()
+    const moment = { ...anchor, quote: { exact: 'talk.webm', prefix: '', suffix: '' }, t: 255 }
+    const n = await (await post('/notes', { doc: DOC, anchor: moment, body: 'Speckle starts here.' })).json() as Note
+    expect(n.anchor.t).toBe(255)
+    expect((await post('/notes', { doc: DOC, anchor: { ...moment, t: -1 }, body: 'x' })).status).toBe(400)
+  })
   it('refuse documents outside the folder', async () => {
     const { post } = setup()
     expect((await post('/notes', { doc: '../x.md', anchor, body: 'x' })).status).toBe(403)

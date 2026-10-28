@@ -255,3 +255,7 @@ When a card's idea is how a quantity behaves, a dense equation, a derivation or 
 carry it: `:::plot`, `:::formula`, `:::animate` (formula frames, or Markdown frames with `{replace}` for the
 stages of a process), `:::sim`, and `:::html` for a small interactive of your own (DSL §8.11, §8.14). The
 `mdlearn-visuals` skill explains when and how; at most one or two per lesson, never inside a question.
+
+When the notes point to a video (a lecture, a talk, a demo), put it in the card it explains with
+`::video[path or YouTube/Vimeo link]{start=… end=… title="…"}` and ask about it with a question that
+carries `{at=m:ss}`: the video pauses there (DSL §8.15). Use only links given in the notes; never invent one.

@@ -69,6 +69,27 @@ ${LONG}
 $$S = \\frac{P_t}{4\\pi R^2}$$
 `)
 writeFileSync(join(root, 'demo/editable.md'), '# Editable\n\nFirst paragraph.\n')
+// a 6 s VP8 clip with captions, a question it pauses for at 0:02, and a YouTube video (never contacted in tests)
+mkdirSync(join(root, 'demo/clips'), { recursive: true })
+cpSync(resolve(here, 'fixtures/clip.webm'), join(root, 'demo/clips/clip.webm'))
+cpSync(resolve(here, 'fixtures/clip.vtt'), join(root, 'demo/clips/clip.vtt'))
+writeFileSync(join(root, 'demo/video.md'), `# Video
+
+## Watching
+
+::video[clips/clip.webm]{title="Blue clip" captions=clips/clip.vtt}
+
+:::quiz{at=0:02}
+Which colour fills the screen?
+- [x] Blue
+- [ ] Red
+  > It is blue from start to end.
+:::
+
+## Online
+
+::video[https://youtu.be/dQw4w9WgXcQ]{start=1:00 end=2:00}
+`)
 writeFileSync(join(here, '.root'), root) // tests reset progress here between study runs
 cpSync(resolve(here, '../../core/test/fixtures/02-bayes-theorem.learn.md'), join(root, 'learn/02-bayes-theorem.learn.md'))
 writeFileSync(join(root, 'demo/python.md'), `# Python

@@ -38,7 +38,7 @@ function phaseFor(lesson: Lesson, e: Entry | undefined): Session['phase'] {
   if (!e?.cardId) return 'complete'
   if (e.kind === 'retry') return 'check'
   const blocks = lesson.cards.find((c) => c.id === e.cardId)!.blocks
-  const hasProse = blocks.some((b) => b.type === 'prose' || b.type === 'callout' || ['plot', 'formula', 'animate', 'sim', 'html'].includes(b.type))
+  const hasProse = blocks.some((b) => b.type === 'prose' || b.type === 'callout' || ['plot', 'formula', 'animate', 'sim', 'html', 'video'].includes(b.type))
   return hasProse ? 'expose' : 'check'
 }
 const run = (s: Session, id: string): WidgetRun => s.runs[id] ?? { failed: false, shaky: false, help: 'none', done: false, revealed: false }

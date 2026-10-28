@@ -8,7 +8,8 @@ import { PH_OPEN, PH_CLOSE, PH_STRAY, WIDGETS, CALLOUTS, VISUALS, type Stage0Res
 import { buildVisual } from './visuals.js'
 import { buildGame, GAME_TYPES } from './games.js'
 import { type Code } from './registry.js'
-import { type Blank, type Block, type MdNode, type Widget } from './ast.js'
+import { type Blank, type Block, type MdNode, type VideoBlock, type Widget } from './ast.js'
+import { parseTime, parseVideoUrl } from './video.js'
 import { mathKeyEvaluable, parseNumber } from './checkers.js'
 import { processor } from './parser.js'
 import { CONTAINER_TAGS, cleanAttrs, groupFlowHtml, pairInline, parseTag, summaryMarkdown, unsafeHtml, type HtmlContainerNode, type HtmlPairNode } from './html.js'
@@ -33,6 +34,8 @@ export interface BuildContext {
   document?: boolean
   /** Node-only syntax check for simulation code. */
   checkJs?: (code: string) => string | null
+  /** Whether a file exists, by its path relative to the lesson or document (`::video` files and captions). */
+  fileExists?: (path: string) => boolean
 }
 
 export function blockBuilder(ctx: BuildContext) {
@@ -91,6 +94,11 @@ const clean = (n: Nodes, inWidget: string | null): MdNode[] => {
       children: cleanAll(c.children as Nodes[], inWidget) }]
   }
   if (n.type === 'text') return splitPlaceholders(n.value, n)
+  // a video inside running text cannot play there: an online one becomes a link to it, a file its title
+  if (n.type === 'image' && parseVideoUrl(n.url)) {
+    const label: MdNode = { type: 'text', value: n.alt || n.url }
+    return parseVideoUrl(n.url)!.source.kind === 'file' ? [label] : [{ type: 'link', url: safeUrl(n.url, false), children: [label] }]
+  }
   if (n.type === 'image') { if (!n.alt) diag('W604', n); return [{ type: 'image', url: safeUrl(n.url, true), alt: n.alt ?? '', title: n.title ?? undefined }] }
   if (n.type === 'link') return [{ type: 'link', url: safeUrl(n.url, false), title: n.title ?? undefined, children: cleanAll(n.children, inWidget) }]
   if (n.type === 'math' || n.type === 'inlineMath') {
@@ -102,6 +110,7 @@ const clean = (n: Nodes, inWidget: string | null): MdNode[] => {
   if (n.type === 'containerDirective' && (CALLOUTS as readonly string[]).includes(n.name)) return [callout(n, inWidget) as unknown as MdNode]
   if (n.type === 'containerDirective' && (VISUALS as readonly string[]).includes(n.name)) { diag('W918', n, n.name); return cleanAll(n.children, inWidget) }
   if (n.type === 'leafDirective' && n.name === 'read') { diag('W113', n); return [] }
+  if (n.type === 'leafDirective' && n.name === 'video') { diag('W918', n, 'video'); return [] }
   if (n.type === 'containerDirective' || n.type === 'leafDirective') { diag(n.type === 'leafDirective' ? 'E104' : 'E103', n, n.name); return [] }
   if (n.type === 'textDirective' || n.type === 'yaml' || n.type === 'definition' || n.type === 'footnoteDefinition' || n.type === 'footnoteReference' || n.type === 'linkReference' || n.type === 'imageReference') {
     return 'children' in n ? cleanAll(n.children as Nodes[], inWidget) : []
@@ -305,9 +314,69 @@ function readBlock(n: LeafDirective): Block[] {
   }
   return refs.length ? [{ type: 'read', refs }] : []
 }
-const toBlocks = (nodes: RootContent[], cardId: string): Block[] => groupFlowHtml(nodes, CONTAINER_TAGS).flatMap((n): Block[] => {
+/** The label of a leaf directive exactly as written (Markdown would read `my_clip.mp4` as emphasis). */
+function rawLabel(n: LeafDirective): string {
+  const from = n.position?.start.offset, to = n.position?.end.offset
+  const m = from !== undefined && to !== undefined ? /^::[a-z]+\[([^\]\n]*)\]/.exec(s0.text.slice(from, to)) : null
+  return (m ? m[1] : toString(n)).trim()
+}
+/** `::video[path or link]{start end title captions}` → video block; null when it cannot play (E928/E929/E930). */
+function videoBlock(n: LeafDirective, cardId: string): VideoBlock | null {
+  return videoFrom(rawLabel(n), (n.attributes ?? {}) as Record<string, string | null | undefined>, n, cardId)
+}
+/** The video block for an address and its attributes (`::video`, or an image whose address is a video). */
+function videoFrom(raw: string, a: Record<string, string | null | undefined>, n: Positioned, cardId: string): VideoBlock | null {
+  const parsed = parseVideoUrl(raw)
+  if (!parsed) { diag('E928', n, raw || 'no address'); return null }
+  const time = (key: 'start' | 'end'): number | undefined | false => {
+    const v = a[key]
+    if (v === undefined || v === null || v === '') return key === 'start' ? parsed.start : undefined
+    const t = parseTime(v)
+    if (t === null) { diag('E930', n, `${key}=${v}`); return false }
+    return t
+  }
+  const start = time('start'), end = time('end')
+  if (start === false || end === false) return null
+  if (start !== undefined && end !== undefined && start >= end) { diag('E930', n, `start ${start}s is not before end ${end}s`); return null }
+  const captions = a.captions?.trim() || undefined
+  if (parsed.source.kind === 'file') {
+    if (ctx.fileExists && !ctx.fileExists(parsed.source.path)) { diag('E929', n, parsed.source.path); return null }
+    if (captions && ctx.fileExists && !ctx.fileExists(captions)) diag('E929', n, `captions: ${captions}`)
+    if (!captions) diag('I933', n)
+  }
+  const pinned = a.id ?? undefined
+  return { type: 'video', id: uniqueId(pinned ? `${cardId}/${pinned}` : `${cardId}/video-${fingerprint(raw)}`), source: parsed.source,
+    ...(a.title ? { title: a.title } : {}), ...(start !== undefined ? { start } : {}), ...(end !== undefined ? { end } : {}),
+    ...(captions && /\.vtt$/i.test(captions) && !/^[a-z][a-z0-9+.-]*:|^[\\/]/i.test(captions) ? { captions } : {}), checkpoints: [] }
+}
+/** `{at=…}` on a question: a checkpoint of the card's last video, if playback can reach it (W931/W932/E930). */
+function checkpoint(video: VideoBlock | null, n: ContainerDirective, built: Widget[]) {
+  const at = (n.attributes as Record<string, string | null | undefined> | undefined)?.at
+  if (at === undefined || at === null) return
+  const w = built[0]
+  if (!w || w.type === 'unavailable') return
+  if (!video) { diag('W932', n); return }
+  const t = parseTime(at)
+  if (t === null) { diag('E930', n, `at=${at}`); return }
+  // playback starts at `start`, so it never reaches a checkpoint there or before it
+  if (t <= (video.start ?? 0) || (video.end !== undefined && t > video.end)) { diag('W931', n, `at=${at}`); return }
+  video.checkpoints.push({ at: t, widget: w.id })
+  video.checkpoints.sort((x, y) => x.at - y.at)
+}
+// the last video of the card (or, in a document, the section): questions after it with {at=…} are its checkpoints
+let lastVideo: { card: string; block: VideoBlock } | null = null
+const toBlocks = (nodes: RootContent[], cardId: string): Block[] => {
+  if (lastVideo?.card !== cardId) lastVideo = null
+  const seen = (v: VideoBlock | null): Block[] => { if (v) lastVideo = { card: cardId, block: v }; return v ? [v] : [] }
+  return groupFlowHtml(nodes, CONTAINER_TAGS).flatMap((n): Block[] => {
   if (n.type === 'leafDirective' && n.name === 'read') return readBlock(n)
-  if (n.type === 'containerDirective' && (WIDGETS as readonly string[]).includes(n.name)) return widget(n, cardId)
+  if (n.type === 'leafDirective' && n.name === 'video') return seen(videoBlock(n, cardId))
+  // a paragraph that is only `![title](clip.mp4)` or `![title](https://youtu.be/…)` embeds the video, as in Obsidian
+  if (n.type === 'paragraph' && n.children.length === 1 && n.children[0].type === 'image' && parseVideoUrl(n.children[0].url)) {
+    const img = n.children[0]
+    return seen(videoFrom(img.url, { title: img.alt || undefined }, n, cardId))
+  }
+  if (n.type === 'containerDirective' && (WIDGETS as readonly string[]).includes(n.name)) { const built = widget(n, cardId); checkpoint(lastVideo?.block ?? null, n, built); return built }
   if (n.type === 'containerDirective' && (VISUALS as readonly string[]).includes(n.name)) {
     const pinned = (n.attributes as Record<string, string> | undefined)?.id
     return buildVisual(n, { clean: (x) => clean(x, null), cleanAll: (xs) => cleanAll(xs, null), diag, checkJs: ctx.checkJs,
@@ -319,7 +388,8 @@ const toBlocks = (nodes: RootContent[], cardId: string): Block[] => groupFlowHtm
     return [{ type: 'unavailable', id: `${cardId}/x-${++widgetSeq}`, kind: n.name, codes: ['E103'], ...(fallback.length ? { fallback } : {}) }]
   }
   return clean(n, null).map((node) => (node.type === 'callout' ? (node as unknown as Block) : { type: 'prose', node }))
-})
+  })
+}
 
 
   return { clean, cleanAll, toBlocks }

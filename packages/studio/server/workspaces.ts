@@ -5,7 +5,7 @@ import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statS
 import { basename, dirname, join, relative, resolve, sep } from 'node:path'
 import { homedir } from 'node:os'
 import { parseDocument, report, type Lesson, type DocModel } from '@mdlearn/core'
-import { workspace, sourceDocs, loadCourse, loadDoc, lessonDirFor, loadProgress, resolverFor, inRoot, checkJs, IGNORED_DIRS, type Workspace } from '@mdlearn/core/node'
+import { workspace, sourceDocs, loadCourse, loadDoc, lessonDirFor, loadProgress, resolverFor, fileExistsFor, inRoot, checkJs, IGNORED_DIRS, type Workspace } from '@mdlearn/core/node'
 import type { SettingsStore } from './settings.js'
 import type { Tree, TreeDoc, WorkspaceSummary, BrowseResult } from '../shared/types.js'
 
@@ -55,7 +55,7 @@ export class Workspaces {
     const key = `${h.id}:${rel}`, stamp = `${st.mtimeMs}:${st.size}`
     const hit = this.docs.get(key)
     if (hit?.stamp === stamp) return hit.model
-    const model = { ...parseDocument(readFileSync(abs, 'utf8'), { path: rel, resolveSource: resolverFor(abs), checkJs }), mtime: st.mtimeMs }
+    const model = { ...parseDocument(readFileSync(abs, 'utf8'), { path: rel, resolveSource: resolverFor(abs), checkJs, fileExists: fileExistsFor(abs) }), mtime: st.mtimeMs }
     this.docs.set(key, { stamp, model })
     return model
   }
@@ -63,7 +63,7 @@ export class Workspaces {
   preview(h: Handle, rel: string, text: string): DocModel & { mtime: number } {
     const abs = inRoot(h.root, rel)
     if (!abs) throw new UserError('path', 'That file is outside this folder.')
-    return { ...parseDocument(text, { path: rel, resolveSource: resolverFor(abs), checkJs }), mtime: 0 }
+    return { ...parseDocument(text, { path: rel, resolveSource: resolverFor(abs), checkJs, fileExists: fileExistsFor(abs) }), mtime: 0 }
   }
   /** Absolute path for a workspace-relative path, or a 403-style error when it escapes the folder. */
   resolve(h: Handle, rel: string, exts = /\.(md|markdown)$/i): string {

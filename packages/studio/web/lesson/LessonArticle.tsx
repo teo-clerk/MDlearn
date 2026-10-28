@@ -7,8 +7,8 @@ import type { LessonResponse } from '../../shared/types'
 import { DocBlocks, type BlockEnv } from '../reader/DocBlocks'
 import { Inline } from '../prose/Prose'
 import { docRoute } from '../lib/paths'
-import { prettyTitle } from '../lib/title'
-import { t } from '../i18n'
+import { levelName, prettyTitle } from '../lib/title'
+import { t, tp } from '../i18n'
 
 type L = NonNullable<LessonResponse['lesson']>
 export function LessonArticle({ ws, lesson: l, source, env, compact }: { ws: string; lesson: L; source?: { path: string; title: string }; env: BlockEnv; compact?: boolean }) {
@@ -17,7 +17,7 @@ export function LessonArticle({ ws, lesson: l, source, env, compact }: { ws: str
     <header className="mb-8">
       <h1 className="font-ui text-[30px] font-bold leading-[1.2] tracking-[-0.02em] text-balance">{prettyTitle(l.title)}</h1>
       <p className="mt-2 flex flex-wrap gap-x-3 tabular text-[13px] text-muted">
-        <span>{l.cards.length} cards</span><span>about {l.time ?? l.timeEstimate} min</span>{l.level && <span className="capitalize">{l.level}</span>}
+        <span>{tp(l.cards.length, '{n} card', '{n} cards')}</span><span>{t('about {n} min', { n: l.time ?? l.timeEstimate })}</span>{l.level && <span>{levelName(l.level)}</span>}
         {source && <Link href={docRoute(ws, source.path)} className="inline-flex items-center gap-1 underline decoration-border-strong underline-offset-2 hover:text-text"><FileText className="size-3.5" aria-hidden />{source.title || source.path}</Link>}
       </p>
       {l.goals.length > 0 && <ul className="mt-4 list-disc pl-5 text-[14px] text-text/85">{l.goals.map((g, i) => <li key={i}>{g}</li>)}</ul>}

@@ -4,7 +4,7 @@
 import { createHash } from 'node:crypto'
 import { DatabaseSync } from 'node:sqlite'
 import { zipSync, strToU8 } from 'fflate'
-import { seededOrder, rightOrder, sortItems, speedItems, isWidget, type Lesson, type Widget, type Blank } from '@mdlearn/core'
+import { seededOrder, rightOrder, sortItems, speedItems, isWidget, videoMoment, type Lesson, type Widget, type Blank } from '@mdlearn/core'
 import { esc, inlineHtml, toHtml } from './html.js'
 
 type W = Exclude<Widget, { type: 'unavailable' }>
@@ -64,9 +64,16 @@ export function noteFor(lesson: Lesson, cardId: string, w: W, cardTitle: string)
   }
 }
 
+/** A question a video pauses for says which video and when, with a link that starts there when it is online. */
+function withMoment(note: AnkiNote, m: ReturnType<typeof videoMoment>): AnkiNote {
+  if (!m) return note
+  const where = `${esc(m.title)} at ${m.at}`
+  const line = `<p><small>From the video ${m.link ? `<a href="${esc(m.link).replace(/"/g, '&quot;')}">${where}</a>` : where}</small></p>`
+  return { ...note, fields: [line + note.fields[0], ...note.fields.slice(1)] }
+}
 export function notesOf(lessons: Lesson[]): AnkiNote[] {
   const out: AnkiNote[] = []
-  for (const l of lessons) for (const c of l.cards) for (const b of c.blocks) if (isWidget(b)) out.push(noteFor(l, c.id, b, c.title))
+  for (const l of lessons) for (const c of l.cards) for (const b of c.blocks) if (isWidget(b)) out.push(withMoment(noteFor(l, c.id, b, c.title), videoMoment(c, b.id)))
   return out
 }
 

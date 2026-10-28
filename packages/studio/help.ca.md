@@ -47,6 +47,7 @@ targetes de repàs. El tutorial mostra cadascun en directe amb el seu codi.
 | `:::speed` amb afirmacions `- [x]` / `- [ ]` | una ronda de vertader/fals (`{time=60}` per a un compte enrere) |
 | `:::plot`, `:::formula`, `:::animate`, `:::sim` | gràfics interactius, fórmules explicades, animacions, simulacions |
 | `:::html` amb un bloc `html` | el teu propi HTML, CSS i JavaScript, en un entorn aïllat |
+| `::video[clip.mp4]` o un enllaç de YouTube/Vimeo | un vídeo; les preguntes que el segueixen amb `{at=4:15}` el posen en pausa allà |
 | `<mark>`, `<kbd>`, `<sub>`, `<details>`, `<figure>`, `<svg>`… | HTML al seu lloc (els scripts sempre s'eliminen) |
 | `:::note`, `:::tip`, `:::important`, `:::warning` | requadres (`{fold}` per plegar-los) |
 
