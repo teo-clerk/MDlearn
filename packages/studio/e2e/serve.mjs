@@ -119,7 +119,9 @@ const ollama = createServer((req, res) => {
     const j = JSON.parse(body || '{}')
     if (req.url === '/api/embed') { res.end(JSON.stringify({ embeddings: j.input.map(bag) })); return }
     res.setHeader('content-type', 'application/x-ndjson')
-    const reply = j.format ? JSON.stringify({ ideas: ['Received power falls with the fourth power of range.', 'Gain counts twice, so doubling it quadruples the power.'] }) : j.messages?.at(-1)?.content?.includes('Passages:') ? 'Backscatter is the power returned toward the radar [1].' : 'Fine.'
+    const teach = j.messages?.[0]?.content?.includes('teach-back')
+    const reply = teach ? JSON.stringify({ ideas: [{ index: 1, verdict: 'covered', evidence: 'power drops fast' }, { index: 2, verdict: 'missing' }], misconceptions: [{ quote: 'doubling the range halves the power', correction: 'Doubling the range divides the power by sixteen.' }], followUp: 'Why the fourth power and not the second?', feedback: 'You have the main idea.' })
+      : j.format ? JSON.stringify({ ideas: ['Received power falls with the fourth power of range.', 'Gain counts twice, so doubling it quadruples the power.'] }) : j.messages?.at(-1)?.content?.includes('Passages:') ? 'Backscatter is the power returned toward the radar [1].' : 'Fine.'
     for (const piece of reply.match(/.{1,12}/g)) res.write(JSON.stringify({ message: { content: piece }, done: false }) + '\n')
     res.end(JSON.stringify({ done: true }) + '\n')
   })

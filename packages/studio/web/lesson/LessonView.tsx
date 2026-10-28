@@ -2,7 +2,7 @@
 // Studying with spaced repetition happens in Study; this is for reading a lesson through.
 import { useEffect, useMemo } from 'react'
 import { useLocation, useSearch } from 'wouter'
-import { BookOpenCheck, GraduationCap, Pencil, Sparkles, TriangleAlert } from 'lucide-react'
+import { BookOpenCheck, GraduationCap, Pencil, Presentation, Sparkles, TriangleAlert } from 'lucide-react'
 import type { Checked, WebAnswer } from '@mdlearn/core'
 import { api } from '../api/client'
 import { useLesson, useSession, useTree } from '../api/queries'
@@ -38,6 +38,7 @@ export default function LessonView({ ws }: { ws: string }) {
       <TopActions>
         {session.data?.caps.includes('write') && path && <Button size="sm" variant="ghost" icon={Pencil} collapse onClick={() => navigate(`/w/${ws}/edit?path=${encodeURIComponent(path)}`)}>{t('Edit')}</Button>}
         {session.data?.caps.includes('ai') && path && <Button size="sm" variant="ghost" icon={Sparkles} collapse onClick={() => navigate(`/w/${ws}/studio?kind=improve&lesson=${encodeURIComponent(path)}`)}>{t('Improve with AI')}</Button>}
+        {l && path && <Button size="sm" variant="ghost" icon={Presentation} collapse onClick={() => navigate(`/w/${ws}/teach?lesson=${encodeURIComponent(path)}`)}>{t('Teach it back')}</Button>}
         {l && <Button size="sm" variant="ghost" icon={BookOpenCheck} collapse onClick={() => navigate(`/w/${ws}/study?scope=${encodeURIComponent(l.id)}`)}>{t('Study this lesson')}</Button>}
       </TopActions>
       {(errors.length > 0 || warnings.length > 0) && (

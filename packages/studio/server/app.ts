@@ -22,6 +22,7 @@ import { notesStore, AnchorSchema } from './notes.js'
 import { ask, cancelAsk, EXPLAIN_QUESTION } from './ai/ask.js'
 import { ollamaStatus, ollamaBusy } from './ai/ollama.js'
 import { judge } from './ai/judge.js'
+import { teachBack, type OneShot } from './ai/teachback.js'
 import { PyodideStore } from './python.js'
 import { Knowledge } from './knowledge/index.js'
 import { AskService } from './ask/service.js'
@@ -66,6 +67,8 @@ export interface Deps {
   jobs?: JobManager
   /** The engine for course jobs (Claude Code, or the scripted demo engine). */
   engine?: () => AiEngine
+  /** One short answer from Claude (teach-back feedback when Claude is chosen); absent without Claude. */
+  claudeOnce?: OneShot
 }
 const IMAGE_TYPES: Record<string, string> = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.webp': 'image/webp' }
 const MAX_UPLOAD_FILES = 2000, MAX_UPLOAD_FILE = 2 * 1024 * 1024
@@ -522,6 +525,14 @@ export function createApp(deps: Deps): Hono {
     const h = ws(c)
     const body = z.object({ widgetId: z.string().min(1).max(300), text: z.string().min(1).max(4000) }).parse(await c.req.json())
     return c.json(await judge(h, deps.settings.get().ollama, body.widgetId, body.text))
+  })
+  app.post('/api/w/:ws/teachback', need('askLocal', o), async (c) => {
+    const h = ws(c)
+    const body = z.object({ lesson: z.string().min(1).max(1024).optional(), doc: z.string().min(1).max(1024).optional(), section: z.string().min(1).max(300).optional(),
+      text: z.string().trim().min(20).max(6000), lang: z.enum(['en', 'it', 'es', 'fr', 'ca']).default('en'), engine: z.enum(['local', 'claude']).default('local') }).parse(await c.req.json())
+    // Claude runs on this computer's account: only from this computer (the 'ai' capability)
+    if (body.engine === 'claude' && !capsOf(c, o).includes('ai')) throw new UserError('capability', 'Claude can be used only on the computer running MDlearn Studio.')
+    return c.json(await teachBack(h, deps.workspaces, { local: deps.settings.get().ollama, ...(deps.claudeOnce ? { claude: deps.claudeOnce } : {}) }, body))
   })
   app.get('/api/engines', need('read', o), async (c) => {
     const local = await ollamaStatus(deps.settings.get().ollama)

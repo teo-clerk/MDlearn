@@ -104,6 +104,7 @@ export default function Reader({ ws }: { ws: string }) {
             <>
               <MenuItem hint={t('Formulas and defined terms of this document')} onClick={() => { close(); navigate(`/w/${ws}/sheet?path=${encodeURIComponent(path)}`) }}>{t('Cheat sheet')}</MenuItem>
               {!!entry?.lessons.length && <MenuItem hint={t('Questions on what you have studied here, marked at the end')} onClick={() => { close(); navigate(`/w/${ws}/exam?doc=${encodeURIComponent(path)}`) }}>{t('Mock exam on this document')}</MenuItem>}
+              <MenuItem hint={t('Explain a section in your own words; the AI says what is missing')} onClick={() => { close(); navigate(`/w/${ws}/teach?doc=${encodeURIComponent(path)}${section ? `&section=${encodeURIComponent(section)}` : ''}`) }}>{t('Teach it back')}</MenuItem>
               <MenuItem onClick={() => { close(); window.print() }}>{t('Print this document')}</MenuItem>
               {canWrite && !!entry?.lessons.length && <MenuItem hint={t('Study cards as an .apkg file')} onClick={() => { close(); window.location.assign(`/api/w/${ws}/export/anki?scope=${encodeURIComponent(path)}`) }}>{t('Export the study cards to Anki')}</MenuItem>}
               <MenuItem hint={termHints ? t('On: hover a dotted word for its definition') : t('Off')} onClick={() => { close(); setTermHints(!termHints) }}>{termHints ? t('Stop underlining defined terms') : t('Underline defined terms')}</MenuItem>

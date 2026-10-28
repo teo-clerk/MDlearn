@@ -13,8 +13,8 @@ import { Workspaces } from './workspaces.js'
 import { watchWorkspace } from './watcher.js'
 import { lanAddresses, pageCsp } from './security.js'
 import { JobManager } from './ai/jobs.js'
-import { ClaudeEngine, claudeStatus } from './ai/claude.js'
-import { FakeEngine } from './ai/fake.js'
+import { ClaudeEngine, claudeStatus, claudeOnce } from './ai/claude.js'
+import { FakeEngine, fakeOnce } from './ai/fake.js'
 
 export interface StudioOptions {
   root?: string
@@ -53,7 +53,8 @@ export async function startStudio(opts: StudioOptions = {}): Promise<Studio> {
   const jobs = new JobManager(bus)
   const engine = () => (opts.fakeAi ? new FakeEngine() : new ClaudeEngine(settings.get().claude))
   const deps = { version: VERSION, security, settings, workspaces, bus, serverId: randomUUID(), jobs, engine,
-    claudeStatus: () => (opts.fakeAi ? Promise.resolve({ available: true, version: 'demo' }) : claudeStatus(settings.get().claude)) }
+    claudeStatus: () => (opts.fakeAi ? Promise.resolve({ available: true, version: 'demo' }) : claudeStatus(settings.get().claude)),
+    claudeOnce: opts.fakeAi ? fakeOnce : (req: { system: string; prompt: string }) => claudeOnce(settings.get().claude, req) }
   const app = createApp(deps)
   const api = getRequestListener(app.fetch)
 

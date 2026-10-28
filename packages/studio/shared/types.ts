@@ -38,6 +38,15 @@ export interface StudyPlan { items: QueueItem[]; due: number; fresh: number; min
 /** `video`: the video this question pauses at in the lesson (its title, the time, a link that starts there when online). */
 export interface StudyItem { item: QueueItem; title: string; widget: PosedWidget; exposition: MdNode[]; reads: ReadRef[]; lessonPath: string; video?: { title: string; at: string; link?: string } }
 export interface CheckResponse { checked: Checked }
+/** Teach-back feedback: each key idea judged (from the lesson, or listed by the AI when the text has none), errors, one next question. */
+export interface TeachResult {
+  title: string
+  ideas: { idea: string; verdict: 'covered' | 'partly' | 'missing'; evidence?: string }[]
+  ideasFrom: 'lesson' | 'ai'
+  misconceptions: { quote: string; correction: string }[]
+  followUp: string
+  feedback: string
+}
 /** A mock exam paper: the questions without their answers; `available` is how many studied cards could be asked. */
 export interface ExamPlan { id: string; requested: number; available: number; items: { item: QueueItem; widget: PosedWidget; lessonPath: string }[] }
 export interface ExamResult {

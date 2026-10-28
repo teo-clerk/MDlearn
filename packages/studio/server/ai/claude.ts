@@ -6,7 +6,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join, isAbsolute, resolve, relative, sep } from 'node:path'
-import { homedir } from 'node:os'
+import { homedir, tmpdir } from 'node:os'
 import { realPath } from '@mdlearn/core/node'
 import type { AiEngine, JobEvent, JobSpec, RunContext } from './engine.js'
 
@@ -109,6 +109,31 @@ export class ClaudeEngine implements AiEngine {
     }
     return { ok, summary, ...(sessionId ? { sessionId } : {}) }
   }
+}
+
+/**
+ * One answer from Claude for a short task (feedback on an explanation): one turn, no tools, no MCP, no access to
+ * any folder, run from the temp directory. Returns the final text.
+ */
+export async function claudeOnce(cfg: ClaudeConfig, req: { system: string; prompt: string; signal?: AbortSignal }): Promise<string> {
+  const bin = resolveClaude(cfg)
+  if (!bin) throw new Error('Claude Code is not installed or could not be found.')
+  const abort = new AbortController()
+  req.signal?.addEventListener('abort', () => abort.abort(), { once: true })
+  const q = query({
+    prompt: req.prompt,
+    options: {
+      cwd: tmpdir(), pathToClaudeCodeExecutable: bin, env: cleanEnv(), settingSources: [], strictMcpConfig: true, mcpServers: {},
+      systemPrompt: req.system, tools: [], allowedTools: [], permissionMode: 'dontAsk', maxTurns: 1, includePartialMessages: false,
+      abortController: abort, model: cfg.model,
+    },
+  })
+  for await (const m of q) {
+    if (m.type !== 'result') continue
+    if (m.subtype !== 'success' || m.is_error) throw new Error('Claude could not answer just now. Try again, or use the local AI.')
+    return String(m.result)
+  }
+  throw new Error('Claude did not answer.')
 }
 
 /** SDK messages → what the user sees in the job log. */
