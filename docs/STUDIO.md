@@ -212,8 +212,21 @@ unchanged files are skipped by mtime) and updated by the file watcher.
   hover or focus; everyday short words are left alone. Links to other documents show a card (what it is, how
   well you remember it). Both can be switched off with the button in the top bar.
 - **Links tab** — what the document points to and what points to it (prerequisites marked).
-- **Map** — the documents as a left-to-right graph (prerequisites point to what needs them), memory dot per
-  node. Whole folder (zoom, fit) or "what surrounds this document" with links optionally included.
+- **Map → Graph** (the default) — every document as a dot sized by its words (square root, capped) and
+  coloured by how well you remember it, prerequisites as arrows, links dashed; optionally each document's
+  lessons as small dots. Hover lights a document's neighbours and names it; a click opens it (a tap on a touch
+  screen chooses it instead); drag, scroll or pinch to move and zoom. Filters for prerequisites, links, lessons
+  and unconnected documents; `?doc=` draws what lies 1–3 steps around one document. The panel beside it
+  (search, the chosen document with what it builds on, leads to and links with) is the keyboard way through;
+  the canvas itself is hidden from screen readers. **2D** is force-graph on a canvas; **3D** is 3d-force-graph
+  (three.js), a separate chunk loaded only when you switch to it, never turning by itself. With reduced motion
+  the layout is computed before the first frame and camera moves are instant. If WebGL is not available, the
+  graph falls back to 2D with a note. The 2D/3D choice and the filters are remembered on the device.
+  `web/knowledge/graph.ts` builds the data (pure, unit-tested); `graphEngine2d.ts` / `graphEngine3d.ts` draw it
+  from the theme's CSS variables, redrawn when the theme or accent changes.
+- **Map → Layers** (`?view=layers`) — the documents as a left-to-right graph (prerequisites point to what needs
+  them), memory dot per node. Whole folder (zoom, fit) or "what surrounds this document" with links optionally
+  included; every node is a keyboard link.
 
 ## 9. Ask your whole folder
 
@@ -340,10 +353,10 @@ choices; they live in `localStorage` and `public/theme.js` applies them before t
 guards, redaction, study, Today, quick cards, the Python file cache, the knowledge index, Ask with a fake Ollama
 (download, indexing, retrieval, citations), cheat sheets, the Anki writer and importer (round trip), every
 importer, the editor's save/conflict/history rules, batches with the scripted engine; and the browser-side
-helpers: cloze blanks, term planning, map layout, Python error messages, every translation, accent contrast) and
+helpers: cloze blanks, term planning, map layout, graph data and highlighting, Python error messages, every translation, accent contrast) and
 `npm run test:e2e -w @mdlearn/studio` (Playwright against a demo server with a stand-in Ollama, desktop and
 phone: reading, search, source view, study sessions, Today and deadlines, quick cards, Python blocks and graded
 exercises (including a runaway loop), formulas/glossary/hovers/links/map, Ask, cheat sheet and Anki download,
 editor save/conflict/insert/new note, the four importers, a batch course and its undo, notes, AI jobs, visuals,
 the four games played to a verdict, safe HTML that must not execute, the `:::html` sandbox, the welcome tour,
-Help and the tutorial, the interface in Italian and accent colours in both themes, and a no-sideways-scrolling check of every page in light and dark).
+Help and the tutorial, the interface in Italian and accent colours in both themes, the graph (search, hover, open, tap on a phone, the 3D chunk only on demand), and a no-sideways-scrolling check of every page in light and dark).

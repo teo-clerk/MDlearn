@@ -19,7 +19,7 @@ Your notes stay plain Markdown files. **Lessons** (`learn/*.learn.md`) hold shor
 | **Ask** | A question about the whole folder, answered by the local model from your own passages. |
 | **Progress** | What you have seen, how well you remember each lesson, your accuracy and streak. |
 | **AI Studio** | Claude Code writes or improves lessons from a note (uses your Claude subscription). |
-| **Formulas** · **Glossary** · **Map** | Every formula, every defined term, and which notes build on which. |
+| **Formulas** · **Glossary** · **Map** | Every formula, every defined term, and which notes build on which: a graph in 2D or 3D, coloured by how well you remember each note. |
 
 ## While reading
 

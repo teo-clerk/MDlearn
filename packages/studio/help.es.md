@@ -19,7 +19,7 @@ Tus apuntes siguen siendo archivos Markdown normales. Las **lecciones** (`learn/
 | **Preguntar** | Una pregunta sobre toda la carpeta, que el modelo local responde con tus propios pasajes. |
 | **Progreso** | Lo que has visto, cuánto recuerdas de cada lección, tu precisión y tu racha. |
 | **AI Studio** | Claude Code escribe o mejora lecciones a partir de un apunte (usa tu suscripción de Claude). |
-| **Fórmulas** · **Glosario** · **Mapa** | Cada fórmula, cada término definido y qué apuntes se basan en cuáles. |
+| **Fórmulas** · **Glosario** · **Mapa** | Cada fórmula, cada término definido y qué apuntes se basan en cuáles: un grafo en 2D o 3D, coloreado según lo bien que recuerdas cada apunte. |
 
 ## Mientras lees
 

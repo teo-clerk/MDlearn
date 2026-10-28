@@ -11,6 +11,6 @@ export default defineConfig({
   webServer: { command: 'node e2e/serve.mjs', url: 'http://localhost:4799/api/session', reuseExistingServer: false, timeout: 30_000 },
   projects: [
     { name: 'desktop', use: { ...devices['Desktop Chrome'], viewport: { width: 1360, height: 900 } } },
-    { name: 'phone', use: { ...devices['Pixel 7'] }, testMatch: /reader|study|layout|games/ },
+    { name: 'phone', use: { ...devices['Pixel 7'] }, testMatch: /reader|study|layout|games|graph/ },
   ],
 })

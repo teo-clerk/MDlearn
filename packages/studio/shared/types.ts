@@ -112,7 +112,7 @@ export interface GlossaryResponse { status: KnowledgeStatus; terms: GlossaryTerm
 export interface LinkedDoc { path: string; title: string; kind: 'link' | 'prereq'; count: number; exists: boolean }
 export interface LinksResponse { outgoing: LinkedDoc[]; backlinks: LinkedDoc[] }
 export interface DocSummary { path: string; title: string; level?: string; timeMin?: number; words: number; objectives: string[]; intro: string; lessons: number; memory: number | null; seen: number }
-export interface MapNode { path: string; title: string; words: number; lessons: number; seen: number; memory: number | null }
+export interface MapNode { path: string; title: string; words: number; lessons: number; seen: number; memory: number | null; lessonList: { path: string; title: string }[] }
 export interface MapResponse { status: KnowledgeStatus; nodes: MapNode[]; edges: { from: string; to: string; kind: 'link' | 'prereq' }[] }
 
 // ---- ask your whole folder

@@ -19,7 +19,7 @@ Vos notes restent de simples fichiers Markdown. Les **leçons** (`learn/*.learn.
 | **Demander** | Une question sur tout le dossier, à laquelle le modèle local répond avec vos propres passages. |
 | **Progrès** | Ce que vous avez vu, à quel point vous retenez chaque leçon, votre précision et votre série. |
 | **AI Studio** | Claude Code écrit ou améliore des leçons à partir d'une note (utilise votre abonnement Claude). |
-| **Formules** · **Glossaire** · **Carte** | Chaque formule, chaque terme défini, et quelles notes s'appuient sur lesquelles. |
+| **Formules** · **Glossaire** · **Carte** | Chaque formule, chaque terme défini, et quelles notes s'appuient sur lesquelles : un graphe en 2D ou en 3D, coloré selon ce que vous retenez de chaque note. |
 
 ## Pendant la lecture
 

@@ -70,6 +70,9 @@ describe('links, backlinks and the map', () => {
     const m = await get<MapResponse>('/map?wait=1')
     expect(m.nodes.map((n) => n.path)).toEqual(expect.arrayContaining(['A.md', 'B.md']))
     expect(m.edges.filter((e) => e.to === 'B.md')).toEqual([{ from: 'A.md', to: 'B.md', kind: 'prereq' }])
+    for (const n of m.nodes) expect(n.lessonList).toHaveLength(n.lessons)
+    expect(m.nodes.find((n) => n.path === '00_FOUNDATIONS/04_radar.md')?.lessonList)
+      .toEqual([{ path: 'learn/00_FOUNDATIONS/04_radar/01-radar-equation.learn.md', title: 'The radar equation' }])
   })
   it('summarises a document for a hover preview', async () => {
     const { get } = setup()

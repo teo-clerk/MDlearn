@@ -3,6 +3,14 @@ import { resolveRel } from '@mdlearn/core/paths'
 export { resolveRel }
 export const docRoute = (ws: string, path: string, anchor?: string) => `/w/${ws}/doc?path=${encodeURIComponent(path)}${anchor ? `#${anchor}` : ''}`
 export const lessonRoute = (ws: string, path: string) => `/w/${ws}/lesson?path=${encodeURIComponent(path)}`
+/** The map: the graph (default) or the layered view, of the whole folder or around one document. */
+export const mapRoute = (ws: string, doc?: string, view?: 'layers') => {
+  const q = new URLSearchParams()
+  if (doc) q.set('doc', doc)
+  if (view) q.set('view', view)
+  const s = q.toString()
+  return `/w/${ws}/map${s ? `?${s}` : ''}`
+}
 /** In-app route for a link in a document, or null when it should open as an ordinary link. */
 export function linkTarget(ws: string, fromDoc: string, url: string): string | null {
   if (url.startsWith('#')) return url

@@ -2,7 +2,7 @@
 import { Link } from 'wouter'
 import { Network } from 'lucide-react'
 import { useLinks } from '../api/queries'
-import { docRoute } from '../lib/paths'
+import { docRoute, mapRoute } from '../lib/paths'
 import { prettyTitle } from '../lib/title'
 import { Spinner } from '../ui/primitives'
 import type { LinkedDoc } from '../../shared/types'
@@ -17,7 +17,7 @@ export function LinksPanel({ ws, path }: { ws: string; path: string }) {
     <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2">
       <Group ws={ws} title={t('Points to')} rows={outgoing} empty={t('This document does not link to another document of the folder.')} />
       <Group ws={ws} title={t('Pointed to by')} rows={backlinks} empty={t('No other document links here yet.')} />
-      <Link href={`/w/${ws}/map?doc=${encodeURIComponent(path)}`} className="mx-2 inline-flex h-7 items-center gap-1.5 rounded-[6px] border border-border-strong px-2.5 text-[12.5px] font-medium hover:bg-hover"><Network className="size-3.5" aria-hidden />{t('Show on the map')}</Link>
+      <Link href={mapRoute(ws, path)} className="mx-2 inline-flex h-7 items-center gap-1.5 rounded-[6px] border border-border-strong px-2.5 text-[12.5px] font-medium hover:bg-hover"><Network className="size-3.5" aria-hidden />{t('Show on the map')}</Link>
     </div>
   )
 }

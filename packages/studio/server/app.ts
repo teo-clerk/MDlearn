@@ -40,7 +40,7 @@ import { createCourse, improveLesson, customJob, importPdf, topicCourse } from '
 import { BatchRunner } from './ai/batch.js'
 import type { EventBus, Envelope } from './bus.js'
 import type { SettingsStore } from './settings.js'
-import type { SessionInfo, LessonResponse, CompileResponse, PreviewResponse, Integrations } from '../shared/types.js'
+import type { SessionInfo, LessonResponse, CompileResponse, PreviewResponse, Integrations, MapNode, MapResponse } from '../shared/types.js'
 
 /** Languages with a translated help page (help.<lang>.md). */
 const HELP_LANGS = new Set(['it', 'es', 'fr', 'ca'])
@@ -302,7 +302,11 @@ export function createApp(deps: Deps): Hono {
     const tree = deps.workspaces.tree(h)
     const rows = new Map(tree.docs.map((d) => [d.path, d]))
     const g = idx.graph()
-    return c.json({ status: idx.status(), edges: g.edges, nodes: g.nodes.map((n) => ({ ...n, lessons: rows.get(n.path)?.lessons.length ?? 0, seen: rows.get(n.path)?.seen ?? 0, memory: rows.get(n.path)?.memory ?? null })) })
+    const node = (n: (typeof g.nodes)[number]): MapNode => {
+      const row = rows.get(n.path)
+      return { ...n, lessons: row?.lessons.length ?? 0, seen: row?.seen ?? 0, memory: row?.memory ?? null, lessonList: (row?.lessons ?? []).map((l) => ({ path: l.path, title: l.title })) }
+    }
+    return c.json({ status: idx.status(), edges: g.edges, nodes: g.nodes.map(node) } satisfies MapResponse)
   })
 
   // ---- importers: a web page, a notebook, an Anki deck, a PDF (read locally, or by Claude for formulas)

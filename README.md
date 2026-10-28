@@ -189,7 +189,8 @@ Start `claude` in the folder and approve the `mdlearn` server when asked. Then t
 - **Run Python** blocks in the browser (Pyodide with numpy, scipy, pandas, matplotlib, …). Exercises
   with `assert` checks are graded.
 - **Your folder as a knowledge base:** formulas, glossary (defined terms are underlined in the text),
-  links and backlinks, a prerequisite map, **Ask** (the local model answers from your documents, with
+  links and backlinks, a **graph** of your documents in 2D or 3D (coloured by how well you remember each,
+  like Obsidian's) and a prerequisite map, **Ask** (the local model answers from your documents, with
   sources) and printable cheat sheets.
 - **Edit, import, export:** a built-in editor with live preview and history; import web pages, PDFs,
   Anki decks and Jupyter notebooks; **export to Anki** to study on your phone anywhere.

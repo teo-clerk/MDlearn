@@ -58,6 +58,7 @@ test('the map shows what a document builds on and what surrounds it', async ({ p
   await page.getByRole('link', { name: 'Show on the map' }).click()
   await expect(page).toHaveURL(/map\?doc=demo%2Fradar-terms\.md/)
   await expect(page.getByText(/Around/)).toBeVisible()
+  await page.getByRole('link', { name: 'Layers' }).click()
   await page.getByLabel('Include links').check()
   await expect(page.getByRole('link', { name: /Visuals/ })).toBeVisible({ timeout: 20_000 })
   await page.getByRole('link', { name: 'Whole folder' }).click()

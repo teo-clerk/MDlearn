@@ -19,7 +19,7 @@ I tuoi appunti restano semplici file Markdown. Le **lezioni** (`learn/*.learn.md
 | **Chiedi** | Una domanda su tutta la cartella, a cui il modello locale risponde con i tuoi passaggi. |
 | **Progressi** | Cosa hai visto, quanto ricordi ogni lezione, la tua precisione e la tua serie. |
 | **AI Studio** | Claude Code scrive o migliora lezioni a partire da un appunto (usa il tuo abbonamento Claude). |
-| **Formule** · **Glossario** · **Mappa** | Ogni formula, ogni termine definito e quali appunti si basano su quali. |
+| **Formule** · **Glossario** · **Mappa** | Ogni formula, ogni termine definito e quali appunti si basano su quali: un grafo in 2D o 3D, colorato secondo quanto ricordi ogni appunto. |
 
 ## Mentre leggi
 
