@@ -1,0 +1,25 @@
+# Changelog
+
+## 1.0.0 — 2026-10-28
+
+The first official version. Every package (`@mdlearn/core`, `cli`, `mcp`, `studio`) is now 1.0.0.
+
+**Lessons.** Plain Markdown `.learn.md` files compiled and checked by `@mdlearn/core` (the lesson language, DSL
+v1.4): questions, gaps to fill, steps, ordering, explanations with key ideas, graded Python exercises, games
+(match, memory, sort, speed), simulations, animations, safe HTML and videos with questions at a moment. Every
+card is scheduled with FSRS from an append-only progress log.
+
+**Study.** `mdlearn review` in the terminal, or Studio's Today (the daily session, goals and deadlines, the
+cards you keep failing), Study, a **mock exam**, the **confidence check**, **teach-back** and **study offline**
+on a phone on your network.
+
+**Studio** (`mdlearn studio`). A reader for any Markdown folder (math, diagrams, code, search, outline, notes
+beside the text), quick cards from a selection, the local model to ask, explain and visualise, Python in the
+browser, formulas, glossary, links and a graph of your notes in 2D or 3D, Ask your whole folder, cheat sheets,
+an editor with history, importers (web pages, PDFs, Anki decks, notebooks), Anki export, AI Studio and batch
+courses with Claude Code, and the interface in English, Italiano, Español, Français and Català with your own
+accent colour.
+
+**Any AI.** The MCP server (study tools, lesson writing that is checked before saving, a course on any topic
+with or without notes), a Claude Code plugin, a Claude.ai skill, and a prompt for ChatGPT and other chats,
+with `mdlearn import-chat` to save what they write.

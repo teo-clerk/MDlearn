@@ -265,6 +265,7 @@ If your notes are in git, add `.mdlearn/` to their `.gitignore`.
 | [docs/TOOLING.md](docs/TOOLING.md) | Importer, `mdlearn` CLI, `mdlearn-mcp` server, skills, a curriculum workflow |
 | [docs/STUDIO.md](docs/STUDIO.md) | MDlearn Studio: architecture, AI engines and jobs, notes, visuals runtime, security, tests |
 | [docs/AGENT_SKILL.md](docs/AGENT_SKILL.md) | The authoring skill (installed as `/mdlearn-course`) |
+| [CHANGELOG.md](CHANGELOG.md) | What each version brings |
 
 ## Packages
 
