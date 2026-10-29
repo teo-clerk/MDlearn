@@ -1,11 +1,13 @@
 # The desktop app for Windows, macOS and Linux: built, launched once as a smoke test, kept as workflow artifacts,
-# and attached to the GitHub release when a version tag (v1.2.0, …) is pushed. Run it by hand from the Actions tab
-# to try a build without releasing. Unsigned for now (see docs/DESKTOP.md).
+# and attached to the GitHub release when a version tag (v1.2.0, …) is pushed. Pull requests that touch the app
+# build it too; or run it by hand from the Actions tab. Unsigned for now (see docs/DESKTOP.md).
 name: Desktop app
 
 on:
   push:
     tags: ['v*']
+  pull_request:
+    paths: ['packages/desktop/**', 'packages/studio/package.json', 'scripts/stage-desktop.ts', 'package-lock.json', '.github/workflows/desktop.yml']
   workflow_dispatch:
 
 permissions:
