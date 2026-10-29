@@ -17,7 +17,7 @@ your notes (.md)  ──►  lessons (learn/*.learn.md)  ──►  study: Studi
 |---|---|
 | **Node.js** (developed on Node 26; needs `node:sqlite` and zstd, so 22.15 or newer) and git | everything |
 | Claude Code, logged in once (`claude`) | AI course creation in Studio, the Claude tutor *(optional)* |
-| [Ollama](https://ollama.com) with `ollama pull qwen3:8b` | ask / explain / visualise a passage, Ask your folder *(optional)* |
+| [Ollama](https://ollama.com), then a model from *Settings → Local AI* (or `ollama pull qwen3:8b`) | ask / explain / visualise a passage, Ask your folder *(optional)* |
 | poppler (`pdftohtml`) | quick PDF import *(optional)* |
 
 ```bash

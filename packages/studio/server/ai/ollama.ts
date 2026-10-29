@@ -10,10 +10,31 @@ export async function ollamaStatus(cfg: OllamaConfig): Promise<EngineStatus> {
     if (!r.ok) return { available: false, models: [], model: cfg.model, error: `Ollama answered ${r.status}.` }
     const body = await r.json() as { models?: { name: string; remote_host?: string }[] }
     const models = (body.models ?? []).filter((m) => !m.remote_host).map((m) => m.name)
-    return { available: models.includes(cfg.model), models, model: cfg.model, ...(models.includes(cfg.model) ? {} : { error: `Model ${cfg.model} is not installed (ollama pull ${cfg.model}).` }) }
+    return { available: models.includes(cfg.model), models, model: cfg.model, ...(models.includes(cfg.model) ? {} : { error: `Model ${cfg.model} is not installed. Download it in Settings → Local AI.` }) }
   } catch {
     return { available: false, models: [], model: cfg.model, error: 'Ollama is not running (start it with `ollama serve`).' }
   }
+}
+
+export interface InstalledModel { name: string; size: number; family?: string; parameters?: string; quantization?: string }
+/** The models on this computer (cloud models Ollama only links to are left out). */
+export async function ollamaModels(cfg: OllamaConfig): Promise<InstalledModel[]> {
+  const r = await fetch(`${cfg.url}/api/tags`, { signal: AbortSignal.timeout(3000) })
+  if (!r.ok) throw new Error(`Ollama answered ${r.status}.`)
+  const body = await r.json() as { models?: { name: string; size?: number; remote_host?: string; details?: { family?: string; parameter_size?: string; quantization_level?: string } }[] }
+  return (body.models ?? []).filter((m) => !m.remote_host).map((m) => ({ name: m.name, size: m.size ?? 0, family: m.details?.family, parameters: m.details?.parameter_size, quantization: m.details?.quantization_level }))
+}
+
+export async function ollamaVersion(cfg: OllamaConfig): Promise<string | null> {
+  try {
+    const r = await fetch(`${cfg.url}/api/version`, { signal: AbortSignal.timeout(1500) })
+    return r.ok ? ((await r.json()) as { version?: string }).version ?? null : null
+  } catch { return null }
+}
+
+export async function ollamaDelete(cfg: OllamaConfig, model: string): Promise<void> {
+  const r = await fetch(`${cfg.url}/api/delete`, { method: 'DELETE', body: JSON.stringify({ model }), signal: AbortSignal.timeout(10_000) })
+  if (!r.ok) throw new Error(`Ollama answered ${r.status}: ${(await r.text().catch(() => '')).slice(0, 200)}`)
 }
 
 let queue: Promise<unknown> = Promise.resolve()

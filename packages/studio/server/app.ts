@@ -21,7 +21,8 @@ import { today } from './today.js'
 import { passageFor, addCard } from './cards.js'
 import { notesStore, AnchorSchema } from './notes.js'
 import { ask, cancelAsk, EXPLAIN_QUESTION } from './ai/ask.js'
-import { ollamaStatus, ollamaBusy } from './ai/ollama.js'
+import { ollamaStatus, ollamaBusy, ollamaDelete, ollamaModels } from './ai/ollama.js'
+import { MODEL_NAME, ModelDownloads, hardware, installedName, localAi } from './ai/models.js'
 import { judge } from './ai/judge.js'
 import { teachBack, type OneShot } from './ai/teachback.js'
 import { PyodideStore } from './python.js'
@@ -46,7 +47,7 @@ import type { EventBus, Envelope } from './bus.js'
 import type { SettingsStore } from './settings.js'
 import { Latex } from './latex.js'
 import { TEX_FILE, texRoot } from './latex-files.js'
-import type { SessionInfo, LessonResponse, CompileResponse, PreviewResponse, Integrations, MapNode, MapResponse } from '../shared/types.js'
+import type { SessionInfo, LessonResponse, CompileResponse, PreviewResponse, Integrations, MapNode, MapResponse, Hardware, LocalAiInfo } from '../shared/types.js'
 
 /** Languages with a translated help page (help.<lang>.md). */
 const HELP_LANGS = new Set(['it', 'es', 'fr', 'ca'])
@@ -63,6 +64,10 @@ export interface Deps {
   claudeStatus?: () => Promise<{ available: boolean; version?: string; error?: string }>
   knowledge?: Knowledge
   ask?: AskService
+  /** Model downloads through Ollama (shared by Settings and Ask's search model). */
+  downloads?: ModelDownloads
+  /** This computer's memory and graphics card (tests pass a fixed one). */
+  hardware?: () => Promise<Hardware>
   /** How often a batch looks at its running job (tests make it short). */
   batchPollMs?: number
   /** Python-in-the-browser files (default: the installed pyodide package + download cache). */
@@ -463,7 +468,8 @@ export function createApp(deps: Deps): Hono {
   })
 
   // ---- ask your whole folder
-  const askSvc = deps.ask ?? new AskService(knowledge, deps.bus, deps.settings)
+  const downloads = deps.downloads ?? new ModelDownloads(() => deps.settings.get().ollama)
+  const askSvc = deps.ask ?? new AskService(knowledge, deps.bus, deps.settings, downloads)
   app.get('/api/w/:ws/ask/status', need('askLocal', o), async (c) => c.json(await askSvc.status(ws(c))))
   app.post('/api/w/:ws/ask/setup', need('ai', o), async (c) => { await askSvc.setup(ws(c)); return c.json(await askSvc.status(ws(c))) })
   app.get('/api/w/:ws/ask/history', need('askLocal', o), (c) => c.json(askSvc.history(ws(c))))
@@ -593,6 +599,39 @@ export function createApp(deps: Deps): Hono {
   app.get('/api/engines', need('read', o), async (c) => {
     const local = await ollamaStatus(deps.settings.get().ollama)
     return c.json({ local: { ...local, busy: ollamaBusy() }, claude: deps.claudeStatus ? await deps.claudeStatus() : { available: false, error: 'Not configured.' } })
+  })
+
+  // ---- local AI models: what is installed, what this computer can run, downloads (changes only from this computer)
+  app.get('/api/ai/local', need('read', o), async (c) => {
+    const info = await localAi(deps.settings.get().ollama, downloads, await (deps.hardware ?? hardware)())
+    return c.json<LocalAiInfo>({ ...info, claude: deps.claudeStatus ? await deps.claudeStatus() : { available: false, error: 'Not configured.' } })
+  })
+  const modelBody = async (c: { req: { json(): Promise<unknown> } }) => z.object({ model: z.string().trim().regex(MODEL_NAME, 'Not a model name.') }).parse(await c.req.json()).model
+  const installedModels = async () => {
+    try { return await ollamaModels(deps.settings.get().ollama) } catch { throw new UserError('engine', 'Ollama is not running (start it with `ollama serve`).') }
+  }
+  app.post('/api/ai/local/pull', need('ai', o), async (c) => {
+    const model = await modelBody(c)
+    await installedModels()
+    return c.json(downloads.start(model))
+  })
+  app.post('/api/ai/local/cancel', need('ai', o), (c) => { downloads.cancel(); return c.json({ ok: true }) })
+  app.post('/api/ai/local/choose', need('ai', o), async (c) => {
+    const model = installedName(await installedModels(), await modelBody(c))
+    if (!model) throw new UserError('not-found', 'That model is not installed. Download it first.')
+    if (/embed/i.test(model)) throw new UserError('invalid', 'That is a search model; it cannot write answers.')
+    deps.settings.update((s) => ({ ...s, ollama: { ...s.ollama, model } }))
+    return c.json({ chosen: model })
+  })
+  app.post('/api/ai/local/delete', need('ai', o), async (c) => {
+    const cfg = deps.settings.get().ollama
+    const model = installedName(await installedModels(), await modelBody(c))
+    if (!model) throw new UserError('not-found', 'That model is not installed.')
+    if (model === installedName([{ name: model }], cfg.model)) throw new UserError('in-use', 'Studio uses this model. Choose another one first.')
+    if (model === installedName([{ name: model }], cfg.embedModel ?? 'embeddinggemma')) throw new UserError('in-use', 'Ask uses this model to search by meaning, so it stays.')
+    if (downloads.running(model)) throw new UserError('busy', 'This model is still downloading.')
+    await ollamaDelete(cfg, model)
+    return c.json({ ok: true })
   })
 
   // ---- AI Studio jobs

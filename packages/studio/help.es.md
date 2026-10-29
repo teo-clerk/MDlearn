@@ -21,6 +21,7 @@ Tus apuntes siguen siendo archivos Markdown normales. Las **lecciones** (`learn/
 | **Progreso** | Lo que has visto, cuánto recuerdas de cada lección, tu precisión y tu racha. Y el **control de seguridad**: las tarjetas de las que estabas seguro pero fallaste, listas para repasar. |
 | **Estudiar sin conexión** | En el móvil: llévate las tarjetas de los próximos días (Hoy → *Llévate sin conexión las tarjetas de los próximos días*), estudia sin conexión y las respuestas se sincronizan cuando el ordenador está a tu alcance. Deja la página abierta mientras no tengas conexión. |
 | **LaTeX** | *Nueva nota → Documento LaTeX*, o cualquier archivo `.tex` bajo *LaTeX* en la barra lateral: escribe a la izquierda, **Compilar** (Ctrl+S) para ver el PDF a la derecha; los errores llevan a su línea. Necesita Tectonic o TeX Live en el ordenador. |
+| **IA local** | *Ajustes → IA local*: instala Ollama si falta, descarga un modelo recomendado (cada uno dice si este ordenador lo mueve bien) y elige con cuál responde Studio. |
 | **AI Studio** | Claude Code escribe o mejora lecciones a partir de un apunte (usa tu suscripción de Claude). |
 | **Fórmulas** · **Glosario** · **Mapa** | Cada fórmula, cada término definido y qué apuntes se basan en cuáles: un grafo en 2D o 3D, coloreado según lo bien que recuerdas cada apunte. |
 

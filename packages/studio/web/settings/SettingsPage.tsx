@@ -1,15 +1,16 @@
-// Settings: how Studio looks, its language, and how to use MDlearn from other assistants (Claude Code in any folder,
+// Settings: how Studio looks, its language, the local AI (Ollama models), and how to use MDlearn from other assistants (Claude Code in any folder,
 // Claude.ai, ChatGPT and other chats) so they write lessons you can study here.
-import { useEffect, useState, type ReactNode } from 'react'
-import { Check, ClipboardCopy, Download, MessageSquareText, Settings, TerminalSquare } from 'lucide-react'
+import { useEffect, type ReactNode } from 'react'
+import { Download, MessageSquareText, Settings, TerminalSquare } from 'lucide-react'
 import { useIntegrations } from '../api/queries'
-import { copyText } from '../lib/copy'
 import { useUi } from '../state/ui'
 import { Button, ErrorNote, Spinner } from '../ui/primitives'
 import { TopLeft } from '../layout/Shell'
 import { LANGS, currentLang, locale, t } from '../i18n'
 import { Appearance, Language } from './Appearance'
 import { Section } from './Section'
+import { Command, CopyButton } from './Command'
+import { LocalAi } from './LocalAi'
 
 export default function SettingsPage() {
   useEffect(() => { document.title = t('Settings · MDlearn Studio') }, [])
@@ -20,28 +21,12 @@ export default function SettingsPage() {
       <h1 className="flex items-center gap-2 font-ui text-[26px] font-bold tracking-[-0.02em]"><Settings className="size-6 text-muted" strokeWidth={1.8} aria-hidden />{t('Settings')}</h1>
       <Appearance />
       <Language />
+      <LocalAi />
       <OtherApps />
     </div>
   )
 }
 
-function CopyButton({ text, label }: { text: string; label: string }) {
-  const [copied, setCopied] = useState(false)
-  return (
-    <Button size="sm" variant="secondary" icon={copied ? Check : ClipboardCopy}
-      onClick={async () => { if (await copyText(text)) { setCopied(true); setTimeout(() => setCopied(false), 1800) } }}>
-      {copied ? t('Copied') : label}
-    </Button>
-  )
-}
-function Command({ text }: { text: string }) {
-  return (
-    <div className="flex items-start gap-2">
-      <code className="min-w-0 flex-1 overflow-x-auto whitespace-pre rounded-[6px] border border-border bg-code px-2.5 py-1.5 font-mono text-[12px] leading-relaxed">{text}</code>
-      <CopyButton text={text} label={t('Copy')} />
-    </div>
-  )
-}
 function App({ icon: Icon, name, children }: { icon: typeof Settings; name: string; children: ReactNode }) {
   return (
     <div className="rounded-[10px] border border-border p-4">

@@ -104,6 +104,25 @@ export interface NoteMessage { id: string; role: 'user' | 'ai'; text: string; en
 export interface Note { id: string; doc: string; anchor: NoteAnchor; body: string; thread: NoteMessage[]; created: number; updated: number }
 export interface EnginesInfo { local: { available: boolean; model: string; models: string[]; error?: string; busy: number }; claude: { available: boolean; version?: string; error?: string } }
 
+// ---- local AI models (Ollama)
+export type ModelFit = 'good' | 'slow' | 'too-big'
+export type ModelPurpose = 'tiny' | 'light' | 'newer-light' | 'default' | 'newer' | 'languages' | 'strong' | 'large'
+export interface Hardware { memoryGb: number; gpu: { name: string; memoryGb: number } | null; unified: boolean }
+export interface LocalModel { name: string; sizeGb: number; parameters?: string; embedding: boolean; fit: ModelFit }
+export interface CatalogModel { name: string; sizeGb: number; memoryGb: number; purpose: ModelPurpose; installed: boolean; fit: ModelFit }
+export interface ModelDownload { model: string; status: string; completed?: number; total?: number; error?: string; done: boolean }
+export interface LocalAiInfo {
+  ollama: { running: boolean; installed: boolean; version: string | null }
+  install: { command: string | null; then: string | null; url: string }
+  hardware: Hardware
+  chosen: string
+  embedModel: string
+  models: LocalModel[]
+  catalog: CatalogModel[]
+  download: ModelDownload | null
+  claude: { available: boolean; version?: string; error?: string }
+}
+
 // ---- AI jobs
 export type JobStatus = 'queued' | 'running' | 'done' | 'failed' | 'cancelled'
 export type JobEvent =

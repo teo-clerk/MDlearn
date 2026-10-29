@@ -59,6 +59,7 @@ atomically, so the CLI, the MCP tutor and the Studio can study at the same time 
 | Area | Routes |
 |---|---|
 | Session | `GET /api/session` (client local/lan, capabilities) · `GET /api/engines` (local model, Claude Code) |
+| Local AI | `GET /api/ai/local` (Ollama, this computer, installed and recommended models, the download) · `POST /api/ai/local/pull` · `…/cancel` · `…/choose` · `…/delete` (`{ model }`) |
 | Folders | `GET /api/workspaces` · `POST /api/workspaces/open` · `GET /api/fs/browse` · `POST /api/workspaces/upload` · `POST /api/workspaces/tutorial` (copy the tutorial into the library and open it; `reset` starts over) |
 | Help | `GET/POST /api/onboarding` (welcome tour seen) · `GET /api/help` (the Help document) |
 | Reading | `GET /api/w/:ws/tree` · `doc?path=` (ETag) · `doc/section` · `raw` · `asset` · `lesson` · `search?q=` · `POST compile` · `POST doc/check` (practice) |
@@ -85,6 +86,16 @@ streamed into the note), "explain", feedback on a free-text explanation against 
 (JSON-schema answer, a suggestion only), and "visualise": the model drafts a `plot`, `formula` or `animate`
 block, the compiler checks it, the diagnostics go back to the model (≤ 3 attempts). Requests are queued one
 at a time (8 GB GPU), with `num_ctx` 8192.
+
+**Settings → Local AI** (`server/ai/models.ts`) manages the models: without Ollama it shows how to install it
+for this system (`sudo pacman -S ollama-cuda` on Arch with an NVIDIA card, the official script on other
+Linux, `brew install ollama`, the Windows installer); with Ollama it lists the installed models (the cloud
+models Ollama only links to are left out), lets you choose the one Studio answers with (saved as
+`ollama.model` in the settings), and offers a short list of recommended models — `qwen3:0.6b` to
+`gpt-oss:20b`, each with its download size and whether this computer runs it **well** (fits on the NVIDIA
+card from `nvidia-smi`, or in Apple Silicon's shared memory), **slowly** (in memory only) or **not at all**.
+One download at a time, with progress over every layer and Cancel; Ask's search model uses the same
+downloader. The model in use and the search model cannot be removed.
 
 **Claude Code** — through the Agent SDK with an isolated configuration:
 
@@ -410,6 +421,7 @@ choices; they live in `localStorage` and `public/theme.js` applies them before t
 | Other devices on the network | off by default (bound to 127.0.0.1); `--lan` binds 0.0.0.0 and requires a 32-byte token (link/QR → HttpOnly, SameSite=Strict cookie); LAN clients can read, study, take notes and ask the local model — not open folders, write files or run Claude jobs (`--lan-full` to allow). Plain HTTP: use trusted networks |
 | Malicious Markdown / uploads | the compiler keeps only allowlisted HTML tags and attributes (other blocks are sanitised by DOMPurify in the browser, scripts/styles/frames/forms/handlers removed, E107) and drops unsafe URLs; the page CSP forbids inline scripts and handlers; React renders text; KaTeX trust allowlist; Mermaid `strict`; uploads limited to Markdown/text/images, 2 MB each, sanitised relative paths |
 | Path traversal | every path goes through `realPath`-based `inRoot` (symlinks and dangling links resolved), hidden folders refused; job ids must be UUIDs; undo only restores files inside the folder |
+| Local AI models | downloading, choosing and removing need the `ai` capability (this computer, or LAN devices under `--lan-full`); model names are checked against Ollama's name form before they reach it; the model in use and the search model are never removed |
 | AI jobs | scoped writes (folder or single file, `.md` only, `.git/.claude/.mdlearn` protected), folder-only reads, no shell, no network tools, snapshots + undo |
 | Imports | the web importer accepts only http/https without credentials, caps size and time, never follows into other schemes; files are written with `wx` (never replacing) inside `inRoot`; PDFs are parsed by poppler in a temp folder; uploads ≤ 100 MB, `write` capability; the editor only saves existing `.md` files inside the folder (hidden folders refused) with a stale-file check |
 | Videos | page CSP `media-src 'self'`; `frame-src` only `'self'`, `https://www.youtube-nocookie.com` and `https://player.vimeo.com`; the compiler accepts only relative video files and YouTube/Vimeo ids (validated by pattern) and builds the embed address itself; embeds load on Play, in `sandbox` frames without top navigation, `referrerpolicy="strict-origin-when-cross-origin"` (the page itself sends no referrer); video files go through the same `inRoot` asset route |

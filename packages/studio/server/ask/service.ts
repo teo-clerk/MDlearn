@@ -9,7 +9,8 @@ import type { Handle } from '../workspaces.js'
 import { UserError } from '../workspaces.js'
 import type { SettingsStore } from '../settings.js'
 import type { Knowledge, KnowledgeIndex } from '../knowledge/index.js'
-import { hasModel, ollamaChat, ollamaEmbed, ollamaPull, ollamaStatus, type ChatMessage, type OllamaConfig } from '../ai/ollama.js'
+import { hasModel, ollamaChat, ollamaEmbed, ollamaStatus, type ChatMessage, type OllamaConfig } from '../ai/ollama.js'
+import { ModelDownloads } from '../ai/models.js'
 import { trackRunning } from '../ai/ask.js'
 import { notesStore, withFile } from '../notes.js'
 import { VectorStore } from './vectors.js'
@@ -39,7 +40,6 @@ export function citedNumbers(answer: string, count: number): number[] {
   return out
 }
 
-interface Pull { status: string; completed?: number; total?: number; error?: string; done: boolean }
 interface Build { running: boolean; error?: string; startedAt: number }
 const EntrySchema = z.object({
   id: z.string(), question: z.string(), answer: z.string(), at: z.number(), mode: z.enum(['meaning', 'words']), notice: z.string().optional(), error: z.string().optional(), done: z.boolean(),
@@ -48,11 +48,10 @@ const EntrySchema = z.object({
 const FileSchema = z.object({ version: z.literal(1), entries: z.array(EntrySchema) })
 
 export class AskService {
-  private pull: Pull | null = null
   private builds = new Map<string, Build>()
   private stores = new Map<string, VectorStore>()
   private cache = new Map<string, { rev: number; passages: Passage[]; bm25: Bm25 }>()
-  constructor(private knowledge: Knowledge, private bus: EventBus, private settings: SettingsStore) {}
+  constructor(private knowledge: Knowledge, private bus: EventBus, private settings: SettingsStore, private downloads = new ModelDownloads(() => settings.get().ollama)) {}
 
   private cfg(): OllamaConfig { return this.settings.get().ollama }
   private store(h: Handle): VectorStore {
@@ -81,10 +80,12 @@ export class AskService {
     const store = this.store(h)
     const indexed = passages.filter((p) => store.has(p.hash)).length
     const b = this.builds.get(h.id)
+    const pull = this.downloads.state()
+    const pullError = pull?.model === model ? pull.error : undefined
     return {
       model, ollama: local.models.length > 0 || local.available, chatReady: local.available, installed, size: '≈620 MB',
-      pulling: this.pull && !this.pull.done && !this.pull.error ? { status: this.pull.status, ...(this.pull.total ? { percent: Math.min(100, Math.round(100 * (this.pull.completed ?? 0) / this.pull.total)) } : {}) } : null,
-      indexed, total: passages.length, building: !!b?.running, reading: this.knowledge.for(h).status().building, ...((b?.error ?? this.pull?.error) ? { error: b?.error ?? this.pull?.error } : {}),
+      pulling: pull && this.downloads.running(model) ? { status: pull.status, ...(pull.total ? { percent: Math.min(100, Math.round(100 * (pull.completed ?? 0) / pull.total)) } : {}) } : null,
+      indexed, total: passages.length, building: !!b?.running, reading: this.knowledge.for(h).status().building, ...((b?.error ?? pullError) ? { error: b?.error ?? pullError } : {}),
     }
   }
 
@@ -93,14 +94,7 @@ export class AskService {
     const cfg = this.cfg(), model = cfg.embedModel ?? 'embeddinggemma'
     const local = await ollamaStatus(cfg)
     if (!local.models.length && !local.available) throw new UserError('engine', local.error ?? 'Ollama is not running.')
-    if (!hasModel(local.models, model)) {
-      if (this.pull && !this.pull.done && !this.pull.error) return
-      const p: Pull = { status: 'Starting the download', done: false }; this.pull = p
-      void ollamaPull(cfg, model, (x) => { p.status = x.status; if (x.total) { p.total = x.total; p.completed = x.completed } })
-        .then(() => { p.done = true; return this.build(h) })
-        .catch((e: Error) => { p.error = e.message })
-      return
-    }
+    if (!hasModel(local.models, model)) { this.downloads.start(model, () => void this.build(h)); return }
     void this.build(h)
   }
 

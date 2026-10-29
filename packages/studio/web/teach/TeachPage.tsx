@@ -98,7 +98,7 @@ export default function TeachPage({ ws }: { ws: string }) {
           )}
           <span className="ml-auto tabular text-[12px] text-muted">{tp(words(text), '{n} word', '{n} words')}</span>
         </div>
-        {!using && engines.data && <p className="mt-3 text-[13px] text-muted">{t('Feedback needs the local AI (Ollama) or Claude.')} <Link href={`/w/${ws}/settings`} className="underline underline-offset-2 hover:text-text">{t('Set one up in Settings')}</Link></p>}
+        {!using && engines.data && <p className="mt-3 text-[13px] text-muted">{t('Feedback needs the local AI (Ollama) or Claude.')} <Link href={`/w/${ws}/settings#local-ai`} className="underline underline-offset-2 hover:text-text">{t('Set one up in Settings')}</Link></p>}
         {busy && <p className="mt-3 text-[13px] text-muted" role="status">{using === 'local' ? t('Reading your explanation. The local AI can take a minute.') : t('Reading your explanation…')}</p>}
         {error ? <div className="mt-4"><ErrorNote error={error} retry={() => void send()} /></div> : null}
       </section>

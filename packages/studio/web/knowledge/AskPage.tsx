@@ -89,7 +89,7 @@ function SearchModel({ ws, s, canSetup }: { ws: string; s?: AskStatus; canSetup:
         <>
           <p className="font-medium">{t('Search by meaning')}</p>
           <p className="mt-0.5 text-muted">Questions are matched by words now. A small search model ({s.size}, downloaded once through Ollama) also finds passages that use other words.</p>
-          {!s.ollama && <p className="mt-1.5 text-muted">{t('Ollama is not running; start it to download.')}</p>}
+          {!s.ollama && <p className="mt-1.5 text-muted">{t('Ollama is not running; start it to download.')} <Link href={`/w/${ws}/settings#local-ai`} className="underline underline-offset-2 hover:text-text">{t('Local AI settings')}</Link></p>}
           {s.ollama && (canSetup
             ? <Button className="mt-2.5" size="sm" icon={Download} busy={starting} onClick={() => void start()}>{t('Download {model}', { model: s.model })}</Button>
             : <p className="mt-1.5 text-muted">{t('Download it from the computer that runs MDlearn.')}</p>)}

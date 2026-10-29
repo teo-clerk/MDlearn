@@ -1,7 +1,7 @@
 // Ctrl+K: jump to a document or lesson, run an action, or search inside every document.
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation } from 'wouter'
-import { BookA, BookOpenCheck, ChartNoAxesColumn, ClipboardCheck, CloudOff, FileCode, FileText, FolderOpen, GraduationCap, MessageSquareText, Network, Search, Settings, Sigma, TextSearch, LifeBuoy } from 'lucide-react'
+import { BookA, BookOpenCheck, ChartNoAxesColumn, ClipboardCheck, CloudOff, Cpu, FileCode, FileText, FolderOpen, GraduationCap, MessageSquareText, Network, Search, Settings, Sigma, TextSearch, LifeBuoy } from 'lucide-react'
 import { search, useTree } from '../api/queries'
 import { Kbd } from '../ui/primitives'
 import { useUi } from '../state/ui'
@@ -48,7 +48,8 @@ export function CommandPalette({ ws }: { ws: string }) {
       { id: 'a-glossary', icon: BookA, title: t('Glossary'), href: `/w/${ws}/glossary`, group: t('Actions') },
       { id: 'a-map', icon: Network, title: t('Map of documents'), href: `/w/${ws}/map`, group: t('Actions') },
       { id: 'a-open', icon: FolderOpen, title: t('Open or upload a folder'), href: '/', group: t('Actions') },
-      { id: 'a-settings', icon: Settings, title: t('Settings'), detail: t('Appearance, language, and MDlearn in Claude Code, Claude.ai and ChatGPT'), href: `/w/${ws}/settings`, group: t('Actions') },
+      { id: 'a-settings', icon: Settings, title: t('Settings'), detail: t('Appearance, language, local AI, and MDlearn in Claude Code, Claude.ai and ChatGPT'), href: `/w/${ws}/settings`, group: t('Actions') },
+      { id: 'a-local-ai', icon: Cpu, title: t('Local AI models'), detail: t('Download a model, or choose the one Studio answers with'), href: `/w/${ws}/settings#local-ai`, group: t('Actions') },
       { id: 'a-help', icon: LifeBuoy, title: t('Help, the tour and the tutorial'), kbd: '?', href: `/w/${ws}/help`, group: t('Actions') },
     ]
     const docs: Item[] = (tree.data?.docs ?? []).map((d) => ({ id: `d-${d.path}`, icon: FileText, title: d.title || d.path, detail: d.path, href: docRoute(ws, d.path), group: t('Documents') }))

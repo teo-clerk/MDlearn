@@ -109,15 +109,31 @@ while True:
 \`\`\`
 `)
 // A stand-in for Ollama (so nothing here needs a GPU): both models installed, embeddings are word-bag hashes,
-// answers cite the first passage they were given.
+// answers cite the first passage they were given; a download takes a moment and then lists the model.
+let installed = [{ name: 'qwen3:8b', size: 5.2e9 }, { name: 'embeddinggemma:latest', size: 6.2e8 }]
 const bag = (text) => { const v = new Array(48).fill(0); for (const w of text.toLowerCase().match(/[a-z]{3,}/g) ?? []) { let h = 0; for (const ch of w) h = (h * 31 + ch.charCodeAt(0)) % 48; v[h] += 1 } return v }
 const ollama = createServer((req, res) => {
   if (req.method === 'GET' && req.url === '/page') { res.setHeader('content-type', 'text/html'); res.end(`<html><head><title>Imported article</title></head><body><article><h1>An imported article</h1><p>${'Radar measures the delay and the Doppler shift of an echo to find range and speed. '.repeat(8)}</p><p>Energy and mass are related by <span class="katex"><annotation encoding="application/x-tex">E = mc^2</annotation></span> in every frame.</p></article></body></html>`); return }
-  if (req.url === '/api/tags') { res.end(JSON.stringify({ models: [{ name: 'qwen3:8b' }, { name: 'embeddinggemma:latest' }] })); return }
+  if (req.url === '/api/tags') { res.end(JSON.stringify({ models: installed })); return }
+  if (req.url === '/api/version') { res.end(JSON.stringify({ version: '0.17.4' })); return }
   let body = ''
   req.on('data', (d) => (body += d)).on('end', () => {
     const j = JSON.parse(body || '{}')
     if (req.url === '/api/embed') { res.end(JSON.stringify({ embeddings: j.input.map(bag) })); return }
+    if (req.url === '/api/delete') { installed = installed.filter((m) => m.name !== j.model); res.end(); return }
+    if (req.url === '/api/pull') {
+      res.setHeader('content-type', 'application/x-ndjson')
+      const total = 2.5e9
+      let step = 0
+      const tick = setInterval(() => {
+        step++
+        if (step <= 4) { res.write(JSON.stringify({ status: 'pulling layer', total, completed: total * step / 4 }) + '\n'); return }
+        clearInterval(tick)
+        installed = [...installed.filter((m) => m.name !== j.model), { name: j.model, size: total }]
+        res.end(JSON.stringify({ status: 'success' }) + '\n')
+      }, 400)
+      return
+    }
     res.setHeader('content-type', 'application/x-ndjson')
     const teach = j.messages?.[0]?.content?.includes('teach-back')
     const reply = teach ? JSON.stringify({ ideas: [{ index: 1, verdict: 'covered', evidence: 'power drops fast' }, { index: 2, verdict: 'missing' }], misconceptions: [{ quote: 'doubling the range halves the power', correction: 'Doubling the range divides the power by sixteen.' }], followUp: 'Why the fourth power and not the second?', feedback: 'You have the main idea.' })

@@ -47,6 +47,9 @@ describe.skipIf(!ip)('sharing on the network (--lan)', () => {
     expect((await post('/ask/setup', {})).status).toBe(403)
     expect((await post('/latex/compile', { path: 'paper.tex' })).status).toBe(403) // runs a program on the computer
     expect((await post('/latex/save-pdf', { path: 'paper.tex' })).status).toBe(403)
+    // downloading, choosing and removing AI models change this computer
+    const postApi = (path: string, body: unknown) => fetch(`${base()}/api${path}`, { method: 'POST', headers: { ...headers, 'content-type': 'application/json', 'x-mdl': '1', origin: base() }, body: JSON.stringify(body) })
+    for (const action of ['pull', 'choose', 'delete', 'cancel']) expect((await postApi(`/ai/local/${action}`, { model: 'qwen3:4b' })).status).toBe(403)
     expect((await fetch(`${base()}/api/w/${ws}/export/anki`, { headers })).status).toBe(403)
     expect((await fetch(`${base()}/api/w/${ws}/formulas`, { headers })).status).toBe(200)
     expect((await fetch(`${base()}/api/w/${ws}/ask/status`, { headers })).status).toBe(200)

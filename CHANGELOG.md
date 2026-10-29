@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+**Local AI models.** *Settings → Local AI* says how to install Ollama on your system, then lets you download a recommended model (from tiny to large, each with its size and whether your computer
+runs it well), see the download's progress, choose the model Studio answers with, and remove models.
+
 ## 1.1.0 — 2026-10-29
 
 **LaTeX.** Write `.tex` documents in Studio (*New note → LaTeX document*, or any `.tex` in the folder, listed

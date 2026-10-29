@@ -14,6 +14,7 @@ import { IGNORED_DIRS } from '@mdlearn/core/node'
 import type { Handle } from './workspaces.js'
 import { UserError } from './workspaces.js'
 import { TEX_FILE } from './latex-files.js'
+import { distroIs, osRelease } from './system.js'
 import type { TexEngine, TexEngineId, TexHint, TexProblem, TexProgram, TexResult, TexStatus } from '../shared/types.js'
 
 const TIMEOUT_MS = 180_000 // Tectonic's first run downloads the packages a document needs
@@ -176,18 +177,14 @@ export function parseTexLog(log: string): TexProblem[] {
 const WRAPPER = /something bad happened inside|engine had an unrecoverable error|halted on potentially-recoverable error/i
 
 /** How to get an engine on this computer (shown when none is found). */
-export function installHelp(os = platform(), release = readOsRelease()): TexStatus['install'] {
+export function installHelp(os = platform(), release = osRelease()): TexStatus['install'] {
   const url = 'https://tectonic-typesetting.github.io/en-US/install.html'
   if (os === 'darwin') return { command: 'brew install tectonic', url }
   if (os !== 'linux') return { command: null, url }
-  const ids = `${release.ID ?? ''} ${release.ID_LIKE ?? ''}`
-  if (/\barch\b/.test(ids)) return { command: 'sudo pacman -S tectonic', url }
-  if (/\bfedora\b/.test(ids)) return { command: 'sudo dnf install tectonic', url }
-  if (/\b(debian|ubuntu)\b/.test(ids)) return { command: 'sudo apt install texlive-latex-extra latexmk', url }
+  if (distroIs(release, 'arch')) return { command: 'sudo pacman -S tectonic', url }
+  if (distroIs(release, 'fedora')) return { command: 'sudo dnf install tectonic', url }
+  if (distroIs(release, 'debian', 'ubuntu')) return { command: 'sudo apt install texlive-latex-extra latexmk', url }
   return { command: null, url }
-}
-function readOsRelease(): Record<string, string> {
-  try { return Object.fromEntries(readFileSync('/etc/os-release', 'utf8').split('\n').map((l) => /^(\w+)="?([^"]*)"?$/.exec(l)).filter((m) => !!m).map((m) => [m[1], m[2]])) } catch { return {} }
 }
 
 export function findEngines(env: NodeJS.ProcessEnv = process.env): TexEngine[] {
