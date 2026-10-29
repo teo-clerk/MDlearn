@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.1.0 — 2026-10-29
 
 **LaTeX.** Write `.tex` documents in Studio (*New note → LaTeX document*, or any `.tex` in the folder, listed
 under *LaTeX*) with highlighting and completion, and compile them to PDF with Tectonic or TeX Live on your

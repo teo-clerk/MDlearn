@@ -23,7 +23,7 @@ import {
 const fromEnv = (v: string | undefined) => (v && !v.includes('${') ? v : undefined)
 const ws = workspace(fromEnv(process.env.MDLEARN_ROOT) ?? fromEnv(process.env.CLAUDE_PROJECT_DIR) ?? process.cwd(), process.env.MDLEARN_LEARN_DIR ?? 'learn')
 const readOnly = process.env.MDLEARN_READONLY === '1'
-const server = new McpServer({ name: 'mdlearn', version: '1.0.0' })
+const server = new McpServer({ name: 'mdlearn', version: '1.1.0' })
 
 const text = (s: string) => ({ content: [{ type: 'text' as const, text: s }] })
 const json = (v: unknown) => text(JSON.stringify(v, null, 1))
