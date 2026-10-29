@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write # attaching files to the release
+  contents: read # building needs no more; only the release job below may write
 
 jobs:
   build:
@@ -29,6 +29,8 @@ jobs:
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
@@ -58,14 +60,28 @@ jobs:
             packages/desktop/release/MDlearn-*.dmg
             packages/desktop/release/MDlearn-*.zip
           if-no-files-found: error
+
+  # Runs no project code: takes the three systems' files (all must have built) and attaches them, with their checksums
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: mdlearn-*
+          merge-multiple: true
+          path: release
       - name: Attach to the release
-        if: startsWith(github.ref, 'refs/tags/v')
-        shell: bash
+        working-directory: release
         run: |
-          shopt -s nullglob
-          files=(packages/desktop/release/MDlearn-*.{AppImage,deb,exe,dmg,zip})
-          # the release page is made right after the tag is pushed; wait for it if this build was quicker
-          for i in $(seq 1 20); do gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1 && break; sleep 30; done
-          gh release upload "$GITHUB_REF_NAME" "${files[@]}" --clobber
+          sha256sum MDlearn-* > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+          # the release page is made right after the tag is pushed; wait for it if the builds were quicker
+          for i in $(seq 1 20); do gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1 && break; sleep 30; done
+          gh release upload "$GITHUB_REF_NAME" MDlearn-* SHA256SUMS.txt --clobber --repo "$GITHUB_REPOSITORY"
         env:
           GH_TOKEN: ${{ github.token }}

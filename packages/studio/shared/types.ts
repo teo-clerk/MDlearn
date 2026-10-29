@@ -114,7 +114,8 @@ export interface ModelDownload { model: string; status: string; completed?: numb
 export interface LocalAiInfo {
   ollama: { running: boolean; installed: boolean; version: string | null }
   install: { command: string | null; then: string | null; url: string }
-  hardware: Hardware
+  /** Not shown to other devices on the network. */
+  hardware: Hardware | null
   chosen: string
   embedModel: string
   models: LocalModel[]

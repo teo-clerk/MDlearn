@@ -94,22 +94,38 @@ export class ModelDownloads {
       const sum = [...job.layers.values()].reduce((a, l) => ({ completed: a.completed + l.completed, total: a.total + l.total }), { completed: 0, total: 0 })
       job.state = { ...job.state, status: p.status, ...(sum.total ? sum : {}) }
     }, job.abort.signal)
-      .then(() => { job.state = { ...job.state, status: 'success', done: true }; job.then.forEach((f) => f()) })
+      .then(() => {
+        job.state = { ...job.state, status: 'success', done: true }
+        for (const f of job.then) try { f() } catch (e) { console.error('[studio] after downloading', model, e) }
+      })
       .catch((e: Error) => { job.state = { ...job.state, error: job.abort.signal.aborted ? 'Download cancelled.' : e.message } })
     return this.state()!
   }
 
-  cancel(): void { if (this.running()) this.job!.abort.abort() }
+  /** Stops the download; another one can start at once. */
+  cancel(): void {
+    if (!this.running()) return
+    this.job!.abort.abort()
+    this.job!.state = { ...this.job!.state, error: 'Download cancelled.' }
+  }
 }
 
-const isEmbedding = (m: InstalledModel) => /embed/i.test(m.name) || /bert/i.test(m.family ?? '')
+/** Search (embedding) models cannot write answers: `embeddinggemma`, `nomic-embed-text`, `all-minilm` (a BERT). */
+export const isEmbedding = (m: InstalledModel) => /embed/i.test(m.name) || /bert/i.test(m.family ?? '')
+
+let ollamaOnPath: { at: number; value: Promise<boolean> } | null = null
+/** Whether `ollama` is installed, looked up at most every 30 s (it runs the program). */
+const ollamaInstalled = () => {
+  if (!ollamaOnPath || Date.now() - ollamaOnPath.at > 30_000) ollamaOnPath = { at: Date.now(), value: onPath('ollama') }
+  return ollamaOnPath.value
+}
 
 /** Everything the Local AI settings show, except Claude (the caller adds it). */
 export async function localAi(cfg: OllamaConfig, downloads: ModelDownloads, hw: Hardware): Promise<Omit<LocalAiInfo, 'claude'>> {
   let models: InstalledModel[] | null = null
   try { models = await ollamaModels(cfg) } catch { /* not running */ }
   const running = models !== null
-  const installed = running || await onPath('ollama')
+  const installed = running || await ollamaInstalled()
   const names = (models ?? []).map((m) => m.name)
   return {
     ollama: { running, installed, version: running ? await ollamaVersion(cfg) : null },

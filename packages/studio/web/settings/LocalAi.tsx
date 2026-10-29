@@ -56,7 +56,7 @@ export function LocalAi() {
       {d && !d.ollama.running && <OllamaSetup info={d} checking={info.isFetching} onCheck={() => void info.refetch()} />}
       {d && d.ollama.running && (
         <>
-          <ComputerLine hw={d.hardware} version={d.ollama.version} />
+          {d.hardware && <ComputerLine hw={d.hardware} version={d.ollama.version} />}
           {!canChange && <p className="text-[13px] text-muted">{t('Models can be changed on the computer running MDlearn Studio.')}</p>}
           {failed && <p role="alert" className="text-[13px] text-bad">{(failed as Error).message}</p>}
           <DownloadBar download={d.download} canChange={canChange} onCancel={() => act.mutate(() => localAiApi.cancel())} onRetry={(m) => act.mutate(() => localAiApi.pull(m))} />

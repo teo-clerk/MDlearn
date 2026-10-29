@@ -3,7 +3,7 @@
 // write checked by the job manager before it happens.
 import { query, type HookCallback, type SDKMessage } from '@anthropic-ai/claude-agent-sdk'
 import { execFileSync } from 'node:child_process'
-import { closeSync, existsSync, openSync, readSync, realpathSync } from 'node:fs'
+import { accessSync, closeSync, constants, existsSync, openSync, readSync, realpathSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { delimiter, dirname, join, isAbsolute, resolve, relative, sep } from 'node:path'
 import { homedir, tmpdir } from 'node:os'
@@ -12,16 +12,17 @@ import type { AiEngine, JobEvent, JobSpec, RunContext } from './engine.js'
 
 const require = createRequire(import.meta.url)
 /** In the desktop app this Node is Electron's: it runs the MCP server as Node only when told to. */
-const AS_NODE: Record<string, string> = process.env.ELECTRON_RUN_AS_NODE ? { ELECTRON_RUN_AS_NODE: '1' } : {}
+const AS_NODE: Record<string, string> = process.versions.electron ? { ELECTRON_RUN_AS_NODE: '1' } : {}
 const ENV_KEEP = ['HOME', 'PATH', 'USER', 'LANG', 'LC_ALL', 'TERM', 'XDG_CONFIG_HOME', 'XDG_DATA_HOME', 'XDG_RUNTIME_DIR', 'TMPDIR']
 const APPEND = `You are MDlearn Studio's course author, working inside the user's notes folder.
 Use the mdlearn MCP tools to read source documents (doc_outline, get_section) and to check lessons (lint_lesson).
 Write only the files the task names. Never edit the user's source documents. Keep answers short; the user sees your tool calls live.`
 
 export interface ClaudeConfig { path?: string; model: string }
-/** A program itself, not a launcher script (a mise shim runs mise and prints to stdout). */
+/** A program that may be run, not a launcher script (a mise shim runs mise and prints to stdout). */
 export function isProgram(path: string): boolean {
   try {
+    if (process.platform !== 'win32') accessSync(path, constants.X_OK)
     const fd = openSync(realpathSync(path), 'r')
     try { const head = Buffer.alloc(2); readSync(fd, head, 0, 2, 0); return head.toString('latin1') !== '#!' } finally { closeSync(fd) }
   } catch { return false }
@@ -38,7 +39,7 @@ export function resolveClaude(cfg: ClaudeConfig): string | null {
   try { candidates.push(join(dirname(require.resolve(`@anthropic-ai/claude-agent-sdk-${process.platform}-${process.arch}/package.json`)), exe)) } catch { /* optional dependency missing */ }
   try { const out = execFileSync('mise', ['which', 'claude'], { encoding: 'utf8', timeout: 4000, stdio: ['ignore', 'pipe', 'ignore'] }).trim().split('\n').pop(); if (out) candidates.push(out) } catch { /* no mise */ }
   candidates.push(join(homedir(), '.local/share/mise/installs/claude/latest/claude'), join(homedir(), '.local/bin', exe))
-  for (const dir of (process.env.PATH ?? '').split(delimiter)) if (dir) candidates.push(join(dir, exe))
+  for (const dir of (process.env.PATH ?? '').split(delimiter)) if (isAbsolute(dir)) candidates.push(join(dir, exe)) // not `.` or `bin`
   return candidates.find((p) => p && existsSync(p) && isProgram(p)) ?? null
 }
 let cachedStatus: { at: number; value: { available: boolean; version?: string; error?: string } } | null = null
@@ -49,7 +50,7 @@ export async function claudeStatus(cfg: ClaudeConfig) {
   if (!bin) value = { available: false, error: 'Claude Code is not installed (https://claude.com/claude-code).' }
   else {
     try { value = { available: true, version: execFileSync(bin, ['--version'], { encoding: 'utf8', timeout: 8000, env: cleanEnv() }).trim().split(' ')[0] } }
-    catch { value = { available: false, error: `Claude Code at ${bin} did not start.` } }
+    catch { value = { available: false, error: 'Claude Code was found but did not start (`claude --version` failed).' } }
   }
   cachedStatus = { at: Date.now(), value }
   return value

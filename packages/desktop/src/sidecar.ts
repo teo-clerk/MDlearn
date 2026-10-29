@@ -2,6 +2,7 @@
 // `mdlearn studio` does. The app waits for its address, logs what it prints, and stops it on quit (closing its
 // stdin first, then the whole process group if it does not go).
 import { spawn } from 'node:child_process'
+import { randomBytes } from 'node:crypto'
 import { appendFileSync, mkdirSync, renameSync, statSync } from 'node:fs'
 import { dirname } from 'node:path'
 import { readyUrl } from './rules'
@@ -27,8 +28,9 @@ export function logger(file: string): (text: string) => void {
 export function startSidecar(o: SidecarOptions): Promise<Sidecar> {
   const log = logger(o.logFile)
   log(`\n--- ${new Date().toISOString()} starting ${o.entry}\n`)
+  const token = randomBytes(16).toString('hex')
   const child = spawn(o.execPath ?? process.execPath, [o.entry], {
-    env: { ...process.env, ELECTRON_RUN_AS_NODE: '1', MDLEARN_PORT: String(o.port) },
+    env: { ...process.env, ELECTRON_RUN_AS_NODE: '1', MDLEARN_PORT: String(o.port), MDLEARN_READY_TOKEN: token },
     stdio: ['pipe', 'pipe', 'pipe'], detached: process.platform !== 'win32', windowsHide: true,
   })
   let output = ''
@@ -48,7 +50,7 @@ export function startSidecar(o: SidecarOptions): Promise<Sidecar> {
       const text = b.toString('utf8')
       log(text)
       if (output.length < 64 * 1024) output += text
-      const url = readyUrl(output)
+      const url = readyUrl(output, token)
       if (url) { clearTimeout(timer); resolve({ url, stop }) }
     }
     child.stdout.on('data', onData)

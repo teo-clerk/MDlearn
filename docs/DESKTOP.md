@@ -12,7 +12,7 @@ your browser at any time.
 | Linux | `MDlearn-<version>-linux-x86_64.AppImage`, `…-linux-amd64.deb` or `…-linux-x64.zip` |
 
 They are built by the *Desktop app* workflow (`.github/workflows/desktop.yml`) and attached to the release of
-each version tag.
+each version tag, with `SHA256SUMS.txt` to check a download (`sha256sum -c SHA256SUMS.txt --ignore-missing`).
 
 ## First open of an unsigned build
 
@@ -35,9 +35,10 @@ There is no automatic update yet: the repository is private, so the app could no
 
 - **The server beside the window** (`src/sidecar.ts`). The app starts `resources/server/start.mjs` with its own
   Node (`ELECTRON_RUN_AS_NODE=1`), so Studio runs exactly as `mdlearn studio` does: same code, same
-  `process.execPath` rules (the MCP server for Claude jobs gets `ELECTRON_RUN_AS_NODE` too). The server prints
-  `MDLEARN_READY http://localhost:4757/`; the window loads that address. Port 4757 is fixed (the next free one if
-  taken) so the page's own preferences survive restarts. What the server prints goes to
+  `process.execPath` rules (the MCP server for Claude jobs gets `ELECTRON_RUN_AS_NODE` too; no other program
+  Studio starts does). The server prints `MDLEARN_READY <token> http://localhost:4757/`, with a random token the app
+  gave it; the window loads that port on `127.0.0.1`. Port 4757 is fixed (the next free one if taken) so the page's
+  own preferences survive restarts. What the server prints goes to
   `<user data>/logs/studio.log` (one older log kept past 5 MB); if it does not start within 30 s, a dialog says so
   and names the log.
 - **Stopping.** Quitting closes the server's stdin; it closes its watchers and exits. After 4 s the app kills its
@@ -58,11 +59,14 @@ electron-builder leaves `node_modules` out of extra resources, so `after-pack.cj
 | Area | Choice |
 |---|---|
 | The page | `contextIsolation`, `sandbox`, no `nodeIntegration`, no preload, no `<webview>`: the page is the same web page as in a browser, with Studio's CSP and API checks |
-| Links | Studio's own pages (same origin) open in an app window; `https:`, `http:` and `mailto:` links open in the browser or mail app; every other scheme (`file:`, `javascript:` …) is refused, for new windows and for navigation alike |
+| Links | Studio's own pages (same origin) open in an app window; `https:`, `http:` and `mailto:` links open in the browser or mail app, passed on exactly as checked (parsed), never with a `user:password@`; every other scheme (`file:`, `javascript:` …) is refused, for new windows and for navigation alike |
 | Permissions | camera, microphone, notifications, location … are all refused; only writing to the clipboard is allowed |
 | Spell checking | the system's on Windows and macOS; off on Linux, where Electron would download dictionaries from Google |
-| The server | the same server as `mdlearn studio` on `127.0.0.1` (never on the network: the desktop app has no `--lan`); the address it reports must be a `localhost`/`127.0.0.1` URL |
-| Dependencies | Electron and electron-builder pinned; their sub-dependencies kept to releases at least two weeks old (root `overrides`) |
+| The server | the same server as `mdlearn studio` on `127.0.0.1` (never on the network: the desktop app has no `--lan`). Only the ready line with the app's token counts, and only a `localhost`/`127.0.0.1` address in it; the window uses `127.0.0.1`, not `localhost`, which may also mean `::1`, where another user's program could listen |
+| Saved window | only the four numbers of its position are read back from `window.json` |
+| Electron's switches | *run as Node* stays on (the server and the MCP server run that way) and so does `--inspect` (Playwright drives the built app with it in the tests); either lets a program already running as you run code as MDlearn, which it could do anyway. The server's files (`resources/server`) are outside the app archive, as writable as the rest of a per-user install |
+| Builds | the workflow builds with a read-only token and checkout keeps no credentials; only the release job, which runs no project code, may write, to attach the files and their checksums |
+| Dependencies | Electron and electron-builder pinned; their sub-dependencies kept to releases at least two weeks old (root `overrides`); the staged server is copied from the lockfile's versions, links resolved to files |
 
 ## Building it
 

@@ -22,7 +22,7 @@ import { passageFor, addCard } from './cards.js'
 import { notesStore, AnchorSchema } from './notes.js'
 import { ask, cancelAsk, EXPLAIN_QUESTION } from './ai/ask.js'
 import { ollamaStatus, ollamaBusy, ollamaDelete, ollamaModels } from './ai/ollama.js'
-import { MODEL_NAME, ModelDownloads, hardware, installedName, localAi } from './ai/models.js'
+import { MODEL_NAME, ModelDownloads, hardware, installedName, isEmbedding, localAi } from './ai/models.js'
 import { judge } from './ai/judge.js'
 import { teachBack, type OneShot } from './ai/teachback.js'
 import { PyodideStore } from './python.js'
@@ -604,7 +604,10 @@ export function createApp(deps: Deps): Hono {
   // ---- local AI models: what is installed, what this computer can run, downloads (changes only from this computer)
   app.get('/api/ai/local', need('read', o), async (c) => {
     const info = await localAi(deps.settings.get().ollama, downloads, await (deps.hardware ?? hardware)())
-    return c.json<LocalAiInfo>({ ...info, claude: deps.claudeStatus ? await deps.claudeStatus() : { available: false, error: 'Not configured.' } })
+    const claude = deps.claudeStatus ? await deps.claudeStatus() : { available: false, error: 'Not configured.' }
+    if (capsOf(c, o).includes('ai')) return c.json<LocalAiInfo>({ ...info, claude })
+    // a phone sees which models there are, not this computer's hardware, system or where its programs are
+    return c.json<LocalAiInfo>({ ...info, hardware: null, install: { command: null, then: null, url: 'https://ollama.com/download' }, claude: { available: claude.available } })
   })
   const modelBody = async (c: { req: { json(): Promise<unknown> } }) => z.object({ model: z.string().trim().regex(MODEL_NAME, 'Not a model name.') }).parse(await c.req.json()).model
   const installedModels = async () => {
@@ -617,9 +620,10 @@ export function createApp(deps: Deps): Hono {
   })
   app.post('/api/ai/local/cancel', need('ai', o), (c) => { downloads.cancel(); return c.json({ ok: true }) })
   app.post('/api/ai/local/choose', need('ai', o), async (c) => {
-    const model = installedName(await installedModels(), await modelBody(c))
+    const models = await installedModels()
+    const model = installedName(models, await modelBody(c))
     if (!model) throw new UserError('not-found', 'That model is not installed. Download it first.')
-    if (/embed/i.test(model)) throw new UserError('invalid', 'That is a search model; it cannot write answers.')
+    if (isEmbedding(models.find((m) => m.name === model)!)) throw new UserError('invalid', 'That is a search model; it cannot write answers.')
     deps.settings.update((s) => ({ ...s, ollama: { ...s.ollama, model } }))
     return c.json({ chosen: model })
   })

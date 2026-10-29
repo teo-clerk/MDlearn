@@ -59,9 +59,10 @@ export function stage(): { packages: number; bytes: number } {
       // a workspace package: its published files only (dist, sandbox, help…)
       mkdirSync(to, { recursive: true })
       cpSync(join(dir, 'package.json'), join(to, 'package.json'))
-      for (const f of pkg.files ?? []) if (existsSync(join(dir, f))) cpSync(join(dir, f), join(to, f), { recursive: true })
+      for (const f of pkg.files ?? []) if (existsSync(join(dir, f))) cpSync(join(dir, f), join(to, f), { recursive: true, dereference: true })
     } else {
-      cpSync(dir, to, { recursive: true, filter: (src) => !relative(dir, src).split(sep).includes('node_modules') })
+      // links become files: a link copied as is would point into this checkout
+      cpSync(dir, to, { recursive: true, dereference: true, filter: (src) => !relative(dir, src).split(sep).includes('node_modules') })
     }
     const wanted = { ...pkg.peerDependencies, ...pkg.optionalDependencies, ...pkg.dependencies }
     for (const name of Object.keys(wanted)) {

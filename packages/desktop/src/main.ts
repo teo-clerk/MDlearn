@@ -5,7 +5,7 @@
 import { app, BrowserWindow, dialog, Menu, nativeTheme, screen, session, shell, type MenuItemConstructorOptions, type WebContents } from 'electron'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { onScreen, openingFor, type Bounds } from './rules'
+import { boundsFrom, onScreen, openingFor, type Bounds } from './rules'
 import { startSidecar, type Sidecar } from './sidecar'
 
 const PORT = 4757 // fixed, so the page's own preferences (theme, accent) persist from one start to the next
@@ -19,22 +19,23 @@ const resource = (name: string) => (app.isPackaged ? join(process.resourcesPath,
 
 function savedBounds(): Bounds | undefined {
   try {
-    const b = JSON.parse(readFileSync(stateFile(), 'utf8')) as Bounds
-    return onScreen(b, screen.getAllDisplays().map((d) => d.workArea)) ? b : undefined
+    const b = boundsFrom(JSON.parse(readFileSync(stateFile(), 'utf8')))
+    return b && onScreen(b, screen.getAllDisplays().map((d) => d.workArea)) ? b : undefined
   } catch { return undefined }
 }
 
 /** Links and new windows: Studio's pages in the app, web and mail links outside, nothing else. */
 function guard(contents: WebContents, origin: string) {
   contents.setWindowOpenHandler(({ url }) => {
-    const where = openingFor(url, origin)
-    if (where === 'external') void shell.openExternal(url)
-    return where === 'window' ? { action: 'allow', overrideBrowserWindowOptions: { autoHideMenuBar: true } } : { action: 'deny' }
+    const to = openingFor(url, origin)
+    if (to.where === 'external') void shell.openExternal(to.url)
+    return to.where === 'window' ? { action: 'allow', overrideBrowserWindowOptions: { autoHideMenuBar: true } } : { action: 'deny' }
   })
   contents.on('will-navigate', (e, url) => {
-    if (openingFor(url, origin) === 'window') return
+    const to = openingFor(url, origin)
+    if (to.where === 'window') return
     e.preventDefault()
-    if (openingFor(url, origin) === 'external') void shell.openExternal(url)
+    if (to.where === 'external') void shell.openExternal(to.url)
   })
   contents.on('will-attach-webview', (e) => e.preventDefault())
 }
@@ -58,7 +59,10 @@ function createWindow(url: string) {
 }
 
 function menu(origin: string): Menu {
-  const openInBrowser = () => void shell.openExternal(main?.webContents.getURL().startsWith(origin) ? main.webContents.getURL() : `${origin}/`)
+  const openInBrowser = () => {
+    const here = main ? openingFor(main.webContents.getURL(), origin) : null
+    void shell.openExternal(here?.where === 'window' ? here.url : `${origin}/`)
+  }
   const mac = process.platform === 'darwin'
   const template: MenuItemConstructorOptions[] = [
     ...(mac ? [{ role: 'appMenu' as const }] : []),

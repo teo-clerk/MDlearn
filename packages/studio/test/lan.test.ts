@@ -50,6 +50,11 @@ describe.skipIf(!ip)('sharing on the network (--lan)', () => {
     // downloading, choosing and removing AI models change this computer
     const postApi = (path: string, body: unknown) => fetch(`${base()}/api${path}`, { method: 'POST', headers: { ...headers, 'content-type': 'application/json', 'x-mdl': '1', origin: base() }, body: JSON.stringify(body) })
     for (const action of ['pull', 'choose', 'delete', 'cancel']) expect((await postApi(`/ai/local/${action}`, { model: 'qwen3:4b' })).status).toBe(403)
+    // the model list, but not this computer's hardware, system or where its programs are
+    const local = await (await fetch(`${base()}/api/ai/local`, { headers })).json() as { hardware: unknown; install: { command: unknown }; claude: Record<string, unknown> }
+    expect(local.hardware).toBeNull()
+    expect(local.install.command).toBeNull()
+    expect(Object.keys(local.claude)).toEqual(['available'])
     expect((await fetch(`${base()}/api/w/${ws}/export/anki`, { headers })).status).toBe(403)
     expect((await fetch(`${base()}/api/w/${ws}/formulas`, { headers })).status).toBe(200)
     expect((await fetch(`${base()}/api/w/${ws}/ask/status`, { headers })).status).toBe(200)

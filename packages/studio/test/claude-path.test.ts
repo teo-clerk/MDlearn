@@ -10,11 +10,15 @@ describe('finding Claude Code', () => {
   writeFileSync(program, Buffer.from([0x7f, 0x45, 0x4c, 0x46, 0, 0])); chmodSync(program, 0o755)
   writeFileSync(script, '#!/bin/bash\nmise use -g claude\n'); chmodSync(script, 0o755)
   symlinkSync(program, link)
+  const notRunnable = join(dir, 'claude-plain'); writeFileSync(notRunnable, Buffer.from([0x7f, 0x45, 0x4c, 0x46, 0, 0])); chmodSync(notRunnable, 0o644)
   it('takes a program, or a link to one (Claude Code\'s installer), never a launcher script', () => {
     expect(isProgram(program)).toBe(true)
     expect(isProgram(link)).toBe(true)
     expect(isProgram(script)).toBe(false)
     expect(isProgram(join(dir, 'missing'))).toBe(false)
+  })
+  it.skipIf(process.platform === 'win32')('skips a file that may not be run', () => {
+    expect(isProgram(notRunnable)).toBe(false)
   })
   it('the path in the settings comes first; a script there is skipped', () => {
     expect(resolveClaude({ path: link, model: 'sonnet' })).toBe(link)

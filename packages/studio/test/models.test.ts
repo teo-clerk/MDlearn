@@ -113,6 +113,9 @@ describe('Settings → Local AI', () => {
     expect((await post('pull', { model: 'qwen3:14b' })).status).toBe(200) // the same model joins the running download
     await post('cancel')
     expect((await until((i) => !!i.download?.error)).download).toMatchObject({ model: 'qwen3:14b', error: 'Download cancelled.', done: false })
+    hold = false
+    expect((await post('pull', { model: 'qwen3:4b' })).status).toBe(200) // another one can start straight away
+    expect((await until((i) => !!i.download?.done)).download?.model).toBe('qwen3:4b')
   })
   it('chooses an installed chat model, and refuses others', async () => {
     const { post, settings, info } = setup()
@@ -121,6 +124,8 @@ describe('Settings → Local AI', () => {
     expect((await info()).chosen).toBe('llama3:8b')
     expect(await errorOf(await post('choose', { model: 'qwen3:14b' }))).toMatchObject({ code: 'not-found' })
     expect(await errorOf(await post('choose', { model: 'embeddinggemma' }))).toMatchObject({ code: 'invalid' })
+    models = [...models, { name: 'all-minilm:latest', size: 0.05 * GB, details: { family: 'bert', parameter_size: '23M' } }]
+    expect(await errorOf(await post('choose', { model: 'all-minilm' }))).toMatchObject({ code: 'invalid' }) // a search model without "embed" in its name
     expect((await post('choose', { model: 'qwen3:8b; rm -x' })).status).toBe(400)
   })
   it('removes a model, but not the one in use or the search model', async () => {

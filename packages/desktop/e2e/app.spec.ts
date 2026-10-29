@@ -19,7 +19,7 @@ test('opens Studio in a locked-down window, and the tutorial works in it', async
   app = await launch()
   const win = await app.firstWindow()
   await expect(win.getByRole('heading', { name: 'MDlearn Studio' })).toBeVisible({ timeout: 30_000 })
-  expect(win.url()).toBe('http://localhost:4757/')
+  expect(win.url()).toBe('http://127.0.0.1:4757/')
   expect(await win.evaluate(() => typeof (globalThis as { require?: unknown }).require)).toBe('undefined')
   const prefs = await app.evaluate(({ BrowserWindow }) => {
     const contents = BrowserWindow.getAllWindows()[0].webContents as unknown as { getLastWebPreferences(): { contextIsolation?: boolean; sandbox?: boolean; nodeIntegration?: boolean } }
@@ -42,7 +42,7 @@ test('web links open in the browser, Studio\'s own pages in an app window, other
   await win.evaluate(() => { window.open('https://ollama.com/library'); window.open('file:///etc/passwd'); window.open('javascript:alert(1)') })
   await expect.poll(() => app.evaluate(() => (globalThis as { opened?: string[] }).opened)).toEqual(['https://ollama.com/library'])
   const [child] = await Promise.all([app.waitForEvent('window'), win.evaluate(() => { window.open('/api/session') })])
-  await expect.poll(() => child.url()).toBe('http://localhost:4757/api/session')
+  await expect.poll(() => child.url()).toBe('http://127.0.0.1:4757/api/session')
   expect(app.windows()).toHaveLength(2)
 })
 
