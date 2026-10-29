@@ -13,6 +13,14 @@ your notes (.md)  ──►  lessons (learn/*.learn.md)  ──►  study: Studi
 
 ## Install
 
+Two ways to run Studio, with the same features and the same settings:
+
+- **The desktop app.** Download it from the [releases](https://github.com/teo-clerk/MDlearn/releases): the
+  installer (`.exe`) or `.zip` for Windows, the `.dmg` or `.zip` for macOS, the AppImage, `.deb` or `.zip` for
+  Linux. Nothing else is needed (no Node.js, no terminal); Claude Code and Ollama stay optional, as below. The
+  builds are not signed yet, so Windows and macOS ask once before opening them — see [DESKTOP.md](docs/DESKTOP.md).
+- **The web app from source**, in your browser (`mdlearn studio`), together with the CLI and the MCP server:
+
 | Needed | For |
 |---|---|
 | **Node.js** (developed on Node 26; needs `node:sqlite` and zstd, so 22.15 or newer) and git | everything |
@@ -267,6 +275,7 @@ If your notes are in git, add `.mdlearn/` to their `.gitignore`.
 | [docs/ENGINE_ARCHITECTURE.md](docs/ENGINE_ARCHITECTURE.md) | Compiler, rendering, state machine, persistence, security, roadmap |
 | [docs/TOOLING.md](docs/TOOLING.md) | Importer, `mdlearn` CLI, `mdlearn-mcp` server, skills, a curriculum workflow |
 | [docs/STUDIO.md](docs/STUDIO.md) | MDlearn Studio: architecture, AI engines and jobs, notes, visuals runtime, security, tests |
+| [docs/DESKTOP.md](docs/DESKTOP.md) | The desktop app: how it is built and packaged, its security choices, opening unsigned builds |
 | [docs/AGENT_SKILL.md](docs/AGENT_SKILL.md) | The authoring skill (installed as `/mdlearn-course`) |
 | [CHANGELOG.md](CHANGELOG.md) | What each version brings |
 

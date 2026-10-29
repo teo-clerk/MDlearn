@@ -8,11 +8,13 @@
   "scripts": {
     "build": "npm run build -w @mdlearn/core && npm run build -w @mdlearn/studio && npm run build -w @mdlearn/cli && npm run build -w @mdlearn/mcp",
     "test": "vitest run",
-    "typecheck": "tsc -p packages/core --noEmit && tsc -p packages/cli --noEmit && tsc -p packages/mcp --noEmit && tsc -p packages/studio/tsconfig.server.json --noEmit && tsc -p packages/studio/tsconfig.web.json",
+    "typecheck": "tsc -p packages/core --noEmit && tsc -p packages/cli --noEmit && tsc -p packages/mcp --noEmit && tsc -p packages/studio/tsconfig.server.json --noEmit && tsc -p packages/studio/tsconfig.web.json && tsc -p packages/desktop",
     "check-docs": "tsx scripts/check-docs.ts docs/*.md",
     "gen-codes": "tsx scripts/gen-codes.ts",
     "check-corpus": "tsx scripts/check-corpus.ts",
-    "dev": "tsx packages/cli/src/index.ts studio --dev"
+    "dev": "tsx packages/cli/src/index.ts studio --dev",
+    "desktop:dev": "npm run start -w @mdlearn/desktop",
+    "desktop:dist": "npm run dist -w @mdlearn/desktop"
   },
   "devDependencies": {
     "@babel/parser": "7.29.9",
@@ -24,6 +26,18 @@
     "vitest": "^5.0.3"
   },
   "overrides": {
-    "@napi-rs/canvas": "1.0.11"
+    "@napi-rs/canvas": "1.0.11",
+    "@electron-internal/extract-zip": "1.0.5",
+    "@peculiar/asn1-schema": "2.11.0",
+    "@peculiar/webcrypto": "1.7.1",
+    "asn1js": "3.0.10",
+    "node-abi": "4.37.0",
+    "pkijs": "3.4.1",
+    "@electron/get": {
+      "undici": "7.30.0"
+    },
+    "node-gyp": {
+      "undici": "6.29.0"
+    }
   }
 }

@@ -1,0 +1,69 @@
+# The desktop app for Windows, macOS and Linux: built, launched once as a smoke test, kept as workflow artifacts,
+# and attached to the GitHub release when a version tag (v1.2.0, …) is pushed. Run it by hand from the Actions tab
+# to try a build without releasing. Unsigned for now (see docs/DESKTOP.md).
+name: Desktop app
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write # attaching files to the release
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            exe: release/linux-unpacked/mdlearn
+          - os: windows-latest
+            exe: release/win-unpacked/MDlearn.exe
+          - os: macos-latest
+            exe: release/mac-arm64/MDlearn.app/Contents/MacOS/MDlearn
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Build the app
+        run: npm run dist -w @mdlearn/desktop
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false' # no signing certificate yet
+      - name: Let Electron's sandbox start (Ubuntu limits unprivileged user namespaces)
+        if: runner.os == 'Linux'
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      - name: Launch the built app once
+        working-directory: packages/desktop
+        shell: bash
+        run: ${{ runner.os == 'Linux' && 'xvfb-run -a ' || '' }}npx playwright test
+        env:
+          MDLEARN_DESKTOP_EXE: ${{ matrix.exe }}
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: mdlearn-${{ runner.os }}
+          path: |
+            packages/desktop/release/MDlearn-*.AppImage
+            packages/desktop/release/MDlearn-*.deb
+            packages/desktop/release/MDlearn-*.exe
+            packages/desktop/release/MDlearn-*.dmg
+            packages/desktop/release/MDlearn-*.zip
+          if-no-files-found: error
+      - name: Attach to the release
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          shopt -s nullglob
+          files=(packages/desktop/release/MDlearn-*.{AppImage,deb,exe,dmg,zip})
+          # the release page is made right after the tag is pushed; wait for it if this build was quicker
+          for i in $(seq 1 20); do gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1 && break; sleep 30; done
+          gh release upload "$GITHUB_REF_NAME" "${files[@]}" --clobber
+        env:
+          GH_TOKEN: ${{ github.token }}

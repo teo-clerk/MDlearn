@@ -1,0 +1,22 @@
+{
+  "name": "@mdlearn/desktop",
+  "version": "1.1.0",
+  "private": true,
+  "description": "MDlearn Studio as a desktop app: the same Studio in its own window, no terminal needed.",
+  "author": "Teo Clerk",
+  "homepage": "https://github.com/teo-clerk/MDlearn",
+  "main": "dist/main.cjs",
+  "desktopName": "mdlearn.desktop",
+  "scripts": {
+    "build": "node build.mjs",
+    "start": "node build.mjs && electron .",
+    "stage": "tsx ../../scripts/stage-desktop.ts",
+    "dist": "node build.mjs && tsx ../../scripts/stage-desktop.ts && electron-builder --publish never",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "electron": "44.7.2",
+    "electron-builder": "26.17.0"
+  }
+}

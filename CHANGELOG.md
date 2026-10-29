@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+**Desktop app.** MDlearn Studio in its own window for Windows (installer or `.zip`), macOS (`.dmg` or `.zip`, Apple
+Silicon and Intel) and Linux (AppImage, `.deb` or `.zip`), with nothing else to install. Same features and
+settings as the web app, which stays (`mdlearn studio`); *File → Open in your browser* switches at any time. Built
+and attached to each release by GitHub Actions; not signed yet (docs/DESKTOP.md says how to open it the first
+time).
+
 **Local AI models.** *Settings → Local AI* says how to install Ollama on your system, then lets you download a recommended model (from tiny to large, each with its size and whether your computer
 runs it well), see the download's progress, choose the model Studio answers with, and remove models.
 
