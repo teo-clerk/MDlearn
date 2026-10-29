@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+**LaTeX.** Write `.tex` documents in Studio (*New note → LaTeX document*, or any `.tex` in the folder, listed
+under *LaTeX*) with highlighting and completion, and compile them to PDF with Tectonic or TeX Live on your
+computer: the PDF shows beside the source, errors come back with their line and a sentence on the usual cause,
+and the PDF can be downloaded or saved next to the file.
+
 ## 1.0.0 — 2026-10-28
 
 The first official version. Every package (`@mdlearn/core`, `cli`, `mcp`, `studio`) is now 1.0.0.

@@ -3,6 +3,7 @@ import { resolveRel } from '@mdlearn/core/paths'
 export { resolveRel }
 export const docRoute = (ws: string, path: string, anchor?: string) => `/w/${ws}/doc?path=${encodeURIComponent(path)}${anchor ? `#${anchor}` : ''}`
 export const lessonRoute = (ws: string, path: string) => `/w/${ws}/lesson?path=${encodeURIComponent(path)}`
+export const latexRoute = (ws: string, path: string) => `/w/${ws}/latex?path=${encodeURIComponent(path)}`
 /** The map: the graph (default) or the layered view, of the whole folder or around one document. */
 export const mapRoute = (ws: string, doc?: string, view?: 'layers') => {
   const q = new URLSearchParams()
@@ -19,6 +20,7 @@ export function linkTarget(ws: string, fromDoc: string, url: string): string | n
   const [p, hash] = r.split('#')
   if (/\.learn\.md$/i.test(p)) return lessonRoute(ws, p)
   if (/\.(md|markdown)$/i.test(p)) return docRoute(ws, p, hash)
+  if (/\.tex$/i.test(p)) return latexRoute(ws, p)
   return null
 }
 export const assetUrl = (ws: string, fromDoc: string, url: string) => {

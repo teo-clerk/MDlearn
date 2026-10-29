@@ -1,9 +1,9 @@
 // The folder's Markdown files as a tree (folders → documents → their companion lessons).
 import { useMemo, useState } from 'react'
 import { Link, useLocation, useSearch } from 'wouter'
-import { ChevronRight, FileText, Folder, GraduationCap, TriangleAlert } from 'lucide-react'
-import type { Tree, TreeDoc } from '../../shared/types'
-import { docRoute, lessonRoute } from '../lib/paths'
+import { ChevronRight, FileCode, FileText, Folder, GraduationCap, TriangleAlert } from 'lucide-react'
+import type { TexDoc, Tree, TreeDoc } from '../../shared/types'
+import { docRoute, latexRoute, lessonRoute } from '../lib/paths'
 import { Spinner } from '../ui/primitives'
 import { t } from '../i18n'
 
@@ -34,7 +34,7 @@ export function FileTree({ ws, tree, loading, error }: { ws: string; tree?: Tree
   })
   if (loading) return <div className="px-2 py-2"><Spinner label={t('Reading folder')} /></div>
   if (error) return <p className="px-2 py-2 text-[13px] text-bad">{(error as Error).message}</p>
-  if (!tree?.docs.length && !tree?.orphanLessons.length) return <p className="px-2 py-2 text-[13px] text-muted">{t('No Markdown files in this folder.')}</p>
+  if (!tree?.docs.length && !tree?.orphanLessons.length && !tree?.latex.length) return <p className="px-2 py-2 text-[13px] text-muted">{t('No Markdown files in this folder.')}</p>
   return (
     <div role="tree" aria-label={t('Files')} className="text-[13.5px]">
       <p className="px-2 pb-1 pt-3 text-[11.5px] font-medium text-muted">{t('Files')}</p>
@@ -43,6 +43,12 @@ export function FileTree({ ws, tree, loading, error }: { ws: string; tree?: Tree
         <>
           <p className="px-2 pb-1 pt-4 text-[11.5px] font-medium text-muted">{t('Lessons')}</p>
           {tree.orphanLessons.map((l) => <LessonRow key={l.path} ws={ws} lesson={l} depth={0} />)}
+        </>
+      )}
+      {!!tree?.latex.length && (
+        <>
+          <p className="px-2 pb-1 pt-4 text-[11.5px] font-medium text-muted">{t('LaTeX')}</p>
+          {tree.latex.map((d) => <TexRow key={d.path} ws={ws} doc={d} />)}
         </>
       )}
     </div>
@@ -96,6 +102,20 @@ function DocRow({ ws, doc, depth, open, toggle }: { ws: string; doc: TreeDoc; de
       </div>
       {hasLessons && isOpen && <div role="group">{doc.lessons.map((l) => <LessonRow key={l.path} ws={ws} lesson={l} depth={depth + 1} />)}</div>}
     </div>
+  )
+}
+
+function TexRow({ ws, doc }: { ws: string; doc: TexDoc }) {
+  const [location] = useLocation()
+  const search = useSearch()
+  const active = location.endsWith('/latex') && new URLSearchParams(search).get('path') === doc.path
+  return (
+    <Link href={latexRoute(ws, doc.path)} role="treeitem" title={doc.path} aria-current={active ? 'page' : undefined}
+      className={`flex h-7 items-center gap-1.5 rounded-[5px] pl-2 pr-2 ${active ? 'bg-active font-medium text-text' : 'text-text/80 hover:bg-hover'}`}>
+      <FileCode className="size-[15px] shrink-0 text-subtle" strokeWidth={1.7} aria-hidden />
+      <span className="truncate">{doc.title}</span>
+      {doc.title !== doc.path.split('/').pop()?.replace(/\.tex$/i, '') && <span className="ml-auto shrink-0 truncate pl-2 text-[11.5px] text-subtle">{doc.path.split('/').pop()}</span>}
+    </Link>
   )
 }
 

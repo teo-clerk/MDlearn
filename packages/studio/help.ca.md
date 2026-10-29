@@ -20,6 +20,7 @@ Els teus apunts continuen sent fitxers Markdown normals. Les **lliçons** (`lear
 | **Pregunta** | Una pregunta sobre tota la carpeta, que el model local respon amb els teus propis passatges. |
 | **Progrés** | El que has vist, com recordes cada lliçó, la teva precisió i la teva ratxa. I el **control de seguretat**: les targetes de les quals n’estaves segur però vas fallar, a punt per repassar. |
 | **Estudia sense connexió** | Al mòbil: emporta’t les targetes dels propers dies (Avui → *Emporta’t sense connexió les targetes dels propers dies*), estudia sense connexió i les respostes se sincronitzen quan l’ordinador és a l’abast. Deixa la pàgina oberta mentre no tinguis connexió. |
+| **LaTeX** | *Nota nova → Document LaTeX*, o qualsevol fitxer `.tex` a *LaTeX* a la barra lateral: escriu a l’esquerra, **Compila** (Ctrl+S) per veure el PDF a la dreta; els errors porten a la seva línia. Cal Tectonic o TeX Live a l’ordinador. |
 | **AI Studio** | Claude Code escriu o millora lliçons a partir d'un apunt (fa servir la teva subscripció de Claude). |
 | **Fórmules** · **Glossari** · **Mapa** | Cada fórmula, cada terme definit i quins apunts es basen en quins: un graf en 2D o 3D, acolorit segons com recordes cada apunt. |
 

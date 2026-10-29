@@ -20,7 +20,19 @@ export interface TreeDoc {
   /** Mean predicted recall of seen cards (FSRS), null when nothing has been studied. */
   memory: number | null
 }
-export interface Tree { root: string; name: string; docs: TreeDoc[]; orphanLessons: TreeDoc['lessons']; totals: { docs: number; lessons: number; cards: number; due: number; seen: number } }
+export interface Tree { root: string; name: string; docs: TreeDoc[]; orphanLessons: TreeDoc['lessons']; latex: TexDoc[]; totals: { docs: number; lessons: number; cards: number; due: number; seen: number } }
+/** A LaTeX document in the folder (opens in the LaTeX editor). */
+export interface TexDoc { path: string; title: string }
+
+// ---- LaTeX
+export type TexEngineId = 'tectonic' | 'latexmk' | 'pdflatex' | 'xelatex' | 'lualatex'
+export type TexProgram = 'pdflatex' | 'xelatex' | 'lualatex'
+export interface TexEngine { id: TexEngineId; version: string }
+/** What usually causes an error, for a sentence in the learner's language. */
+export type TexHint = 'undefined-command' | 'math-mode' | 'missing-file' | 'braces' | 'undefined-environment' | 'begin-end' | 'alignment' | 'timeout'
+export interface TexProblem { severity: 'error' | 'warning'; message: string; file?: string; line?: number; hint?: TexHint }
+export interface TexResult { ok: boolean; engine: TexEngineId; program?: TexProgram; ms: number; pdf: { size: number; at: number } | null; problems: TexProblem[]; log: string }
+export interface TexStatus { engines: TexEngine[]; chosen: string | null; install: { command: string | null; url: string } }
 
 export type DocResponse = DocModel & { mtime: number }
 /** Lesson as shown before answering: widgets are redacted (no keys). */
@@ -73,7 +85,7 @@ export interface RecordResponse { rating: 1 | 2 | 3; word: string; meaning: stri
 // ---- events (SSE)
 export type ServerEvent =
   | { type: 'hello'; serverId: string; ws: string | null }
-  | { type: 'fs.changed'; ws: string; paths: { path: string; kind: 'doc' | 'lesson' | 'asset' | 'other'; change: 'add' | 'change' | 'unlink' }[] }
+  | { type: 'fs.changed'; ws: string; paths: { path: string; kind: 'doc' | 'lesson' | 'latex' | 'asset' | 'other'; change: 'add' | 'change' | 'unlink' }[] }
   | { type: 'tree.changed'; ws: string }
   | { type: 'progress.changed'; ws: string }
   | { type: 'notes.changed'; ws: string; doc: string }
@@ -166,7 +178,7 @@ export interface SheetResponse {
 }
 
 // ---- editor
-export interface FileInfo { path: string; text: string; mtime: number; kind: 'doc' | 'lesson' }
+export interface FileInfo { path: string; text: string; mtime: number; kind: 'doc' | 'lesson' | 'latex' }
 export interface HistoryEntry { id: string; at: number; size: number }
 export interface PreviewResponse { kind: 'doc' | 'lesson'; doc?: DocResponse; lesson?: LessonResponse; diagnostics: { code: string; line: number; message?: string }[] }
 

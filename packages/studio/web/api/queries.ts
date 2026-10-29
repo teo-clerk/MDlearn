@@ -2,7 +2,7 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { api, qs } from './client'
 import { currentLang } from '../i18n'
-import type { SessionInfo, WorkspaceSummary, Tree, DocResponse, LessonResponse, BrowseResult, StudyPlan, StudyItem, RecordResponse, SearchHit, Note, NoteAnchor, EnginesInfo, JobSummary, JobEvent, TodayResponse, GoalsInfo, FormulasResponse, GlossaryResponse, LinksResponse, MapResponse, DocSummary, AskStatus, AskEntry, SheetResponse, FileInfo, HistoryEntry, PreviewResponse, ImportResult, ChatCheck, Integrations, Batch, BatchCandidate, ConfidenceInfo, ExamPlan, ExamResult } from '../../shared/types'
+import type { SessionInfo, WorkspaceSummary, Tree, DocResponse, LessonResponse, BrowseResult, StudyPlan, StudyItem, RecordResponse, SearchHit, Note, NoteAnchor, EnginesInfo, JobSummary, JobEvent, TodayResponse, GoalsInfo, FormulasResponse, GlossaryResponse, LinksResponse, MapResponse, DocSummary, AskStatus, AskEntry, SheetResponse, FileInfo, HistoryEntry, PreviewResponse, ImportResult, ChatCheck, Integrations, Batch, BatchCandidate, ConfidenceInfo, ExamPlan, ExamResult, TexResult, TexStatus } from '../../shared/types'
 import type { Checked, MdNode, WebAnswer, Outcome } from '@mdlearn/core'
 
 export const keys = {
@@ -68,6 +68,13 @@ export const useSheet = (ws: string, path: string | undefined) => useQuery({
 export const sheetApi = { ideas: (ws: string, path: string, regenerate = false) => api.post<SheetResponse['ideas']>(`/api/w/${ws}/sheet/ideas`, { path, regenerate }) }
 
 // ---- editor
+export const latexApi = {
+  status: (fresh = false) => api.get<TexStatus>(`/api/latex/status${fresh ? '?fresh=1' : ''}`),
+  compile: (ws: string, path: string) => api.post<TexResult & { target: string }>(`/api/w/${ws}/latex/compile`, { path }),
+  savePdf: (ws: string, path: string) => api.post<{ path: string }>(`/api/w/${ws}/latex/save-pdf`, { path }),
+  pdfUrl: (ws: string, path: string, opts: { v?: number; download?: boolean } = {}) => `/api/w/${ws}/latex/pdf?${qs({ path, v: opts.v, download: opts.download ? 1 : undefined })}`,
+}
+
 export const fileApi = {
   get: (ws: string, path: string) => api.get<FileInfo>(`/api/w/${ws}/file?${qs({ path })}`),
   save: (ws: string, body: { path: string; text: string; baseMtime?: number; overwrite?: boolean }) => api.post<{ mtime: number }>(`/api/w/${ws}/files/save`, body),

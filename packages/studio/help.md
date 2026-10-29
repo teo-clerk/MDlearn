@@ -20,6 +20,7 @@ Your notes stay plain Markdown files. **Lessons** (`learn/*.learn.md`) hold shor
 | **Ask** | A question about the whole folder, answered by the local model from your own passages. |
 | **Progress** | What you have seen, how well you remember each lesson, your accuracy and streak, and the **confidence check**: the cards you were sure about and got wrong, ready to review. |
 | **Study offline** | On a phone: take the next days' cards (Today → *Take the next days' cards offline*), study with no connection, and the answers sync when the computer is reachable. Keep the page open while offline. |
+| **LaTeX** | *New note → LaTeX document*, or any `.tex` file under *LaTeX* in the sidebar: write on the left, **Compile** (Ctrl+S) to see the PDF on the right; errors link to their line. Needs Tectonic or TeX Live on the computer. |
 | **AI Studio** | Claude Code writes or improves lessons from a note (uses your Claude subscription). |
 | **Formulas** · **Glossary** · **Map** | Every formula, every defined term, and which notes build on which: a graph in 2D or 3D, coloured by how well you remember each note. |
 

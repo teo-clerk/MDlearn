@@ -201,6 +201,9 @@ Start `claude` in the folder and approve the `mdlearn` server when asked. Then t
   sources) and printable cheat sheets.
 - **Edit, import, export:** a built-in editor with live preview and history; import web pages, PDFs,
   Anki decks and Jupyter notebooks; **export to Anki** to study on your phone anywhere.
+- **LaTeX:** write `.tex` documents with highlighting and completion, compile them to PDF beside the source
+  (Ctrl+S), with errors linked to their line and explained. Uses Tectonic or TeX Live on your computer
+  (`sudo pacman -S tectonic` on Arch, `brew install tectonic` on macOS).
 - **On your phone at home:** `mdlearn studio --lan` prints a private link and a QR code (reading,
   studying and notes; no file changes or AI jobs unless you add `--lan-full`). **Study offline** takes the
   next 1, 3 or 7 days of cards onto the phone, marks them there with no connection, and syncs the answers

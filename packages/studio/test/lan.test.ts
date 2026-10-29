@@ -45,6 +45,8 @@ describe.skipIf(!ip)('sharing on the network (--lan)', () => {
     expect((await post('/import/web', { url: 'http://example.org' })).status).toBe(403)
     expect((await post('/ai/batches', { docs: ['a.md'] })).status).toBe(403)
     expect((await post('/ask/setup', {})).status).toBe(403)
+    expect((await post('/latex/compile', { path: 'paper.tex' })).status).toBe(403) // runs a program on the computer
+    expect((await post('/latex/save-pdf', { path: 'paper.tex' })).status).toBe(403)
     expect((await fetch(`${base()}/api/w/${ws}/export/anki`, { headers })).status).toBe(403)
     expect((await fetch(`${base()}/api/w/${ws}/formulas`, { headers })).status).toBe(200)
     expect((await fetch(`${base()}/api/w/${ws}/ask/status`, { headers })).status).toBe(200)

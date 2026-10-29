@@ -7,6 +7,7 @@ import { homedir } from 'node:os'
 import { parseDocument, report, type Lesson, type DocModel } from '@mdlearn/core'
 import { workspace, sourceDocs, loadCourse, loadDoc, lessonDirFor, loadProgress, resolverFor, fileExistsFor, inRoot, checkJs, IGNORED_DIRS, type Workspace } from '@mdlearn/core/node'
 import type { SettingsStore } from './settings.js'
+import { texDocs } from './latex-files.js'
 import type { Tree, TreeDoc, WorkspaceSummary, BrowseResult } from '../shared/types.js'
 
 export interface Handle { id: string; name: string; root: string; ws: Workspace }
@@ -99,7 +100,7 @@ export class Workspaces {
       }
     })
     const orphanLessons = loaded.filter((l) => !used.has(l.path)).map(lessonRow)
-    return { root: h.root, name: h.name, docs, orphanLessons,
+    return { root: h.root, name: h.name, docs, orphanLessons, latex: texDocs(h.root),
       totals: { docs: docs.length, lessons: loaded.length, cards: rep.totals.cards, due: rep.totals.due, seen: rep.totals.seen } }
   }
 

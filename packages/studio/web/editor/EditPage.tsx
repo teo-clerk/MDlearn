@@ -1,7 +1,7 @@
 // Edit a Markdown file beside its preview. Saves never overwrite a change made elsewhere; the last 20
 // versions are kept and can be brought back.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useLocation, useSearch } from 'wouter'
+import { Redirect, useLocation, useSearch } from 'wouter'
 import { useQueryClient } from '@tanstack/react-query'
 import { AlertTriangle, Check, History, Plus, Save } from 'lucide-react'
 import type { Checked, WebAnswer } from '@mdlearn/core'
@@ -12,7 +12,7 @@ import { Button, Empty, ErrorNote, Spinner } from '../ui/primitives'
 import { Menu, MenuItem, MenuLabel } from '../ui/Menu'
 import { DocBlocks, type BlockEnv } from '../reader/DocBlocks'
 import { LessonArticle } from '../lesson/LessonArticle'
-import { assetUrl, docRoute, lessonRoute } from '../lib/paths'
+import { assetUrl, docRoute, latexRoute, lessonRoute } from '../lib/paths'
 import { useDebounced } from '../lib/hooks'
 import { Editor, type EditorHandle, type Problem } from './Editor'
 import { snippetsFor, type Snippet } from './snippets'
@@ -33,11 +33,13 @@ export default function EditPage({ ws }: { ws: string }) {
   if (!path) return <Empty title={t('No file selected')}>{t('Choose a file in the sidebar, then Edit.')}</Empty>
   if (loadError) return <ErrorNote error={loadError} />
   if (!file) return <div className="p-10"><Spinner label={t('Opening file')} /></div>
+  if (file.kind === 'latex') return <Redirect to={latexRoute(ws, file.path)} replace />
   return <Workbench key={`${ws}:${path}`} ws={ws} initial={file} />
 }
 
 function Workbench({ ws, initial }: { ws: string; initial: FileInfo }) {
-  const { path, kind } = initial
+  const { path } = initial
+  const kind = initial.kind === 'lesson' ? 'lesson' : 'doc'
   const [, navigate] = useLocation()
   const qc = useQueryClient()
   const session = useSession()

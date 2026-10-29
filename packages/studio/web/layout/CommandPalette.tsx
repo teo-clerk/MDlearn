@@ -1,11 +1,11 @@
 // Ctrl+K: jump to a document or lesson, run an action, or search inside every document.
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation } from 'wouter'
-import { BookA, BookOpenCheck, ChartNoAxesColumn, ClipboardCheck, CloudOff, FileText, FolderOpen, GraduationCap, MessageSquareText, Network, Search, Settings, Sigma, TextSearch, LifeBuoy } from 'lucide-react'
+import { BookA, BookOpenCheck, ChartNoAxesColumn, ClipboardCheck, CloudOff, FileCode, FileText, FolderOpen, GraduationCap, MessageSquareText, Network, Search, Settings, Sigma, TextSearch, LifeBuoy } from 'lucide-react'
 import { search, useTree } from '../api/queries'
 import { Kbd } from '../ui/primitives'
 import { useUi } from '../state/ui'
-import { docRoute, lessonRoute } from '../lib/paths'
+import { docRoute, latexRoute, lessonRoute } from '../lib/paths'
 import type { SearchHit } from '../../shared/types'
 import { t, tp } from '../i18n'
 
@@ -52,10 +52,11 @@ export function CommandPalette({ ws }: { ws: string }) {
       { id: 'a-help', icon: LifeBuoy, title: t('Help, the tour and the tutorial'), kbd: '?', href: `/w/${ws}/help`, group: t('Actions') },
     ]
     const docs: Item[] = (tree.data?.docs ?? []).map((d) => ({ id: `d-${d.path}`, icon: FileText, title: d.title || d.path, detail: d.path, href: docRoute(ws, d.path), group: t('Documents') }))
+    const texs: Item[] = (tree.data?.latex ?? []).map((d) => ({ id: `t-${d.path}`, icon: FileCode, title: d.title, detail: d.path, href: latexRoute(ws, d.path), group: t('LaTeX') }))
     const lessons: Item[] = [...(tree.data?.docs ?? []).flatMap((d) => d.lessons), ...(tree.data?.orphanLessons ?? [])]
       .map((l) => ({ id: `l-${l.path}`, icon: GraduationCap, title: l.title, detail: l.path, href: lessonRoute(ws, l.path), group: t('Lessons') }))
     if (!q.trim()) return [...actions, ...docs.slice(0, 8)]
-    const ranked = [...actions, ...docs, ...lessons].map((it) => ({ it, s: score(q, `${it.title} ${it.detail ?? ''}`) })).filter((x) => x.s > 0).sort((a, b) => b.s - a.s).slice(0, 12).map((x) => x.it)
+    const ranked = [...actions, ...docs, ...texs, ...lessons].map((it) => ({ it, s: score(q, `${it.title} ${it.detail ?? ''}`) })).filter((x) => x.s > 0).sort((a, b) => b.s - a.s).slice(0, 12).map((x) => x.it)
     const text: Item[] = hits.slice(0, 10).map((h) => ({ id: `s-${h.doc}-${h.section}`, icon: TextSearch, title: `§${h.section} ${h.title}`, detail: h.snippet, href: `${docRoute(ws, h.doc)}&section=${encodeURIComponent(h.section)}`, group: t('In documents') }))
     const askItem: Item = { id: 'ask-q', icon: MessageSquareText, title: t('Ask: {question}', { question: q.trim() }), detail: t('Answer from your documents, with sources'), href: `/w/${ws}/ask?q=${encodeURIComponent(q.trim())}`, group: t('Ask') }
     return [...ranked, ...text, ...(q.trim().split(/\s+/).length >= 3 ? [askItem] : [])]

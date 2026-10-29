@@ -66,6 +66,7 @@ atomically, so the CLI, the MCP tutor and the Studio can study at the same time 
 | Quick cards | `GET doc/passage?path&quote` (the passage's source) · `POST cards` (adds a card to the document's my-cards lesson) |
 | Ask the folder | `GET ask/status` · `POST ask/setup` (download the search model, index) · `POST ask` · `GET ask/history` · `POST ask/delete` · `POST ask/note` · answers stream as `ai.delta` / `ai.done` events (`noteId: "ask"`) |
 | Editor | `GET file?path` · `POST files/save` (409 if the file changed) · `files/create` · `preview` · `GET history` · `history/version` |
+| LaTeX | `GET /api/latex/status` (engines found, how to install one) · `POST latex/compile` · `GET latex/pdf?path[&download=1]` · `POST latex/save-pdf` |
 | Import & export | `POST import/web` · `import/file` (multipart: pdf-fast, pdf-quality, anki, notebook) · `GET export/anki?scope=` · `GET sheet?path` · `POST sheet/ideas` |
 | Batch courses | `GET ai/batch/candidates` · `POST ai/batches` · `GET ai/batches[/:id]` · `POST ai/batches/:id/stop` · `resume` |
 | Library | `GET formulas?q&doc&limit` · `glossary?q&compact` · `links?path` · `doc/summary?path` · `map` · `knowledge/status` |
@@ -330,6 +331,22 @@ tab that regains focus notices outside changes. Every save keeps the previous te
 creates a file anywhere in the folder (never replacing one). All of it needs the `write` capability: the computer
 running MDlearn, not a phone on `--lan`.
 
+**LaTeX** (`/w/:ws/latex?path=`). `.tex` files are listed under *LaTeX* in the sidebar (by their `\title`), in the
+command palette, and made by *New note → LaTeX document* (a short article template). The page is the same
+editor with LaTeX highlighting (CodeMirror's stex mode in the quiet style), completion of the usual commands and
+environments (`\begin{…}` writes its `\end`), and the PDF beside it, drawn page by page with pdf.js (loaded only
+here, so it looks the same on every device). **Compile** (Ctrl+S) saves, then runs a TeX engine on this computer
+(`server/latex.ts`): Tectonic when installed (one program that downloads the packages a document uses), else TeX
+Live through latexmk (or pdflatex / xelatex / lualatex directly, with a second pass for references). A
+`% !TEX program = xelatex` line picks the TeX Live program; `% !TEX root = main.tex` in a chapter compiles the
+main file. Errors and warnings are read from the log (both TeX Live forms and Tectonic's), shown with their file
+and line (click to go there; a problem in another file opens it) and, for the common ones, a sentence on the
+usual cause; the last good PDF stays on screen. The engine runs on a private copy of the file's folder (so
+`\input` and `\includegraphics` work, and nothing it does can reach the notes), and only the PDF and log are kept, in
+`~/.cache/mdlearn/latex/`; *Save the PDF next to the file* copies it to `paper.pdf`. With no engine, the page says
+how to install one for this system (`sudo pacman -S tectonic`, `brew install tectonic`, …). `.bib`, `.sty` and
+`.cls` files open in the editor too.
+
 ## 12. Importers
 
 *Import…* in the sidebar (or on the start page, which imports into `<library>/Imports`):
@@ -399,15 +416,17 @@ choices; they live in `localStorage` and `public/theme.js` applies them before t
 | Simulations, Python and `:::html` | opaque-origin sandboxes, own CSP without network; simulations and Python in a Worker + watchdog, `:::html` started on demand + heartbeat watchdog; the server only serves allow-listed Pyodide files and caches them atomically |
 | Answer keys | games and questions reach the browser without keys; single moves are checked on the server and reveal only their own result; a mock exam is marked on the server after the whole paper is in; an offline pack does carry the answers (that is the point), so it is served only to clients with the `study` capability, and the page says so |
 | Offline sync and exams | ids validated (UUIDs), device events prefixed `off:` and exam events derived from the exam id; both are written first-write-wins, so a resend can never change recorded history; sync accepts only cards of a pack this server issued, timed after that pack, whose widget belongs to the card, ≤ 2,000 events per sync |
+| LaTeX | compiling runs a program, so it needs the `write` capability (this computer, or LAN devices under `--lan-full`); shell escape off (`--untrusted` for Tectonic, `-no-shell-escape` and `shell_escape=f` for TeX Live); TeX Live also gets kpathsea's paranoid `openin_any`/`openout_any` (no absolute paths, no `..`, no dot files) with `TEXMFOUTPUT` set to the temp output folder; latexmk runs with `-norc` and only from version 4.77 (a project's `latexmkrc` is Perl and is never read; `LATEXMKRCSYS` is dropped); a `.tex` may come from anywhere, so the engine works on a fresh copy of the document's folder — regular files only, no hidden files, no `latexmkrc`, links followed only to files inside the notes folder, ≤ 3,000 files / 300 MB — and the file is passed as `./name`; nothing it writes can reach the notes, and the copy is removed afterwards (leftovers swept at start-up); two compiles at most at once, one per file, each killed with its process group after 180 s or 500 MB written; long log lines are cut before matching; *Save the PDF next to the file* writes a new file and renames it into place (a `paper.pdf` link is replaced, not followed); a fresh engine check only from this computer; the PDF response carries its own CSP |
 | Teach-back load | at most two feedback requests at once (`busy` otherwise); Claude one-shots time out after two minutes |
 | Teach-back with Claude | only from this computer (`ai` capability); one turn, no tools, no MCP servers, no setting sources, cwd = the temp directory; the notes and the explanation are marked as data in the prompt; the reply is parsed as JSON and rendered as text |
 | Large inputs | JSON bodies ≤ 2 MB, uploads ≤ 200 MB / 2,000 files, answer and note sizes validated with zod, linear-time text normalisation |
 
 ## 16. Tests
 
-`npm test` (Vitest, ~520 tests: core incl. analytics and goals; CLI; MCP; the server — security headers, path
+`npm test` (Vitest, ~530 tests: core incl. analytics and goals; CLI; MCP; the server — security headers, path
 guards, redaction, study, Today, quick cards, the Python file cache, the knowledge index, Ask with a fake Ollama
-(download, indexing, retrieval, citations), cheat sheets, the Anki writer and importer (round trip), the confidence check, mock exams (sampling,
+(download, indexing, retrieval, citations), cheat sheets, the Anki writer and importer (round trip), LaTeX (log reading, engine choice, no shell escape, a stand-in
+`tectonic` on the PATH, chapters, busy and no-engine cases), the confidence check, mock exams (sampling,
 marks, idempotent recording), teach-back with a stand-in Ollama and Claude, offline packs and sync, every
 importer, the editor's save/conflict/history rules, batches with the scripted engine; and the browser-side
 helpers: cloze blanks, term planning, map layout, graph data and highlighting, Python error messages, every translation, accent contrast) and
@@ -416,4 +435,4 @@ phone: reading, search, source view, study sessions, Today and deadlines, quick 
 exercises (including a runaway loop), formulas/glossary/hovers/links/map, Ask, cheat sheet and Anki download,
 editor save/conflict/insert/new note, the four importers, a batch course and its undo, notes, AI jobs, visuals,
 the four games played to a verdict, safe HTML that must not execute, the `:::html` sandbox, the welcome tour,
-Help and the tutorial, the interface in Italian and accent colours in both themes, the graph (search, hover, open, tap on a phone, the 3D chunk only on demand), a mock exam to its marks and the confidence check after it, a timed exam running out, teach-back on a lesson and a section, an offline pack studied with the network cut and synced when it returns, and a no-sideways-scrolling check of every page in light and dark).
+Help and the tutorial, the interface in Italian and accent colours in both themes, the graph (search, hover, open, tap on a phone, the 3D chunk only on demand), a mock exam to its marks and the confidence check after it, a timed exam running out, teach-back on a lesson and a section, an offline pack studied with the network cut and synced when it returns, a LaTeX document written, compiled, fixed from its error line and saved as PDF, and a no-sideways-scrolling check of every page in light and dark).

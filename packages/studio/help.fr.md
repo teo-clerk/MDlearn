@@ -20,6 +20,7 @@ Vos notes restent de simples fichiers Markdown. Les **leçons** (`learn/*.learn.
 | **Demander** | Une question sur tout le dossier, à laquelle le modèle local répond avec vos propres passages. |
 | **Progrès** | Ce que vous avez vu, à quel point vous retenez chaque leçon, votre précision et votre série. Et le **contrôle de confiance** : les fiches dont vous étiez sûr mais que vous avez ratées, prêtes à revoir. |
 | **Étudier hors ligne** | Sur un téléphone : emportez les fiches des prochains jours (Aujourd’hui → *Emporter hors ligne les cartes des prochains jours*), étudiez sans connexion, et les réponses se synchronisent quand l’ordinateur est joignable. Gardez la page ouverte hors ligne. |
+| **LaTeX** | *Nouvelle note → Document LaTeX*, ou tout fichier `.tex` sous *LaTeX* dans la barre latérale : écrivez à gauche, **Compiler** (Ctrl+S) pour voir le PDF à droite ; les erreurs mènent à leur ligne. Il faut Tectonic ou TeX Live sur l’ordinateur. |
 | **AI Studio** | Claude Code écrit ou améliore des leçons à partir d'une note (utilise votre abonnement Claude). |
 | **Formules** · **Glossaire** · **Carte** | Chaque formule, chaque terme défini, et quelles notes s'appuient sur lesquelles : un graphe en 2D ou en 3D, coloré selon ce que vous retenez de chaque note. |
 

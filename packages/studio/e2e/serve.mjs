@@ -133,5 +133,5 @@ const settingsFile = join(cfgDir, 's.json')
 // the welcome tour is tested on its own (onboarding.spec); the library (tutorial, uploads) stays in the temp folder
 writeFileSync(settingsFile, JSON.stringify({ ollama: { url: `http://127.0.0.1:${ollama.address().port}`, model: 'qwen3:8b', embedModel: 'embeddinggemma' },
   libraryDir: join(cfgDir, 'library'), onboarding: { tourDone: true } }))
-const s = await startStudio({ root, port: 4799, fakeAi: true, settingsFile })
+const s = await startStudio({ root, port: 4799, fakeAi: true, fakeTex: true, settingsFile })
 console.log(`e2e studio on ${s.url} (folder ${root})`)

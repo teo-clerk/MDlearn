@@ -1,5 +1,5 @@
-// The Markdown source editor: CodeMirror 6 with this app's look, diagnostics from the compiler shown inline,
-// block names after `:::`, and Ctrl+S.
+// The source editor: CodeMirror 6 with this app's look, diagnostics from the compiler shown inline, and Ctrl+S.
+// Markdown by default (block names after `:::`); another language (LaTeX) comes in through `language`.
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
 import { EditorState, type Extension } from '@codemirror/state'
 import { EditorView, keymap, lineNumbers, highlightActiveLine, drawSelection, placeholder } from '@codemirror/view'
@@ -46,17 +46,23 @@ function blockNames(ctx: CompletionContext) {
   return { from: m.from + 3, options: BLOCK_NAMES.map((label) => ({ label, type: 'keyword' })), validFor: /^[a-z]*$/ }
 }
 
-export const Editor = forwardRef<EditorHandle, { initial: string; onChange(text: string): void; onSave(): void; problems: Problem[]; ariaLabel: string }>(function Editor({ initial, onChange, onSave, problems, ariaLabel }, ref) {
+export interface EditorLanguage { extensions: Extension[]; placeholder: string; spellcheck: boolean }
+const MARKDOWN = (): EditorLanguage => ({
+  extensions: [markdown(), syntaxHighlighting(highlight), autocompletion({ override: [blockNames], icons: false })],
+  placeholder: t('Write Markdown. Insert a question or a visual from the Insert menu.'), spellcheck: true,
+})
+
+export const Editor = forwardRef<EditorHandle, { initial: string; onChange(text: string): void; onSave(): void; problems: Problem[]; ariaLabel: string; language?: EditorLanguage }>(function Editor({ initial, onChange, onSave, problems, ariaLabel, language }, ref) {
   const host = useRef<HTMLDivElement>(null)
   const view = useRef<EditorView | null>(null)
   const cb = useRef({ onChange, onSave }); cb.current = { onChange, onSave }
 
   useEffect(() => {
+    const lang = language ?? MARKDOWN()
     const extensions: Extension[] = [
       lineNumbers(), history(), drawSelection(), highlightActiveLine(), indentOnInput(), EditorView.lineWrapping, lintGutter(),
-      markdown(), syntaxHighlighting(highlight), theme, autocompletion({ override: [blockNames], icons: false }),
-      placeholder(t('Write Markdown. Insert a question or a visual from the Insert menu.')),
-      EditorView.contentAttributes.of({ 'aria-label': ariaLabel, spellcheck: 'true' }),
+      ...lang.extensions, theme, placeholder(lang.placeholder),
+      EditorView.contentAttributes.of({ 'aria-label': ariaLabel, spellcheck: String(lang.spellcheck) }),
       keymap.of([{ key: 'Mod-s', preventDefault: true, run: () => { cb.current.onSave(); return true } }, ...completionKeymap, ...defaultKeymap, ...historyKeymap]),
       EditorView.updateListener.of((u) => { if (u.docChanged) cb.current.onChange(u.state.doc.toString()) }),
     ]

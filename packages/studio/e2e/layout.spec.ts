@@ -6,6 +6,7 @@ import { openFolder, RADAR } from './helpers'
 const ROUTES = (ws: string) => [
   `/w/${ws}`, `/w/${ws}/doc?path=${encodeURIComponent(RADAR)}`, `/w/${ws}/study`, `/w/${ws}/progress`, `/w/${ws}/ask`,
   `/w/${ws}/formulas`, `/w/${ws}/glossary`, `/w/${ws}/map`, `/w/${ws}/help`, `/w/${ws}/settings`, `/w/${ws}/sheet?path=${encodeURIComponent(RADAR)}`,
+  `/w/${ws}/latex?path=layout%2Fpage.tex`,
 ]
 for (const scheme of ['light', 'dark'] as const) {
   test(`every page fits the screen (${scheme})`, async ({ page }) => {
@@ -13,6 +14,7 @@ for (const scheme of ['light', 'dark'] as const) {
     const errors: string[] = []
     page.on('pageerror', (e) => errors.push(e.message))
     const ws = await openFolder(page)
+    await page.request.post(`/api/w/${ws}/files/create`, { headers: { 'x-mdl': '1' }, data: { path: 'layout/page.tex', text: '\\documentclass{article}\n\\begin{document}\nA line long enough to wrap on a phone, with $x^2 + y^2 = r^2$ in it.\n\\end{document}\n' } })
     for (const route of ROUTES(ws)) {
       await page.goto(route)
       await page.waitForLoadState('networkidle')

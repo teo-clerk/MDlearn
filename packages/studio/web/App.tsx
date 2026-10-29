@@ -10,6 +10,7 @@ const LessonView = lazy(() => import('./lesson/LessonView'))
 const StudyPage = lazy(() => import('./study/StudyPage'))
 const ExamPage = lazy(() => import('./exam/ExamPage'))
 const TeachPage = lazy(() => import('./teach/TeachPage'))
+const LatexPage = lazy(() => import('./latex/LatexPage'))
 const OfflinePage = lazy(() => import('./offline/OfflinePage'))
 const OfflineHome = lazy(() => import('./offline/OfflinePage').then((m) => ({ default: m.OfflineHome })))
 const ProgressPage = lazy(() => import('./progress/ProgressPage'))
@@ -37,6 +38,7 @@ function Workspace() {
           <Route path="/w/:ws/progress"><ProgressPage ws={ws} /></Route>
           <Route path="/w/:ws/studio"><StudioPage ws={ws} /></Route>
           <Route path="/w/:ws/edit"><EditPage ws={ws} /></Route>
+          <Route path="/w/:ws/latex"><LatexPage ws={ws} /></Route>
           <Route path="/w/:ws/sheet"><SheetPage ws={ws} /></Route>
           <Route path="/w/:ws/ask"><AskPage ws={ws} /></Route>
           <Route path="/w/:ws/formulas"><FormulasPage ws={ws} /></Route>

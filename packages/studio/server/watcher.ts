@@ -9,7 +9,7 @@ import type { ServerEvent } from '../shared/types.js'
 
 type Change = Extract<ServerEvent, { type: 'fs.changed' }>['paths'][number]
 const kindOf = (rel: string): Change['kind'] =>
-  rel.endsWith('.learn.md') ? 'lesson' : /\.(md|markdown)$/i.test(rel) ? 'doc' : /\.(png|jpe?g|gif|webp|svg)$/i.test(rel) ? 'asset' : 'other'
+  rel.endsWith('.learn.md') ? 'lesson' : /\.(md|markdown)$/i.test(rel) ? 'doc' : /\.tex$/i.test(rel) ? 'latex' : /\.(png|jpe?g|gif|webp|svg)$/i.test(rel) ? 'asset' : 'other'
 
 export function watchWorkspace(h: Handle, bus: EventBus, debounceMs = 150): FSWatcher {
   const progressFile = ['learn', '.mdlearn', 'progress.json'].join(sep)

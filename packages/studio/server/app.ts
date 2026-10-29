@@ -6,7 +6,7 @@ import { compress } from 'hono/compress'
 import { bodyLimit } from 'hono/body-limit'
 import { readFileSync, statSync, existsSync } from 'node:fs'
 import { MEDIA_TYPES, mediaResponse } from './media.js'
-import { extname, relative, join, dirname } from 'node:path'
+import { extname, relative, join, dirname, posix } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { z } from 'zod'
 import { compile, parseDocument, findSection, sectionText, isWidget, parseWebAnswer, checkStructured, MAX_EXAM_QUESTIONS } from '@mdlearn/core'
@@ -44,6 +44,8 @@ import { createCourse, improveLesson, customJob, importPdf, topicCourse } from '
 import { BatchRunner } from './ai/batch.js'
 import type { EventBus, Envelope } from './bus.js'
 import type { SettingsStore } from './settings.js'
+import { Latex } from './latex.js'
+import { TEX_FILE, texRoot } from './latex-files.js'
 import type { SessionInfo, LessonResponse, CompileResponse, PreviewResponse, Integrations, MapNode, MapResponse } from '../shared/types.js'
 
 /** Languages with a translated help page (help.<lang>.md). */
@@ -70,6 +72,7 @@ export interface Deps {
   engine?: () => AiEngine
   /** One short answer from Claude (teach-back feedback when Claude is chosen); absent without Claude. */
   claudeOnce?: OneShot
+  latex?: Latex
 }
 const IMAGE_TYPES: Record<string, string> = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.webp': 'image/webp' }
 const MAX_UPLOAD_FILES = 2000, MAX_UPLOAD_FILE = 2 * 1024 * 1024
@@ -395,6 +398,46 @@ export function createApp(deps: Deps): Hono {
     }
     const doc = deps.workspaces.preview(h, path, text)
     return c.json<PreviewResponse>({ kind: 'doc', doc: redactDoc(doc), diagnostics: doc.diagnostics })
+  })
+  // ---- LaTeX: compile a .tex file with the engine on this computer; the PDF stays in the cache until saved next to it
+  const latex = deps.latex ?? new Latex()
+  /** The document to compile: the file itself, or the main file its "% !TEX root" names. */
+  const texPath = (rel: string) => posix.normalize(rel.replace(/\\/g, '/')) // one spelling per file, one cached PDF
+  const texTarget = (h: Handle, asked: string) => {
+    const rel = texPath(asked)
+    const abs = deps.workspaces.resolve(h, rel, TEX_FILE)
+    const root = texRoot(readFileSync(abs, 'utf8'))
+    if (!root) return { abs, rel }
+    const target = posix.normalize(posix.join(posix.dirname(rel), root.replace(/\\/g, '/')))
+    return { abs: deps.workspaces.resolve(h, target, TEX_FILE), rel: target }
+  }
+  // looking again runs the engines' --version: only from this computer, not on every phone refresh
+  app.get('/api/latex/status', need('read', o), (c) => c.json(latex.status(c.req.query('fresh') === '1' && capsOf(c, o).includes('write'))))
+  app.post('/api/w/:ws/latex/compile', need('write', o), async (c) => {
+    const h = ws(c)
+    const { path } = z.object({ path: z.string().min(1).max(1024) }).parse(await c.req.json())
+    const t = texTarget(h, path)
+    return c.json({ ...(await latex.compile(h, t.abs, t.rel)), target: t.rel })
+  })
+  app.get('/api/w/:ws/latex/pdf', need('read', o), (c) => {
+    const h = ws(c)
+    const rel = texPath(pathParam(c))
+    deps.workspaces.resolve(h, rel, TEX_FILE)
+    const pdf = latex.pdfOf(h, rel)
+    if (!pdf) throw new UserError('not-found', 'Compile the document first.')
+    const name = encodeURIComponent(posix.basename(rel).replace(TEX_FILE, '.pdf'))
+    return c.body(readFileSync(pdf), 200, {
+      'Content-Type': 'application/pdf', 'Cache-Control': 'no-store',
+      'Content-Disposition': `${c.req.query('download') === '1' ? 'attachment' : 'inline'}; filename*=UTF-8''${name}`,
+      // the browser's own PDF viewer is a plugin: allowed for this response only
+      'Content-Security-Policy': "object-src 'self'; frame-ancestors 'self'",
+    })
+  })
+  app.post('/api/w/:ws/latex/save-pdf', need('write', o), async (c) => {
+    const h = ws(c)
+    const path = texPath(z.object({ path: z.string().min(1).max(1024) }).parse(await c.req.json()).path)
+    const abs = deps.workspaces.resolve(h, path, TEX_FILE)
+    return c.json({ path: latex.savePdfNextTo(h, abs, path) })
   })
   app.get('/api/w/:ws/history', need('read', o), (c) => c.json(listHistory(ws(c), deps.workspaces, pathParam(c))))
   app.get('/api/w/:ws/history/version', need('read', o), (c) => {
