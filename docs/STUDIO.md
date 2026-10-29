@@ -423,10 +423,10 @@ choices; they live in `localStorage` and `public/theme.js` applies them before t
 
 ## 16. Tests
 
-`npm test` (Vitest, ~530 tests: core incl. analytics and goals; CLI; MCP; the server — security headers, path
+`npm test` (Vitest, ~540 tests: core incl. analytics and goals; CLI; MCP; the server — security headers, path
 guards, redaction, study, Today, quick cards, the Python file cache, the knowledge index, Ask with a fake Ollama
 (download, indexing, retrieval, citations), cheat sheets, the Anki writer and importer (round trip), LaTeX (log reading, engine choice, no shell escape, a stand-in
-`tectonic` on the PATH, chapters, busy and no-engine cases), the confidence check, mock exams (sampling,
+`tectonic` on the PATH, chapters, busy and no-engine cases, and a real compile when Tectonic is installed — skipped otherwise), the confidence check, mock exams (sampling,
 marks, idempotent recording), teach-back with a stand-in Ollama and Claude, offline packs and sync, every
 importer, the editor's save/conflict/history rules, batches with the scripted engine; and the browser-side
 helpers: cloze blanks, term planning, map layout, graph data and highlighting, Python error messages, every translation, accent contrast) and

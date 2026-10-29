@@ -52,6 +52,14 @@ describe('reading a TeX log', () => {
       [31, 'LaTeX Warning: Reference `fig:'], [44, 'Package hyperref Warning: Toke'], [50, 'Overfull \\hbox (12.3pt too wid'], [60, 'Underfull \\hbox (badness 10000'],
     ])
   })
+  it('shows a real Tectonic error once, without the engine\'s own wrapper messages', () => {
+    // captured from Tectonic 0.17 on a document with \textbff on line 4
+    const log = ['! Undefined control sequence.', 'l.4 \\textbff', 'error: broken.tex:4: Undefined control sequence',
+      'error: something bad happened inside XeTeX; its output follows:', '! Undefined control sequence.', 'l.4 \\textbff', 'error: the XeTeX engine had an unrecoverable error'].join('\n')
+    expect(parseTexLog(log)).toEqual([{ severity: 'error', line: 4, message: 'Undefined control sequence.', hint: 'undefined-command', file: 'broken.tex' }])
+    // alone, a wrapper message is all there is to show
+    expect(parseTexLog('error: the XeTeX engine had an unrecoverable error')).toHaveLength(1)
+  })
 })
 
 describe('choosing and running an engine', () => {
@@ -232,3 +240,20 @@ describe('a .tex file from anywhere cannot touch the notes folder', () => {
 })
 
 function outDirOf(args: string[]) { return args[args.indexOf('--outdir') + 1] }
+
+const hasTectonic = findEngines().some((e) => e.id === 'tectonic')
+describe.skipIf(!hasTectonic)('with the Tectonic installed on this computer', () => {
+  const real = () => setup(new Latex({ cacheDir: tmp('mdl-texcache-') }))
+  it('compiles a document, reports an error at its line, and compiles a chapter\'s main file', async () => {
+    const { root, post, get } = real()
+    const ok = await (await post('/latex/compile', { path: 'paper/main.tex' })).json() as TexResult
+    expect(ok).toMatchObject({ ok: true, engine: 'tectonic' })
+    expect(Buffer.from(await (await get('/latex/pdf?path=paper/main.tex')).arrayBuffer()).subarray(0, 5).toString()).toBe('%PDF-')
+    writeFileSync(join(root, 'paper/broken.tex'), '\\documentclass{article}\n\\begin{document}\nFine.\n\\textbff{x}\n\\end{document}\n')
+    const bad = await (await post('/latex/compile', { path: 'paper/broken.tex' })).json() as TexResult
+    expect(bad.ok).toBe(false)
+    expect(bad.problems.filter((p) => p.severity === 'error')).toEqual([expect.objectContaining({ line: 4, hint: 'undefined-command', file: 'broken.tex' })])
+    const chapter = await (await post('/latex/compile', { path: 'paper/chapters/one.tex' })).json() as TexResult & { target: string }
+    expect(chapter).toMatchObject({ ok: true, target: 'paper/main.tex' })
+  }, 180_000)
+})

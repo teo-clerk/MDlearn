@@ -170,8 +170,10 @@ export function parseTexLog(log: string): TexProblem[] {
     m = /^error: (.+)$/.exec(l)
     if (m) add({ severity: 'error', message: m[1].trim() })
   }
-  return out
+  // Tectonic wraps a real error in two of its own ("something bad happened inside XeTeX…"): keep them only alone
+  return out.some((p) => p.severity === 'error' && p.line !== undefined) ? out.filter((p) => !(p.line === undefined && WRAPPER.test(p.message))) : out
 }
+const WRAPPER = /something bad happened inside|engine had an unrecoverable error|halted on potentially-recoverable error/i
 
 /** How to get an engine on this computer (shown when none is found). */
 export function installHelp(os = platform(), release = readOsRelease()): TexStatus['install'] {
