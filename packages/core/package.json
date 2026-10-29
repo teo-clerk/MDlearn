@@ -1,6 +1,6 @@
 {
   "name": "@mdlearn/core",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "MDlearn compiler, importer, answer checkers and learning models (DOM-free).",
   "type": "module",
   "exports": {

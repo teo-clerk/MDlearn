@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.2.0 — 2026-10-29
 
 **Desktop app.** MDlearn Studio in its own window for Windows (installer or `.zip`), macOS (`.dmg` or `.zip`, Apple
 Silicon and Intel) and Linux (AppImage, `.deb` or `.zip`), with nothing else to install. Same features and
