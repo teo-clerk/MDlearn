@@ -6,9 +6,9 @@
 //   MDLEARN_GUIDE.md     the full guide to attach as a knowledge file (method + DSL specification)
 // Install the plugin: claude plugin marketplace add <…>/integrations/claude-plugin && claude plugin install mdlearn@mdlearn
 import { build } from 'esbuild'
-import { cpSync, mkdirSync, rmSync, writeFileSync, readFileSync, existsSync } from 'node:fs'
-import { execFileSync } from 'node:child_process'
-import { join, resolve } from 'node:path'
+import { cpSync, mkdirSync, rmSync, writeFileSync, readFileSync, existsSync, readdirSync } from 'node:fs'
+import { join, relative, resolve, sep } from 'node:path'
+import { zipSync } from 'fflate'
 import { coursePrompt } from '../packages/core/src/authoring.ts'
 
 const repo = resolve(import.meta.dirname, '..')
@@ -75,7 +75,12 @@ writeFileSync(join(skillDir, 'SKILL.md'), read('docs/AGENT_SKILL.md').replace(
 ))
 cpSync(join(repo, 'docs/DSL_SPECIFICATION.md'), join(skillDir, 'DSL_SPECIFICATION.md'))
 await bundle('scripts/lint-entry.ts', join(skillDir, 'scripts/lint.mjs'))
-execFileSync('zip', ['-qr', join(out, 'mdlearn-skill.zip'), 'mdlearn-course'], { cwd: zipDir })
+// zipped here, not by a `zip` command (Windows has none); names inside always use /
+const entries: Record<string, Uint8Array> = {}
+for (const f of readdirSync(skillDir, { recursive: true, withFileTypes: true })) {
+  if (f.isFile()) entries[['mdlearn-course', ...relative(skillDir, join(f.parentPath, f.name)).split(sep)].join('/')] = readFileSync(join(f.parentPath, f.name))
+}
+writeFileSync(join(out, 'mdlearn-skill.zip'), zipSync(entries, { level: 9 }))
 rmSync(zipDir, { recursive: true, force: true })
 
 // ---------------------------------------------------------------- chats without tools
