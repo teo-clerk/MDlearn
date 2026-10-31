@@ -58,7 +58,7 @@ describe('getting a folder ready for any assistant', () => {
     writeFileSync(join(root, 'notes.md'), '# Notes\n')
     mkdirSync(join(root, 'week1'))
     writeFileSync(join(root, 'week1/CLAUDE.md'), '# A note that happens to have this name\n')
-    expect(sourceDocs(workspace(root)).map((p) => p.slice(root.length + 1))).toEqual(['notes.md', 'week1/CLAUDE.md'])
+    expect(sourceDocs(workspace(root)).map((p) => p.slice(root.length + 1).replaceAll('\\', '/'))).toEqual(['notes.md', 'week1/CLAUDE.md'])
   })
 })
 

@@ -19,6 +19,14 @@ ${q}
 :::
 `
 const compiled = (source: string, path = '/c/02-heat.learn.md'): Lesson => compile(source, { path }).lesson!
+
+describe('a lesson\'s id on every system', () => {
+  it('comes from the file name on Windows too, so progress survives moving the folder', () => {
+    const source = '---\ntitle: Heat\n---\n## What heat is\n\nWords.\n'
+    expect(compile(source, { path: 'C:\\Users\\me\\Thermo\\02-heat.learn.md' }).lesson!.id).toBe('heat')
+    expect(compile(source, { path: '/home/me/Thermo/02-heat.learn.md' }).lesson!.id).toBe('heat')
+  })
+})
 const review = (key: string, t: number, id = `${key}-${t}`) => ({ id, t, key, rating: 3 as const })
 
 describe('pinIds', () => {

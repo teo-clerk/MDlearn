@@ -209,6 +209,9 @@ real paths; Studio shows them under **Settings → Use MDlearn in other apps**.
 | **Claude.ai** | Upload `packages/studio/dist/integrations/mdlearn-skill.zip` under Settings → Capabilities → Skills; ask "Make an MDlearn course on …". |
 | **ChatGPT, Gemini, any chat** | Paste the output of `mdlearn prompt` into the chat (or a Custom GPT's or Project's instructions; `mdlearn prompt --full` is the whole guide, to attach as a file). Then paste the chat's answer into Studio → *Import* → **From a chat**, or run `mdlearn import-chat answer.md`: every file is checked, the good ones are saved in a new course folder, and errors become a message to paste back into the chat. |
 
+A whole course has been tested from start to finish with Claude Code. Codex, OpenCode and Pi use the same folder
+instructions, but no finished course has been confirmed with them yet.
+
 The prompt lives in [docs/CHAT_PROMPT.md](docs/CHAT_PROMPT.md); `npm run build` regenerates the plugin,
 the skill and the prompt files from the docs.
 

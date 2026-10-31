@@ -9,14 +9,14 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod'
 import { randomUUID } from 'node:crypto'
 import { readFileSync, existsSync, mkdirSync, writeFileSync, renameSync, rmSync } from 'node:fs'
-import { relative, dirname, join, basename } from 'node:path'
+import { dirname, join, basename } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
   formatDiagnostic, sectionText, outlineDoc, studyQueue, locate, pose, check, hint, ratingFor, ratingWords, scheduleAfter, whenText, report, coursePrompt, courseChanges,
   type Lesson,
 } from '@mdlearn/core'
 import {
-  workspace, curriculumStatus, findDoc, loadDoc, planFor, loadLessons, loadProgress, loadGoals, appendProgress, compileSource, compileFile, searchCurriculum, inRoot as insideRoot,
+  workspace, relativePosix, curriculumStatus, findDoc, loadDoc, planFor, loadLessons, loadProgress, loadGoals, appendProgress, compileSource, compileFile, searchCurriculum, inRoot as insideRoot,
 } from '@mdlearn/core/node'
 
 // a plugin's .mcp.json may pass an unexpanded "${…}" when the host does not know the variable
@@ -51,7 +51,7 @@ server.registerTool('curriculum_status', {
   description: 'List source documents of the curriculum with size, planned vs existing companion lessons, lint errors/warnings, cards and widgets. Use first to see what exists.',
   inputSchema: { filter: z.string().optional().describe('Substring of the document path, e.g. "00_FOUNDATIONS" or "04_sar"') },
   annotations: RO,
-}, async ({ filter }) => json({ root: ws.root, learnDir: relative(ws.root, ws.learnDir), docs: curriculumStatus(ws, filter) }))
+}, async ({ filter }) => json({ root: ws.root, learnDir: relativePosix(ws.root, ws.learnDir), docs: curriculumStatus(ws, filter) }))
 
 server.registerTool('doc_outline', {
   title: 'Document outline',
@@ -95,7 +95,7 @@ server.registerTool('plan_lessons', {
   annotations: RO,
 }, async ({ doc, targetWords }) => {
   const abs = findDoc(ws, doc)
-  return abs ? json(planFor(ws, abs, targetWords).map((p) => ({ ...p, path: relative(ws.root, p.path) }))) : error(`No unique document matches "${doc}".`)
+  return abs ? json(planFor(ws, abs, targetWords).map((p) => ({ ...p, path: relativePosix(ws.root, p.path) }))) : error(`No unique document matches "${doc}".`)
 })
 
 server.registerTool('lint_lesson', {
@@ -155,7 +155,7 @@ if (!readOnly) server.registerTool('save_lesson', {
     const errs = r.diagnostics.filter((d) => d.code.startsWith('E'))
     const lines = r.diagnostics.filter((d) => !d.code.startsWith('I')).map(formatDiagnostic)
     if (errs.length || !r.lesson) return error(`✗ not saved: ${errs.length} error(s)\n${lines.join('\n')}`)
-    summary = `✓ saved ${relative(ws.root, abs)} · ${r.lesson.cards.length} cards${lines.length ? `\n${lines.join('\n')}` : ''}`
+    summary = `✓ saved ${relativePosix(ws.root, abs)} · ${r.lesson.cards.length} cards${lines.length ? `\n${lines.join('\n')}` : ''}`
     const was = existsSync(abs) ? compileSource(readFileSync(abs, 'utf8'), abs).lesson : null
     if (was) summary += `\n${replacedReport(was, r.lesson)}`
   } else if (!content.trim()) return error('The overview is empty.')
@@ -165,7 +165,7 @@ if (!readOnly) server.registerTool('save_lesson', {
     writeFileSync(tmp, content.endsWith('\n') ? content : `${content}\n`)
     renameSync(tmp, abs)
   } catch (e) { rmSync(tmp, { force: true }); return error(`Could not save ${path}: ${(e as Error).message}`) }
-  return text(lesson ? summary : `✓ saved ${relative(ws.root, abs)}`)
+  return text(lesson ? summary : `✓ saved ${relativePosix(ws.root, abs)}`)
 })
 
 /** What replacing a lesson did to the student's cards, so the AI can put back a card it should have kept. */

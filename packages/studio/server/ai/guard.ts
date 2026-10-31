@@ -30,7 +30,7 @@ export class Snapshots {
   private taken = new Map<string, Snapshot>()
   constructor(private dir: string, private root: string) {}
   take(abs: string): void {
-    const rel = relative(this.root, abs)
+    const rel = relative(this.root, abs).split(sep).join('/')
     if (this.taken.has(rel)) return
     const existed = existsSync(abs) && statSync(abs).isFile()
     const store = join(this.dir, 'before', rel)

@@ -29,7 +29,7 @@ describe('workspace', () => {
     const doc = findDoc(ws, '04_radar')!
     const plan = planFor(ws, doc, 30)
     expect(plan[0].source).toBe('../../../00_FOUNDATIONS/04_radar.md')
-    expect(plan[0].path).toContain('learn/00_FOUNDATIONS/04_radar/')
+    expect(plan[0].path.replaceAll('\\', '/')).toContain('learn/00_FOUNDATIONS/04_radar/')
   })
   it('progress round-trips atomically', () => {
     const tmp = mkdtempSync(resolve(tmpdir(), 'mdl-'))

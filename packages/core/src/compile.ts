@@ -126,7 +126,7 @@ export function compile(source: string, opts: CompileOptions = {}): CompileResul
     toString(tree).split(/\s+/).length / 180))
   if (meta.time && Math.abs(meta.time - estimate) / estimate > 0.5) diag('I607', s0.frontmatter?.line ?? 1, `declared ${meta.time}, estimated ${estimate}`)
 
-  const lessonId = meta.id ?? (opts.path ? opts.path.split('/').pop()!.replace(/\.learn\.md$|\.md$/, '').replace(/^\d+[-_]/, '') : slugger.slug(title ?? 'lesson'))
+  const lessonId = meta.id ?? (opts.path ? opts.path.split(/[\\/]/).pop()!.replace(/\.learn\.md$|\.md$/, '').replace(/^\d+[-_]/, '') : slugger.slug(title ?? 'lesson'))
   diagnostics.sort((a, b) => a.line - b.line)
   const candidate = { astVersion: 1, id: lessonId, title: title ?? '', level: meta.level, lang, prereq: meta.prereq, goals: meta.goals,
     ...(meta.source ? { source: meta.source } : {}),

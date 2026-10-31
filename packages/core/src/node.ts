@@ -109,6 +109,8 @@ export const loadLessons = (ws: Workspace): LoadedLesson[] => lessonPaths(ws).ma
 
 // ---------------------------------------------------------------- curriculum layout
 export interface Workspace { root: string; learnDir: string }
+/** A path inside a folder, written the same on every system. */
+export const relativePosix = (base: string, abs: string) => relative(base, abs).split(sep).join('/')
 export function workspace(root: string, learnDirName = 'learn'): Workspace {
   const abs = realPath(resolve(root))
   return { root: abs, learnDir: join(abs, learnDirName) }
@@ -131,7 +133,7 @@ export function findDoc(ws: Workspace, ref: string): string | null {
   const direct = resolve(ws.root, ref)
   if (existsSync(direct) && direct.endsWith('.md')) return direct
   const q = ref.toLowerCase().replace(/\.md$/, '')
-  const hits = sourceDocs(ws).filter((p) => relative(ws.root, p).toLowerCase().includes(q))
+  const hits = sourceDocs(ws).filter((p) => relativePosix(ws.root, p).toLowerCase().includes(q))
   return hits.length === 1 ? hits[0] : (hits.find((p) => p.toLowerCase().endsWith(`/${q}.md`)) ?? null)
 }
 
@@ -142,7 +144,7 @@ export interface DocStatus {
 export function curriculumStatus(ws: Workspace, filter?: string): DocStatus[] {
   const lessons = loadLessons(ws)
   return sourceDocs(ws)
-    .filter((p) => !filter || relative(ws.root, p).toLowerCase().includes(filter.toLowerCase()))
+    .filter((p) => !filter || relativePosix(ws.root, p).toLowerCase().includes(filter.toLowerCase()))
     .map((abs) => {
       const { outline } = loadDoc(abs, ws.root)
       const mine = lessons.filter((l) => lessonOfDoc(ws, abs, l.path))

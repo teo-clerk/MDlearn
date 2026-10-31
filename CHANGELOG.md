@@ -36,6 +36,10 @@ do, in Studio, the CLI and the MCP tools. Lessons sit under their `course.md`.
 information out, and one that can't be loaded leaves its description and a link. Paste or drop a screenshot into the editor and it's
 saved under `assets/`. Click any picture, or press Enter on it, to see it larger.
 
+**Every system.** The tests now run on Windows, macOS and Linux for every change. That found a lesson's id being its whole
+path on Windows, which would have lost your progress if you moved the folder, and wrong paths for a folder reached through
+a link.
+
 **Fixes.** Jumping to a section could shift the whole app up and hide its top bar until you reloaded. Claude Code now
 uses whatever it's signed in with, including your own `ANTHROPIC_API_KEY`. A damaged notes file no longer breaks Today.
 
