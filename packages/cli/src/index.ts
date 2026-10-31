@@ -81,15 +81,17 @@ write MDlearn lessons. An AGENTS.md or CLAUDE.md of your own is never replaced.
   When something must be fixed, prints the message to paste back into the chat.`,
 }
 
-const { values: opt, positionals } = parseArgs({
+const readOptions = () => { try { return parseArgs({
   allowPositionals: true,
   options: {
     root: { type: 'string' }, json: { type: 'boolean' }, verbose: { type: 'boolean' }, quiet: { type: 'boolean' }, all: { type: 'boolean' },
     o: { type: 'string' }, target: { type: 'string' }, limit: { type: 'string' }, scope: { type: 'string' }, 'max-words': { type: 'string' },
-    'new-cards': { type: 'string' }, due: { type: 'boolean' }, kind: { type: 'string' }, help: { type: 'boolean', short: 'h' }, full: { type: 'boolean' }, mcp: { type: 'boolean' }, to: { type: 'string' },
+    'new-cards': { type: 'string' }, due: { type: 'boolean' }, kind: { type: 'string' }, help: { type: 'boolean', short: 'h' }, version: { type: 'boolean', short: 'v' }, full: { type: 'boolean' }, mcp: { type: 'boolean' }, to: { type: 'string' },
     port: { type: 'string' }, lan: { type: 'boolean' }, 'lan-full': { type: 'boolean' }, 'no-open': { type: 'boolean' }, dev: { type: 'boolean' }, 'fake-ai': { type: 'boolean' },
   },
-})
+}) } catch (e) { return fail(`${(e as Error).message.split('. ')[0]}. Run "mdlearn" for the list.`) } }
+const { values: opt, positionals } = readOptions()
+if (opt.version) { out((JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as { version: string }).version); process.exit(0) }
 const [cmd, ...args] = positionals
 
 // `mdlearn lint | head` closes the pipe early: end quietly instead of printing a stack trace.
