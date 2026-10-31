@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+**Study papers from SciNet.** *Import → From SciNet* finds a paper in your SciNet library, by meaning or by title, and
+brings it into the folder with its details, ready for *Make a course*. Most papers arrive with formulas as plain
+text, and the import says so; *Read the PDF again* gets them as LaTeX. *Make a course* now follows every import
+that gives one document.
+
 ## 1.2.0 — 2026-10-29
 
 **Desktop app.** MDlearn Studio in its own window for Windows (installer or `.zip`), macOS (`.dmg` or `.zip`, Apple

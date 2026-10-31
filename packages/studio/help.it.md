@@ -22,6 +22,7 @@ I tuoi appunti restano semplici file Markdown. Le **lezioni** (`learn/*.learn.md
 | **Studia offline** | Sul telefono: porta con te le carte dei prossimi giorni (Oggi → *Porta offline le carte dei prossimi giorni*), studia senza connessione e le risposte si sincronizzano quando il computer è raggiungibile. Tieni aperta la pagina mentre sei offline. |
 | **LaTeX** | *Nuova nota → Documento LaTeX*, o qualsiasi file `.tex` sotto *LaTeX* nella barra laterale: scrivi a sinistra, **Compila** (Ctrl+S) per vedere il PDF a destra; gli errori portano alla loro riga. Serve Tectonic o TeX Live sul computer. |
 | **AI locale** | *Impostazioni → AI locale*: installa Ollama se manca, scarica un modello consigliato (ognuno dice se questo computer lo fa girare bene) e scegli quello con cui risponde Studio. |
+| **Importa** | *Importa…* nella barra laterale: una pagina web, un PDF, un mazzo Anki, un notebook, lezioni da una chat, o un articolo da **SciNet** se è in esecuzione su questo computer. |
 | **AI Studio** | Claude Code scrive o migliora lezioni a partire da un appunto (usa il tuo abbonamento Claude). |
 | **Formule** · **Glossario** · **Mappa** | Ogni formula, ogni termine definito e quali appunti si basano su quali: un grafo in 2D o 3D, colorato secondo quanto ricordi ogni appunto. |
 

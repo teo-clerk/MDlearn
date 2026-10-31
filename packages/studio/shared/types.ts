@@ -205,6 +205,10 @@ export interface PreviewResponse { kind: 'doc' | 'lesson'; doc?: DocResponse; le
 // ---- importers
 export interface ImportedFile { path: string; kind: 'document' | 'lesson' | 'asset' | 'job' }
 export interface ImportResult { files: ImportedFile[]; warnings: string[]; summary: string; /** A Claude job started for a high-quality import. */ jobId?: string; /** For a chat import with errors: the message that asks the chat to fix them. */ fix?: string }
+/** SciNet, a private map of your paper library, as a place to import from. */
+export interface ScinetStatus { url: string; running: boolean; version?: string; papers?: number }
+export interface ScinetPaper { id: number; title: string; year: number | null; snippet?: string }
+export interface ScinetDetail extends ScinetPaper { authors: string[]; venue: string | null; abstract: string | null; doi: string | null; arxivId: string | null; pages: number | null; parsedBy: string | null; formulas: 'latex' | 'text' }
 /** MDlearn for other assistants: the prompt for chats, where the Claude Code plugin is, what can be downloaded. */
 export interface Integrations { prompt: string; pluginDir?: string; skillZip: boolean; guide: boolean }
 /** A pasted chat answer, checked before anything is written. */

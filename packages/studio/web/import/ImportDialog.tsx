@@ -1,22 +1,26 @@
-// Bring something into the folder: lessons a chat wrote, a web page, a PDF, an Anki deck or a Jupyter notebook.
+// Bring something into the folder: lessons a chat wrote, a web page, a PDF, an Anki deck, a Jupyter notebook or a
+// paper from SciNet.
 import { useCallback, useRef, useState, type ReactNode } from 'react'
 import { Link } from 'wouter'
 import { useQueryClient } from '@tanstack/react-query'
-import { BookOpenCheck, FileText, Globe, GraduationCap, Layers, MessageSquareText, NotebookText, X } from 'lucide-react'
+import { BookOpenCheck, FileText, Globe, GraduationCap, Layers, Library, MessageSquareText, NotebookText, Sparkles, X } from 'lucide-react'
 import { importApi, keys, useSession } from '../api/queries'
 import { docRoute, lessonRoute } from '../lib/paths'
 import { Button } from '../ui/primitives'
 import type { ChatCheck, ImportResult } from '../../shared/types'
 import { ChatImport, FixRequest } from './ChatImport'
+import { ScinetImport } from './ScinetImport'
+import { Choice } from './Choice'
 import { t } from '../i18n'
 
-type Kind = 'chat' | 'web' | 'pdf' | 'anki' | 'notebook'
+type Kind = 'chat' | 'web' | 'pdf' | 'anki' | 'notebook' | 'scinet'
 const KINDS = (): { id: Kind; icon: typeof Globe; label: string; hint: string; accept?: string }[] => [
   { id: 'chat', icon: MessageSquareText, label: t('From a chat'), hint: t('Lessons ChatGPT, Gemini or Claude.ai wrote with the MDlearn prompt') },
   { id: 'web', icon: Globe, label: t('Web page'), hint: t('An article, as Markdown with its math and pictures') },
   { id: 'pdf', icon: FileText, label: t('PDF'), hint: t('A paper or a chapter'), accept: '.pdf,application/pdf' },
   { id: 'anki', icon: Layers, label: t('Anki deck'), hint: t('Notes become study cards; history can come along'), accept: '.apkg' },
   { id: 'notebook', icon: NotebookText, label: t('Notebook'), hint: t('A Jupyter .ipynb with its outputs'), accept: '.ipynb' },
+  { id: 'scinet', icon: Library, label: t('From SciNet'), hint: t('A paper from your own library, to study it here') },
 ]
 
 export function ImportDialog({ ws, onClose }: { ws: string; onClose: () => void }) {
@@ -25,6 +29,7 @@ export function ImportDialog({ ws, onClose }: { ws: string; onClose: () => void 
   const [file, setFile] = useState<File | null>(null)
   const [quality, setQuality] = useState<'fast' | 'high'>('fast')
   const [history, setHistory] = useState(true)
+  const [paperId, setPaperId] = useState<number | null>(null), [reread, setReread] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState<ImportResult | null>(null)
@@ -35,13 +40,14 @@ export function ImportDialog({ ws, onClose }: { ws: string; onClose: () => void 
   const qc = useQueryClient()
   const canAi = !!useSession().data?.caps.includes('ai')
   const spec = KINDS().find((k) => k.id === kind)!
-  const ready = kind === 'chat' ? !!check?.files.some((f) => !f.errors && !f.exists) : kind === 'web' ? /^https?:\/\//i.test(url.trim()) : !!file
+  const ready = kind === 'chat' ? !!check?.files.some((f) => !f.errors && !f.exists) : kind === 'web' ? /^https?:\/\//i.test(url.trim()) : kind === 'scinet' ? paperId !== null : !!file
 
   const run = async () => {
     setBusy(true); setError(null)
     try {
       const r = kind === 'chat' ? await importApi.chat(ws, chat, folder || check?.folder)
         : kind === 'web' ? await importApi.web(ws, url.trim())
+        : kind === 'scinet' ? await importApi.scinet(ws, paperId!, reread)
         : kind === 'pdf' ? await importApi.file(ws, quality === 'high' ? 'pdf-quality' : 'pdf-fast', file!)
         : kind === 'anki' ? await importApi.file(ws, 'anki', file!, { keepHistory: String(history) })
         : await importApi.file(ws, 'notebook', file!)
@@ -60,12 +66,12 @@ export function ImportDialog({ ws, onClose }: { ws: string; onClose: () => void 
           <button onClick={onClose} aria-label={t('Close')} className="rounded-[6px] p-1 text-muted hover:bg-hover cursor-pointer"><X className="size-4" aria-hidden /></button>
         </div>
 
-        {done ? <Result ws={ws} r={done} onClose={onClose} onMore={() => { setDone(null); setFile(null); setUrl(''); setChat(''); setFolder('') }} /> : (
+        {done ? <Result ws={ws} r={done} canAi={canAi} onClose={onClose} onMore={() => { setDone(null); setFile(null); setUrl(''); setChat(''); setFolder(''); setPaperId(null); setReread(false) }} /> : (
           <>
             <div role="radiogroup" aria-label={t('What to import')} className="mt-4 grid grid-cols-2 gap-2">
               {KINDS().map((k) => (
                 <button key={k.id} role="radio" aria-checked={kind === k.id} onClick={() => choose(k.id)}
-                  className={`${k.id === 'chat' ? 'col-span-2 ' : ''}flex items-start gap-2.5 rounded-[8px] border px-3 py-2.5 text-left cursor-pointer ${kind === k.id ? 'border-text bg-hover' : 'border-border hover:bg-hover'}`}>
+                  className={`${k.id === 'chat' || k.id === 'scinet' ? 'col-span-2 ' : ''}flex items-start gap-2.5 rounded-[8px] border px-3 py-2.5 text-left cursor-pointer ${kind === k.id ? 'border-text bg-hover' : 'border-border hover:bg-hover'}`}>
                   <k.icon className="mt-0.5 size-4 shrink-0 text-muted" strokeWidth={1.8} aria-hidden />
                   <span><span className="block text-[13.5px] font-medium">{k.label}</span><span className="block text-[12px] leading-snug text-muted">{k.hint}</span></span>
                 </button>
@@ -73,7 +79,7 @@ export function ImportDialog({ ws, onClose }: { ws: string; onClose: () => void 
             </div>
 
             <div className="mt-4">
-              {kind === 'chat' ? <ChatImport ws={ws} text={chat} setText={setChat} folder={folder} setFolder={setFolder} onCheck={onCheck} /> : kind === 'web' ? (
+              {kind === 'chat' ? <ChatImport ws={ws} text={chat} setText={setChat} folder={folder} setFolder={setFolder} onCheck={onCheck} /> : kind === 'scinet' ? <ScinetImport paperId={paperId} onPaper={setPaperId} reread={reread} onReread={setReread} canAi={canAi} /> : kind === 'web' ? (
                 <>
                   <label htmlFor="import-url" className="text-[12.5px] text-muted">{t('Address')}</label>
                   <input id="import-url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://…" inputMode="url" autoFocus spellCheck={false}
@@ -111,16 +117,7 @@ export function ImportDialog({ ws, onClose }: { ws: string; onClose: () => void 
   )
 }
 
-function Choice({ name, checked, disabled, onChange, title, hint }: { name: string; checked: boolean; disabled?: boolean; onChange: () => void; title: string; hint: string }) {
-  return (
-    <label className={`mt-1.5 flex items-start gap-2 text-[13px] ${disabled ? 'opacity-50' : 'cursor-pointer'}`}>
-      <input type="radio" name={name} checked={checked} disabled={disabled} onChange={onChange} className="mt-0.5 accent-[var(--accent)]" />
-      <span><span className="block font-medium">{title}</span><span className="block text-[12px] leading-snug text-muted">{hint}</span></span>
-    </label>
-  )
-}
-
-function Result({ ws, r, onClose, onMore }: { ws: string; r: ImportResult; onClose: () => void; onMore: () => void }) {
+function Result({ ws, r, canAi, onClose, onMore }: { ws: string; r: ImportResult; canAi: boolean; onClose: () => void; onMore: () => void }) {
   const docs = r.files.filter((f) => f.kind === 'document'), lessons = r.files.filter((f) => f.kind === 'lesson')
   const link = (f: { path: string; kind: string }): ReactNode => (
     <li key={f.path} className="flex items-center gap-2 py-1">
@@ -137,6 +134,7 @@ function Result({ ws, r, onClose, onMore }: { ws: string; r: ImportResult; onClo
       <div className="mt-5 flex flex-wrap items-center justify-end gap-2">
         {r.jobId && <Link href={`/w/${ws}/studio?job=${r.jobId}`} onClick={onClose} className="inline-flex h-8 items-center rounded-[6px] border border-border-strong px-3 text-[13px] font-medium hover:bg-hover">{t('Watch the job')}</Link>}
         {lessons.length > 0 && <Link href={`/w/${ws}/study`} onClick={onClose} className="inline-flex h-8 items-center gap-1.5 rounded-[6px] border border-border-strong px-3 text-[13px] font-medium hover:bg-hover"><BookOpenCheck className="size-4" aria-hidden />{t('Study')}</Link>}
+        {canAi && !r.jobId && docs.length === 1 && <Link href={`/w/${ws}/studio?kind=course&doc=${encodeURIComponent(docs[0].path)}`} onClick={onClose} className="inline-flex h-8 items-center gap-1.5 rounded-[6px] border border-border-strong px-3 text-[13px] font-medium hover:bg-hover"><Sparkles className="size-4" aria-hidden />{t('Make a course')}</Link>}
         <Button variant="ghost" onClick={onMore}>{t('Import another')}</Button>
         <Button variant="primary" onClick={onClose}>{t('Done')}</Button>
       </div>

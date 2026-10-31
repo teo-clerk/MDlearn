@@ -50,6 +50,10 @@ describe.skipIf(!ip)('sharing on the network (--lan)', () => {
     // downloading, choosing and removing AI models change this computer
     const postApi = (path: string, body: unknown) => fetch(`${base()}/api${path}`, { method: 'POST', headers: { ...headers, 'content-type': 'application/json', 'x-mdl': '1', origin: base() }, body: JSON.stringify(body) })
     for (const action of ['pull', 'choose', 'delete', 'cancel']) expect((await postApi(`/ai/local/${action}`, { model: 'qwen3:4b' })).status).toBe(403)
+    // the paper library stays on this computer, as SciNet keeps it
+    for (const path of ['/api/scinet/status', '/api/scinet/papers?q=x', '/api/scinet/papers/1']) expect((await fetch(`${base()}${path}`, { headers })).status).toBe(403)
+    expect((await postApi('/scinet/url', { url: 'http://127.0.0.1:8000' })).status).toBe(403)
+    expect((await post('/import/scinet', { paperId: 1 })).status).toBe(403)
     // the model list, but not this computer's hardware, system or where its programs are
     const local = await (await fetch(`${base()}/api/ai/local`, { headers })).json() as { hardware: unknown; install: { command: unknown }; claude: Record<string, unknown> }
     expect(local.hardware).toBeNull()

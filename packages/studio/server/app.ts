@@ -35,6 +35,8 @@ import { importWeb } from './import/web.js'
 import { checkChat, importChat, MAX_CHAT_CHARS } from './import/chat.js'
 import { importNotebook } from './import/notebook.js'
 import { importPdfFast, pdfPageCount } from './import/pdf-fast.js'
+import { importScinet } from './import/scinet.js'
+import { findPapers, scinetMarkdown, scinetPaper, scinetPdf, scinetStatus, scinetUrl } from './integrations/scinet.js'
 import { importAnki } from './import/anki.js'
 import { IMPORT_DIR, MAX_IMPORT_BYTES, freePath, slugify, writeNew } from './import/common.js'
 import { visualise } from './ai/visualise.js'
@@ -47,7 +49,7 @@ import type { EventBus, Envelope } from './bus.js'
 import type { SettingsStore } from './settings.js'
 import { Latex } from './latex.js'
 import { TEX_FILE, texRoot } from './latex-files.js'
-import type { SessionInfo, LessonResponse, CompileResponse, PreviewResponse, Integrations, MapNode, MapResponse, Hardware, LocalAiInfo } from '../shared/types.js'
+import type { SessionInfo, LessonResponse, CompileResponse, PreviewResponse, Integrations, MapNode, MapResponse, Hardware, ImportResult, LocalAiInfo } from '../shared/types.js'
 
 /** Languages with a translated help page (help.<lang>.md). */
 const HELP_LANGS = new Set(['it', 'es', 'fr', 'ca'])
@@ -366,7 +368,10 @@ export function createApp(deps: Deps): Hono {
     if (kind === 'notebook') return c.json(importNotebook(h, name, Buffer.from(bytes).toString('utf8')))
     if (kind === 'anki') return c.json(importAnki(h, name, bytes, { keepHistory: body['keepHistory'] === 'true' }))
     if (kind === 'pdf-fast') return c.json(await importPdfFast(h, name, bytes))
-    // high quality: keep the PDF in the folder, then let Claude read it
+    return c.json(await readPdf(c, h, name, bytes))
+  })
+  // high quality: keep the PDF in the folder, then let Claude read it
+  const readPdf = async (c: Context, h: Handle, name: string, bytes: Uint8Array): Promise<ImportResult> => {
     if (!capsOf(c, o).includes('ai')) throw new UserError('path', 'Only the computer running MDlearn can start Claude jobs.')
     if (Buffer.from(bytes.subarray(0, 5)).toString('latin1') !== '%PDF-') throw new UserError('invalid', 'This file is not a PDF.')
     if (deps.claudeStatus && deps.engine?.().name === 'Claude Code') { const st = await deps.claudeStatus(); if (!st.available) throw new UserError('engine', st.error ?? 'Claude Code is not available.') }
@@ -378,7 +383,26 @@ export function createApp(deps: Deps): Hono {
     const r = importPdf(h, pdfRel, outRel, pages)
     const { jobs: jm, engine } = jobs()
     const job = jm.start(h, engine, r.spec)
-    return c.json({ files: [{ path: pdfRel, kind: 'asset' }, { path: outRel, kind: 'document' }], warnings: [], summary: `Claude is reading ${pages ? `${pages} pages` : 'the PDF'}; the document appears when the job finishes.`, jobId: job.id })
+    return { files: [{ path: pdfRel, kind: 'asset' }, { path: outRel, kind: 'document' }], warnings: [], summary: `Claude is reading ${pages ? `${pages} pages` : 'the PDF'}; the document appears when the job finishes.`, jobId: job.id }
+  }
+
+  // ---- SciNet, your paper library: only from this computer, so the library stays as private as SciNet keeps it
+  const scinet = () => deps.settings.get().scinet.url
+  const paperId = (c: Context) => z.coerce.number().int().positive().parse(c.req.param('id'))
+  app.get('/api/scinet/status', need('write', o), async (c) => c.json(await scinetStatus(scinet())))
+  app.post('/api/scinet/url', need('write', o), async (c) => {
+    const url = scinetUrl(z.object({ url: z.string().max(200) }).parse(await c.req.json()).url).origin
+    deps.settings.update((s) => ({ ...s, scinet: { url } }))
+    return c.json(await scinetStatus(url))
+  })
+  app.get('/api/scinet/papers', need('write', o), async (c) => c.json(await findPapers(scinet(), c.req.query('q') ?? '', c.req.query('mode') === 'title' ? 'title' : 'meaning')))
+  app.get('/api/scinet/papers/:id', need('write', o), async (c) => c.json(await scinetPaper(scinet(), paperId(c))))
+  app.post('/api/w/:ws/import/scinet', need('write', o), async (c) => {
+    const h = ws(c)
+    const { paperId: id, reread } = z.object({ paperId: z.number().int().positive(), reread: z.boolean().default(false) }).parse(await c.req.json())
+    const paper = await scinetPaper(scinet(), id)
+    if (reread) return c.json(await readPdf(c, h, `${paper.title}.pdf`, await scinetPdf(scinet(), id)))
+    return c.json(importScinet(h, paper, await scinetMarkdown(scinet(), id)))
   })
 
   // ---- editor: read with a version stamp, save without overwriting someone else's change, preview, history

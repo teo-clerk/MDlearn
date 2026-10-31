@@ -144,10 +144,28 @@ const ollama = createServer((req, res) => {
 }).listen(0)
 await new Promise((r) => ollama.once('listening', r))
 writeFileSync(join(here, '.ollama-port'), String(ollama.address().port))
+// A stand-in for SciNet's API: two papers, one read from the PDF's text and one by Marker
+const PAPERS = [
+  { id: 1, title: 'Statistical physics of adaptation', year: 2016, status: 'ready', authors: ['N. Perunov', 'J. England'], venue: 'Physical Review X', abstract: 'How driven matter comes to look adapted to its environment.', doi: null, arxiv_id: '1412.1875', page_count: 12, parse: { tier: 0, parser: 'pymupdf' } },
+  { id: 2, title: 'A paper read by Marker', year: 2021, status: 'ready', authors: [], venue: null, abstract: null, doi: null, arxiv_id: null, page_count: 3, parse: { tier: 1, parser: 'marker' } },
+]
+const scinet = createServer((req, res) => {
+  const u = new URL(req.url, 'http://x')
+  const send = (body) => { res.setHeader('content-type', 'application/json'); res.end(JSON.stringify(body)) }
+  const one = PAPERS.find((p) => u.pathname.startsWith(`/api/papers/${p.id}`))
+  if (u.pathname === '/api/health') send({ status: 'ok', version: '0.9.0', pipeline_version: 3 })
+  else if (u.pathname === '/api/papers') send({ items: PAPERS.filter((p) => p.title.toLowerCase().includes((u.searchParams.get('q') ?? '').toLowerCase())), total: PAPERS.length, offset: 0, limit: 30 })
+  else if (u.pathname === '/api/search/semantic') send({ mode: 'semantic', query: u.searchParams.get('q'), hits: [{ paper_id: 1, title: PAPERS[0].title, score: 0.8, snippet: 'Driven matter and dissipation.' }] })
+  else if (one && u.pathname.endsWith('/markdown')) { res.setHeader('content-type', 'text/plain'); res.end(`## Introduction\n\n${'Work absorbed from the drive, with α and β and σ and μ and Σ as the symbols of the story. '.repeat(8)}\n`) }
+  else if (one) send(one)
+  else { res.statusCode = 404; send({ detail: 'not found' }) }
+}).listen(0, '127.0.0.1')
+await new Promise((r) => scinet.once('listening', r))
+writeFileSync(join(here, '.scinet-port'), String(scinet.address().port))
 const cfgDir = mkdtempSync(join(tmpdir(), 'mdl-e2e-cfg-'))
 const settingsFile = join(cfgDir, 's.json')
 // the welcome tour is tested on its own (onboarding.spec); the library (tutorial, uploads) stays in the temp folder
 writeFileSync(settingsFile, JSON.stringify({ ollama: { url: `http://127.0.0.1:${ollama.address().port}`, model: 'qwen3:8b', embedModel: 'embeddinggemma' },
-  libraryDir: join(cfgDir, 'library'), onboarding: { tourDone: true } }))
+  scinet: { url: `http://127.0.0.1:${scinet.address().port}` }, libraryDir: join(cfgDir, 'library'), onboarding: { tourDone: true } }))
 const s = await startStudio({ root, port: 4799, fakeAi: true, fakeTex: true, settingsFile })
 console.log(`e2e studio on ${s.url} (folder ${root})`)

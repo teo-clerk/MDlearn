@@ -27,6 +27,7 @@ Two ways to run Studio, with the same features and the same settings:
 | Claude Code, logged in once (`claude`) | AI course creation in Studio, the Claude tutor *(optional)* |
 | [Ollama](https://ollama.com), then a model from *Settings → Local AI* (or `ollama pull qwen3:8b`) | ask / explain / visualise a passage, Ask your folder *(optional)* |
 | poppler (`pdftohtml`) | quick PDF import *(optional)* |
+| [SciNet](https://github.com/teo-clerk/SciNet) running on this computer | importing papers from your library *(optional)* |
 
 ```bash
 git clone https://github.com/teo-clerk/MDlearn.git

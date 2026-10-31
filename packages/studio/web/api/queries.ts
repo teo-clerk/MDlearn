@@ -2,7 +2,7 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { api, qs } from './client'
 import { currentLang } from '../i18n'
-import type { SessionInfo, WorkspaceSummary, Tree, DocResponse, LessonResponse, BrowseResult, StudyPlan, StudyItem, RecordResponse, SearchHit, Note, NoteAnchor, EnginesInfo, JobSummary, JobEvent, TodayResponse, GoalsInfo, FormulasResponse, GlossaryResponse, LinksResponse, MapResponse, DocSummary, AskStatus, AskEntry, SheetResponse, FileInfo, HistoryEntry, PreviewResponse, ImportResult, ChatCheck, Integrations, Batch, BatchCandidate, ConfidenceInfo, ExamPlan, ExamResult, TexResult, TexStatus, LocalAiInfo, ModelDownload } from '../../shared/types'
+import type { SessionInfo, WorkspaceSummary, Tree, DocResponse, LessonResponse, BrowseResult, StudyPlan, StudyItem, RecordResponse, SearchHit, Note, NoteAnchor, EnginesInfo, JobSummary, JobEvent, TodayResponse, GoalsInfo, FormulasResponse, GlossaryResponse, LinksResponse, MapResponse, DocSummary, AskStatus, AskEntry, SheetResponse, FileInfo, HistoryEntry, PreviewResponse, ImportResult, ChatCheck, Integrations, Batch, BatchCandidate, ConfidenceInfo, ExamPlan, ExamResult, TexResult, TexStatus, LocalAiInfo, ModelDownload, ScinetDetail, ScinetPaper, ScinetStatus } from '../../shared/types'
 import type { Checked, MdNode, WebAnswer, Outcome } from '@mdlearn/core'
 
 export const keys = {
@@ -16,6 +16,7 @@ export const keys = {
   notes: (ws: string, doc: string) => ['notes', ws, doc] as const,
   engines: ['engines'] as const,
   localAi: ['local-ai'] as const,
+  scinet: ['scinet'] as const,
   today: (ws: string) => ['today', ws] as const,
   jobs: (ws: string) => ['jobs', ws] as const,
   job: (ws: string, id: string) => ['job', ws, id] as const,
@@ -77,6 +78,13 @@ export const localAiApi = {
   remove: (model: string) => api.post<{ ok: true }>('/api/ai/local/delete', { model }),
 }
 
+export const scinetApi = {
+  status: () => api.get<ScinetStatus>('/api/scinet/status'),
+  setUrl: (url: string) => api.post<ScinetStatus>('/api/scinet/url', { url }),
+  papers: (q: string, mode: 'meaning' | 'title') => api.get<ScinetPaper[]>(`/api/scinet/papers?mode=${mode}&q=${encodeURIComponent(q)}`),
+  paper: (id: number) => api.get<ScinetDetail>(`/api/scinet/papers/${id}`),
+}
+
 export const latexApi = {
   status: (fresh = false) => api.get<TexStatus>(`/api/latex/status${fresh ? '?fresh=1' : ''}`),
   compile: (ws: string, path: string) => api.post<TexResult & { target: string }>(`/api/w/${ws}/latex/compile`, { path }),
@@ -103,6 +111,7 @@ export const importApi = {
   folder: () => api.post<{ id: string; name: string; root: string }>('/api/workspaces/imports', {}),
   checkChat: (ws: string, text: string, folder?: string) => api.post<ChatCheck>(`/api/w/${ws}/import/chat/check`, { text, folder }),
   chat: (ws: string, text: string, folder?: string) => api.post<ImportResult>(`/api/w/${ws}/import/chat`, { text, folder }),
+  scinet: (ws: string, paperId: number, reread: boolean) => api.post<ImportResult>(`/api/w/${ws}/import/scinet`, { paperId, reread }),
 }
 
 // ---- a course for the whole folder

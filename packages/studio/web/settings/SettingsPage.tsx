@@ -11,6 +11,7 @@ import { Appearance, Language } from './Appearance'
 import { Section } from './Section'
 import { Command, CopyButton } from './Command'
 import { LocalAi } from './LocalAi'
+import { ScinetSettings } from './ScinetSettings'
 
 export default function SettingsPage() {
   useEffect(() => { document.title = t('Settings · MDlearn Studio') }, [])
@@ -22,6 +23,7 @@ export default function SettingsPage() {
       <Appearance />
       <Language />
       <LocalAi />
+      <ScinetSettings />
       <OtherApps />
     </div>
   )

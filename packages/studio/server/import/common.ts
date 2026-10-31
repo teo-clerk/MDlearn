@@ -28,6 +28,22 @@ export function writeNew(h: Handle, rel: string, data: string | Uint8Array): str
   return rel
 }
 export const result = (files: ImportResult['files'], warnings: string[] = [], summary = ''): ImportResult => ({ files, warnings, summary })
+
+/** A response body, refused once it passes `max` bytes (without reading the rest). */
+export async function readCapped(res: Response, max: number, what = 'The page'): Promise<Uint8Array> {
+  if (!res.body) return new Uint8Array(await res.arrayBuffer())
+  const chunks: Uint8Array[] = []
+  let n = 0
+  const reader = res.body.getReader()
+  for (;;) {
+    const { value, done } = await reader.read()
+    if (done) break
+    n += value.length
+    if (n > max) { await reader.cancel(); throw new UserError('too-large', `${what} is larger than ${Math.round(max / 1048576)} MB.`) }
+    chunks.push(value)
+  }
+  return Buffer.concat(chunks)
+}
 export const MAX_IMPORT_BYTES = 100 * 1024 * 1024
 
 /** The first heading of a Markdown text, or null. */

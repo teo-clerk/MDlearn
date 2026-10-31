@@ -22,6 +22,7 @@ Vos notes restent de simples fichiers Markdown. Les **leçons** (`learn/*.learn.
 | **Étudier hors ligne** | Sur un téléphone : emportez les fiches des prochains jours (Aujourd’hui → *Emporter hors ligne les cartes des prochains jours*), étudiez sans connexion, et les réponses se synchronisent quand l’ordinateur est joignable. Gardez la page ouverte hors ligne. |
 | **LaTeX** | *Nouvelle note → Document LaTeX*, ou tout fichier `.tex` sous *LaTeX* dans la barre latérale : écrivez à gauche, **Compiler** (Ctrl+S) pour voir le PDF à droite ; les erreurs mènent à leur ligne. Il faut Tectonic ou TeX Live sur l’ordinateur. |
 | **IA locale** | *Réglages → IA locale* : installez Ollama s’il manque, téléchargez un modèle recommandé (chacun indique si cet ordinateur le fait bien tourner) et choisissez celui avec lequel Studio répond. |
+| **Importer** | *Importer…* dans la barre latérale : une page web, un PDF, un paquet Anki, un notebook, des leçons d’un chat, ou un article de **SciNet** s’il tourne sur cet ordinateur. |
 | **AI Studio** | Claude Code écrit ou améliore des leçons à partir d'une note (utilise votre abonnement Claude). |
 | **Formules** · **Glossaire** · **Carte** | Chaque formule, chaque terme défini, et quelles notes s'appuient sur lesquelles : un graphe en 2D ou en 3D, coloré selon ce que vous retenez de chaque note. |
 

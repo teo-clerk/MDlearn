@@ -7,7 +7,7 @@ import TurndownService from 'turndown'
 import { gfm } from 'turndown-plugin-gfm'
 import type { Handle } from '../workspaces.js'
 import { UserError } from '../workspaces.js'
-import { IMPORT_DIR, freePath, result, slugify, writeNew } from './common.js'
+import { IMPORT_DIR, freePath, readCapped, result, slugify, writeNew } from './common.js'
 import type { ImportResult } from '../../shared/types.js'
 
 type Doc = ReturnType<typeof parseHTML>['document']
@@ -17,20 +17,6 @@ const MAX_PAGE_BYTES = 5 * 1024 * 1024, MAX_IMAGE_BYTES = 2 * 1024 * 1024, MAX_I
 const IMAGE_EXT: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif', 'image/webp': 'webp' }
 const UA = 'Mozilla/5.0 (compatible; MDlearn Studio importer)'
 
-async function readCapped(res: Response, max: number): Promise<Uint8Array> {
-  if (!res.body) return new Uint8Array(await res.arrayBuffer())
-  const chunks: Uint8Array[] = []
-  let n = 0
-  const reader = res.body.getReader()
-  for (;;) {
-    const { value, done } = await reader.read()
-    if (done) break
-    n += value.length
-    if (n > max) { await reader.cancel(); throw new UserError('too-large', `The page is larger than ${Math.round(max / 1048576)} MB.`) }
-    chunks.push(value)
-  }
-  return Buffer.concat(chunks)
-}
 export function checkUrl(raw: string): URL {
   let u: URL
   try { u = new URL(raw.trim()) } catch { throw new UserError('invalid', 'That is not a web address.') }
