@@ -1,11 +1,13 @@
 // Select text in a document → Note · Card · Inbox · Ask · Explain, floating above the selection.
 import { useEffect, useState } from 'react'
 import { ChartSpline, Inbox, Layers, MessageSquarePlus, Sparkles, StickyNote } from 'lucide-react'
+import { NOTE_MARKS, markLabel } from './marks'
 import { anchorFromSelection } from '../lib/anchor'
 import type { NoteAnchor } from '../../shared/types'
 import { t } from '../i18n'
 
-export type SelectionKind = 'note' | 'ask' | 'explain' | 'visual' | 'card' | 'inbox'
+import type { NoteColor } from '../../shared/types'
+export type SelectionKind = 'note' | 'ask' | 'explain' | 'visual' | 'card' | 'inbox' | NoteColor
 export interface SelectionAction { (kind: SelectionKind, anchor: NoteAnchor): void }
 export function SelectionToolbar({ root, onAction, canAsk }: { root: HTMLElement | null; onAction: SelectionAction; canAsk: boolean }) {
   const [at, setAt] = useState<{ x: number; y: number; anchor: NoteAnchor } | null>(null)
@@ -34,6 +36,7 @@ export function SelectionToolbar({ root, onAction, canAsk }: { root: HTMLElement
     <div role="toolbar" aria-label={t('Selected text')} style={{ left: at.x, top: Math.max(8, at.y - 44) }}
       className="fixed z-40 flex -translate-x-1/2 items-center divide-x divide-border overflow-hidden rounded-[8px] border border-border bg-raised shadow-pop"
       onMouseDown={(e) => e.preventDefault()}>
+      {NOTE_MARKS.map(({ color, icon: Icon }) => <button key={color} className={btn} title={markLabel(color)} aria-label={markLabel(color)} onClick={() => act(color)}><Icon className={`size-4 tone-${color}`} strokeWidth={1.8} aria-hidden /></button>)}
       <button className={btn} onClick={() => act('note')}><StickyNote className="size-4 text-muted" strokeWidth={1.8} aria-hidden />{label(t('Note'))}</button>
       <button className={btn} onClick={() => act('card')}><Layers className="size-4 text-muted" strokeWidth={1.8} aria-hidden />{label(t('Card'))}</button>
       <button className={btn} onClick={() => act('inbox')}><Inbox className="size-4 text-muted" strokeWidth={1.8} aria-hidden />{label(t('Inbox'))}</button>

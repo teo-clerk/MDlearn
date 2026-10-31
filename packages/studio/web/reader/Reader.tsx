@@ -18,6 +18,7 @@ import { anchorForMoment } from '../lib/anchor'
 import { DocBlocks, type BlockEnv } from './DocBlocks'
 import { Outline } from './Outline'
 import { CoursePanel } from './CoursePanel'
+import { markLabel } from '../notes/marks'
 import { RelatedPanel } from './RelatedPanel'
 import { LinksPanel } from '../knowledge/LinksPanel'
 import { PreviewLink } from '../knowledge/PreviewLink'
@@ -35,6 +36,7 @@ export default function Reader({ ws }: { ws: string }) {
   const params = new URLSearchParams(useSearch())
   const path = params.get('path') ?? undefined
   const section = params.get('section')
+  const noteId = params.get('note')
   const doc = useDoc(ws, path)
   const tree = useTree(ws)
   const [, navigate] = useLocation()
@@ -50,6 +52,7 @@ export default function Reader({ ws }: { ws: string }) {
   const qc = useQueryClient()
   const [askError, setAskError] = useState<string | null>(null)
   useEffect(() => { setDraft(null) }, [path, setDraft])
+  useEffect(() => { if (noteId) { setPanelTab('notes'); setActive(noteId) } }, [noteId, setPanelTab, setActive])
   useNoteHighlights(ws, path, source ? null : article)
   const onSelection = async (kind: SelectionKind, anchor: NoteAnchor) => {
     if (!path) return
@@ -58,6 +61,14 @@ export default function Reader({ ws }: { ws: string }) {
         await inboxApi.capture(ws, { quote: anchor.quote.exact.slice(0, MAX_CAPTURE), doc: path, section: anchor.section })
         void qc.invalidateQueries({ queryKey: keys.inbox(ws) })
         notify(t('Saved to your inbox'))
+      } catch (e) { notify((e as Error).message) }
+      return
+    }
+    if (kind === 'important' || kind === 'confusing' || kind === 'exam') {
+      try {
+        await notesApi.create(ws, path, anchor, '', kind)
+        await qc.invalidateQueries({ queryKey: keys.notes(ws, path) })
+        notify(t('Highlighted: {kind}', { kind: markLabel(kind) }))
       } catch (e) { notify((e as Error).message) }
       return
     }

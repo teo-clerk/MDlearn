@@ -67,7 +67,7 @@ function NewJob({ ws, onStarted, onBatch, params }: { ws: string; onStarted: (id
   // the course language starts as the interface language (English means: the language of the topic)
   const [topic, setTopic] = useState({ topic: '', level: 'beginner' as 'beginner' | 'intermediate' | 'advanced', language: currentLang() === 'en' ? '' : LANGS.find((l) => l.code === currentLang())!.english, minutes: 45, notes: '' })
   const [lesson, setLesson] = useState(params.get('lesson') ?? '')
-  const [focus, setFocus] = useState<'all' | 'questions' | 'clarity' | 'lint'>('all')
+  const [focus, setFocus] = useState<'all' | 'questions' | 'clarity' | 'marks' | 'lint'>('all')
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<unknown>(null)
@@ -161,10 +161,10 @@ function NewJob({ ws, onStarted, onBatch, params }: { ws: string; onStarted: (id
             </label>
             <fieldset><legend className="text-[13px] font-medium">{t('Focus')}</legend>
               <div className="mt-1.5 flex flex-wrap gap-1.5">
-                {(['all', 'questions', 'clarity', 'lint'] as const).map((f) => (
+                {(['all', 'questions', 'clarity', 'marks', 'lint'] as const).map((f) => (
                   <label key={f} className={`cursor-pointer rounded-[6px] border px-2.5 py-1 text-[13px] ${focus === f ? 'border-text bg-hover' : 'border-border hover:bg-hover'}`}>
                     <input type="radio" name="focus" value={f} checked={focus === f} onChange={() => setFocus(f)} className="sr-only" />
-                    {f === 'all' ? t('Everything') : f === 'questions' ? t('Better questions') : f === 'clarity' ? t('Clearer text') : t('Fix problems')}
+                    {f === 'all' ? t('Everything') : f === 'questions' ? t('Better questions') : f === 'clarity' ? t('Clearer text') : f === 'marks' ? t('Mark key terms') : t('Fix problems')}
                   </label>
                 ))}
               </div>

@@ -26,6 +26,12 @@ Les lliçons apareixen a mesura que s'escriuen. A l'editor, enganxa o deixa anar
 
 Per canviar un curs ja començat, obre la seva pàgina de presentació. Pots moure o posar en pausa una lliçó, afegir fitxers o demanar un canvi. Les targetes conserven el calendari, fins i tot amb títols nous.
 
+## El color a les notes
+
+Aquí el color té una funció: el tipus de requadre, un terme d'una fórmula i la seva explicació, la paraula clau d'una targeta. Selecciona un
+passatge per ressaltar-lo com a **Important**, **Confús** o **Per a l'examen**, sense escriure res. Els passatges confusos t'esperen a **Avui**, i
+els de l'examen ofereixen **Crea una targeta**. **Configuració → Aparença → Color a les notes** el desactiva.
+
 ## Les pàgines
 
 | Pàgina | Per a què serveix |

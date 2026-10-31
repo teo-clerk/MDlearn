@@ -8,8 +8,9 @@ import { loadGoals, type Progress } from '@mdlearn/core/node'
 import type { Handle } from './workspaces.js'
 import type { TodayResponse, LeechInfo, PaceInfo } from '../shared/types.js'
 import { course, progressOf, lessonsOfDoc, plan } from './study.js'
+import { notesStore } from './notes.js'
 
-const DAY = 864e5
+const DAY = 864e5, MAX_CONFUSING = 5
 const keysOf = (lessons: Lesson[]) => lessons.flatMap((l) => l.cards.filter((c) => c.blocks.some(askable)).map((c) => `${l.id}/${c.id}`))
 /** Cards that have been reviewed at least once, with the time of their first review. */
 const firstReviews = (p: Progress) => { const m = new Map<string, number>(); for (const r of p.reviews.filter(isOriginalReview)) if (!m.has(r.key)) m.set(r.key, r.t); return m }
@@ -77,6 +78,7 @@ export function today(h: Handle, now = Date.now()): TodayResponse {
     goal: { daily: goals.dailyGoal, doneToday, percent: Math.min(100, Math.round((doneToday / goals.dailyGoal) * 100)) },
     forecast: forecast(cards, now, 7, tz),
     heatmap: heatmap(done, now, 26, tz),
+    confusing: notesStore.marked(h, 'confusing', MAX_CONFUSING).map((n) => ({ id: n.id, doc: n.doc, anchor: n.anchor, explained: n.thread.some((m) => m.role === 'ai') })),
     time: studyTime(times, now, tz),
     calibration: calibration(p.attempts, now, 30),
     leeches: leechList,

@@ -228,6 +228,7 @@ Callouts: `note` (side detail), `tip` (intuition; `[label]{fold}` = optional dep
 ## Token discipline
 
 - Output only lesson files: no preface, no closing remarks, no wrapping code fence.
+- Mark the key term: wrap the one or two words a card is about in `<mark>`, once, where they first appear. Never a sentence, never a label, and leave a card unmarked if no term stands out (W610).
 - Write no ids of your own except a scaffold's frontmatter `id`, and keep every id already in a file: a `{#id}` on a heading is what ties the card to the student's progress, so it stays when the title changes; attributes only `{fold}`, `{exact}`, `{memory}` and `{time=N}`. `time` is your estimate in minutes (≈ 1 per card, more
   for `steps` and `code`); the compiler re-estimates it.
 - Math only as `$…$` and `$$…$$` (a one-line `$$…$$` is fine); money as `\$5`.
@@ -250,6 +251,7 @@ Callouts: `note` (side detail), `tip` (intuition; `[label]{fold}` = optional dep
 - [ ] Blanks only in `cloze`/`steps`; braces balanced.
 - [ ] Every `explain` ends with `> - ` idea units; every `steps` and `order` has a numbered list.
 - [ ] Each display formula has its gloss; every image has alt text; widgets only after the first `##`.
+- [ ] `<mark>` only on the key term of a card, never a sentence; no more than three in a card.
 - [ ] Every answer key recomputed; ≤ 4 blanks per cloze; no cloze key printed in its own prompt.
 
 ## Visuals

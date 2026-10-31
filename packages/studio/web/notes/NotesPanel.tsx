@@ -12,6 +12,7 @@ import { NoteCard, type NoteActions } from './NoteCard'
 import { DraftCard } from './DraftCard'
 import { VisualDraftCard } from './VisualDraftCard'
 import { CardDraft } from './CardDraft'
+import { NOTE_MARKS } from './marks'
 import type { Note } from '../../shared/types'
 import { t } from '../i18n'
 
@@ -105,6 +106,7 @@ export function NotesPanel({ ws, doc, article, mtime }: { ws: string; doc: strin
     save: async (body) => { await notesApi.update(ws, doc, n.id, body); await refresh() },
     remove: async () => { await notesApi.remove(ws, doc, n.id); setActive(null); await refresh() },
     ask: async (question) => { await notesApi.ask(ws, { doc, anchor: n.anchor, question, mode: 'ask', noteId: n.id }); await refresh() },
+    makeCard: () => setDraft({ anchor: n.anchor, mode: 'card' }),
     stop: (id) => { void notesApi.cancel(ws, id); useStream.getState().finish(id) },
   })
   // a note on a moment of a video: the player it sits beside goes back to that moment
@@ -184,8 +186,9 @@ export function useNoteHighlights(ws: string, doc: string | undefined, article: 
     const H = (window as unknown as { Highlight?: new (...r: Range[]) => unknown }).Highlight
     if (!reg || !H || !article || !notes.data) return
     const text = textOf(article)
-    const ranges = notes.data.map((n) => { const at = locate(text, n.anchor); return at ? rangeFor(article, at.start, at.end) : null }).filter((r): r is Range => !!r)
-    reg.set('mdl-note', new H(...ranges))
-    return () => { reg.delete('mdl-note') }
+    const rangesOf = (list: Note[]) => list.map((n) => { const at = locate(text, n.anchor); return at ? rangeFor(article, at.start, at.end) : null }).filter((r): r is Range => !!r)
+    reg.set('mdl-note', new H(...rangesOf(notes.data.filter((n) => !n.color))))
+    for (const { color } of NOTE_MARKS) reg.set(`mdl-mark-${color}`, new H(...rangesOf(notes.data.filter((n) => n.color === color))))
+    return () => { reg.delete('mdl-note'); for (const { color } of NOTE_MARKS) reg.delete(`mdl-mark-${color}`) }
   }, [notes.data, article, version])
 }

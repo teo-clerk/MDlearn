@@ -2,7 +2,7 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { api, qs } from './client'
 import { currentLang } from '../i18n'
-import type { SessionInfo, WorkspaceSummary, Tree, DocResponse, LessonResponse, BrowseResult, StudyPlan, StudyItem, RecordResponse, SearchHit, Note, NoteAnchor, EnginesInfo, JobSummary, JobEvent, TodayResponse, GoalsInfo, FormulasResponse, GlossaryResponse, LinksResponse, MapResponse, DocSummary, AskStatus, AskEntry, SheetResponse, FileInfo, HistoryEntry, PreviewResponse, ImportResult, ChatCheck, Integrations, Batch, BatchCandidate, ConfidenceInfo, ExamPlan, ExamResult, TexResult, TexStatus, LocalAiInfo, ModelDownload, ScinetDetail, ScinetPaper, ScinetStatus, RelatedResponse, InboxItem, InboxList } from '../../shared/types'
+import type { SessionInfo, WorkspaceSummary, Tree, DocResponse, LessonResponse, BrowseResult, StudyPlan, StudyItem, RecordResponse, SearchHit, Note, NoteAnchor, NoteColor, EnginesInfo, JobSummary, JobEvent, TodayResponse, GoalsInfo, FormulasResponse, GlossaryResponse, LinksResponse, MapResponse, DocSummary, AskStatus, AskEntry, SheetResponse, FileInfo, HistoryEntry, PreviewResponse, ImportResult, ChatCheck, Integrations, Batch, BatchCandidate, ConfidenceInfo, ExamPlan, ExamResult, TexResult, TexStatus, LocalAiInfo, ModelDownload, ScinetDetail, ScinetPaper, ScinetStatus, RelatedResponse, InboxItem, InboxList } from '../../shared/types'
 import type { Checked, MdNode, WebAnswer, Outcome } from '@mdlearn/core'
 
 export const keys = {
@@ -149,7 +149,7 @@ export const useJobs = (ws: string) => useQuery({ queryKey: keys.jobs(ws), query
 export const useJob = (ws: string, id: string | undefined) => useQuery({ queryKey: keys.job(ws, id ?? ''), enabled: !!id, queryFn: () => api.get<JobDetail>(`/api/w/${ws}/ai/jobs/${id}`) })
 export type JobRequest =
   | { recipe: 'course.create'; doc: string }
-  | { recipe: 'lesson.improve'; lesson: string; focus: 'questions' | 'clarity' | 'lint' | 'all' | 'leech'; note?: string; card?: { key: string; title: string; wrong: string[] } }
+  | { recipe: 'lesson.improve'; lesson: string; focus: 'questions' | 'clarity' | 'lint' | 'marks' | 'all' | 'leech'; note?: string; card?: { key: string; title: string; wrong: string[] } }
   | { recipe: 'custom'; request: string; scope?: string }
   | { recipe: 'course.change'; doc: string; request: string }
   | { recipe: 'course.class'; name: string; level?: 'beginner' | 'intermediate' | 'advanced'; language?: string; request?: string }
@@ -165,7 +165,7 @@ export const useNotes = (ws: string, doc: string | undefined) => useQuery({
 })
 export const useEngines = () => useQuery({ queryKey: keys.engines, queryFn: () => api.get<EnginesInfo>('/api/engines'), staleTime: 30_000, refetchInterval: 60_000 })
 export const notesApi = {
-  create: (ws: string, doc: string, anchor: NoteAnchor, body: string) => api.post<Note>(`/api/w/${ws}/notes`, { doc, anchor, body }),
+  create: (ws: string, doc: string, anchor: NoteAnchor, body: string, color?: NoteColor) => api.post<Note>(`/api/w/${ws}/notes`, { doc, anchor, body, color }),
   update: (ws: string, doc: string, id: string, body: string) => api.post<Note>(`/api/w/${ws}/notes/${id}/update`, { doc, body }),
   remove: (ws: string, doc: string, id: string) => api.post<{ ok: true }>(`/api/w/${ws}/notes/${id}/delete`, { doc }),
   ask: (ws: string, body: { doc: string; anchor: NoteAnchor; question?: string; mode: 'ask' | 'explain'; noteId?: string }) => api.post<{ note: Note; messageId: string }>(`/api/w/${ws}/ai/ask`, body),

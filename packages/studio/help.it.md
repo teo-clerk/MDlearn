@@ -26,6 +26,12 @@ Le lezioni compaiono man mano che vengono scritte. Nell'editor, incolla o trasci
 
 Per cambiare un corso già iniziato, apri la sua pagina di presentazione. Puoi spostare o mettere in pausa una lezione, aggiungere file o chiedere una modifica. Le carte mantengono la loro programmazione, anche con nuovi titoli.
 
+## Il colore negli appunti
+
+Qui il colore ha un compito: il tipo di riquadro, un termine di una formula e la sua spiegazione, la parola chiave di una carta. Seleziona un
+passaggio per evidenziarlo come **Importante**, **Non chiaro** o **Per l'esame**, senza scrivere nulla. I passaggi non chiari ti aspettano su
+**Oggi**, e quelli per l'esame offrono **Crea una carta**. **Impostazioni → Aspetto → Colore negli appunti** lo disattiva.
+
 ## Le pagine
 
 | Pagina | A cosa serve |

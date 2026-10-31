@@ -4,6 +4,7 @@ import { ArrowUp, Loader2, Play, Square, Trash2 } from 'lucide-react'
 import { formatTime } from '@mdlearn/core'
 import type { Note, NoteMessage } from '../../shared/types'
 import { MiniMarkdown } from '../prose/MiniMarkdown'
+import { NOTE_MARKS, markLabel } from './marks'
 import { useStream } from '../state/stream'
 import { IconButton } from '../ui/primitives'
 import { t } from '../i18n'
@@ -12,6 +13,8 @@ export interface NoteActions {
   save(body: string): Promise<void>
   remove(): Promise<void>
   ask(question: string): Promise<void>
+  /** Turn the passage into a card of your own. */
+  makeCard(): void
   stop(messageId: string): void
   canAsk: boolean
 }
@@ -21,12 +24,20 @@ export function NoteCard({ note, active, onFocus, actions, quoteFound, onSeek }:
   const [body, setBody] = useState(note.body)
   const [question, setQuestion] = useState('')
   const [busy, setBusy] = useState(false)
+  const mark = NOTE_MARKS.find((m) => m.color === note.color)
   return (
     <article onClick={onFocus} onFocus={onFocus} tabIndex={-1} aria-label={t('Note')}
       className={`rounded-[8px] border bg-raised p-3 text-[13.5px] transition-shadow ${active ? 'border-border-strong shadow-pop' : 'border-border'}`}>
       <blockquote className={`line-clamp-2 border-l pl-2 text-[12.5px] text-muted ${quoteFound ? 'border-border-strong' : 'border-dashed border-warn'}`} title={note.anchor.quote.exact}>
         {note.anchor.quote.exact}
       </blockquote>
+      {mark && (
+        <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px]">
+          <span className="inline-flex items-center gap-1 font-medium"><mark.icon className={`size-3.5 tone-${mark.color}`} strokeWidth={1.8} aria-hidden />{markLabel(mark.color)}</span>
+          {mark.color === 'confusing' && actions.canAsk && !note.thread.length && <button type="button" onClick={(e) => { e.stopPropagation(); void actions.ask(t('Explain this passage simply.')) }} className="text-muted underline underline-offset-2 hover:text-text cursor-pointer">{t('Explain')}</button>}
+          {mark.color === 'exam' && <button type="button" onClick={(e) => { e.stopPropagation(); actions.makeCard() }} className="text-muted underline underline-offset-2 hover:text-text cursor-pointer">{t('Make a card')}</button>}
+        </p>
+      )}
       {note.anchor.t !== undefined && onSeek && (
         <button type="button" onClick={(e) => { e.stopPropagation(); onSeek() }} aria-label={t('Play the video from {time}', { time: formatTime(note.anchor.t) })}
           className="mt-1.5 inline-flex items-center gap-1 rounded-[5px] border border-border px-1.5 py-0.5 tabular text-[12px] text-muted hover:bg-hover hover:text-text cursor-pointer">

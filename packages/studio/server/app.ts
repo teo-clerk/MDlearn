@@ -22,7 +22,7 @@ import { examPlan, examGrade } from './exam.js'
 import { offlinePack, syncOffline, PACK_DAYS } from './offline.js'
 import { today } from './today.js'
 import { passageFor, addCard } from './cards.js'
-import { notesStore, AnchorSchema } from './notes.js'
+import { notesStore, AnchorSchema, NoteColorSchema } from './notes.js'
 import { ask, cancelAsk, EXPLAIN_QUESTION } from './ai/ask.js'
 import { ollamaStatus, ollamaBusy, ollamaDelete, ollamaModels } from './ai/ollama.js'
 import { MODEL_NAME, ModelDownloads, hardware, installedName, isEmbedding, localAi } from './ai/models.js'
@@ -646,9 +646,9 @@ export function createApp(deps: Deps): Hono {
   })
   app.post('/api/w/:ws/notes', need('notes', o), async (c) => {
     const h = ws(c)
-    const body = z.object({ doc: z.string().min(1).max(1024), anchor: AnchorSchema, body: z.string().max(20_000) }).parse(await c.req.json())
+    const body = z.object({ doc: z.string().min(1).max(1024), anchor: AnchorSchema, body: z.string().max(20_000), color: NoteColorSchema.optional() }).parse(await c.req.json())
     deps.workspaces.resolve(h, body.doc)
-    const note = await notesStore.create(h, body.doc, body.anchor, body.body)
+    const note = await notesStore.create(h, body.doc, body.anchor, body.body, body.color)
     deps.bus.publish({ type: 'notes.changed', ws: h.id, doc: body.doc })
     return c.json(note)
   })
@@ -764,7 +764,7 @@ export function createApp(deps: Deps): Hono {
     const h = ws(c)
     const body = z.discriminatedUnion('recipe', [
       z.object({ recipe: z.literal('course.create'), doc: z.string().min(1).max(1024) }),
-      z.object({ recipe: z.literal('lesson.improve'), lesson: z.string().min(1).max(1024), focus: z.enum(['questions', 'clarity', 'lint', 'all', 'leech']).default('all'), note: z.string().max(2000).default(''),
+      z.object({ recipe: z.literal('lesson.improve'), lesson: z.string().min(1).max(1024), focus: z.enum(['questions', 'clarity', 'lint', 'marks', 'all', 'leech']).default('all'), note: z.string().max(2000).default(''),
         card: z.object({ key: z.string().max(300), title: z.string().max(200), wrong: z.array(z.string().max(300)).max(5).default([]) }).optional() }),
       z.object({ recipe: z.literal('course.change'), doc: z.string().min(1).max(1024), request: z.string().trim().min(2).max(2000) }),
       z.object({ recipe: z.literal('course.class'), name: z.string().trim().min(1).max(200), level: z.enum(['beginner', 'intermediate', 'advanced']).default('beginner'), language: z.string().max(40).optional(), request: z.string().max(2000).optional() }),

@@ -54,6 +54,7 @@ const FOCUS: Record<string, string> = {
   questions: 'Strengthen the questions: every card should end with a retrieval question; wrong quiz options need feedback naming the misconception; vary the question kinds.',
   clarity: 'Make the explanations clearer and shorter (at most three sentences per card) without losing anything the source says.',
   lint: 'Fix every lint error and warning.',
+  marks: 'Mark the key terms: wrap the one or two words each card is about in `<mark>`, once per card, the first time they appear. Never mark a sentence, a label or an example, and change no other text. Leave a card unmarked if no term stands out.',
   all: 'Fix lint problems, make sure every card has a good retrieval question (feedback on every wrong option), and tighten explanations.',
 }
 export interface LeechContext { cardKey: string; title: string; wrong: string[] }

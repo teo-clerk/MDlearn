@@ -26,6 +26,12 @@ Las lecciones aparecen a medida que se escriben. En el editor, pega o suelta una
 
 Para cambiar un curso ya empezado, abre su página de presentación. Puedes mover o pausar una lección, añadir archivos o pedir un cambio. Las tarjetas conservan su calendario, incluso con títulos nuevos.
 
+## El color en tus notas
+
+Aquí el color tiene una función: el tipo de recuadro, un término de una fórmula y su explicación, la palabra clave de una tarjeta. Selecciona un
+pasaje para resaltarlo como **Importante**, **Confuso** o **Para el examen**, sin escribir nada. Los pasajes confusos te esperan en **Hoy**, y los
+del examen ofrecen **Crear una tarjeta**. **Ajustes → Apariencia → Color en las notas** lo desactiva.
+
 ## Las páginas
 
 | Página | Para qué sirve |

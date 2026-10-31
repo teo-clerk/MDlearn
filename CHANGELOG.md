@@ -10,6 +10,10 @@ Then Claude, your coding assistant or a chat writes the lessons, and they appear
 class files, or tell Claude what should change: cards keep their schedule even with new titles, and the job ends by saying how many kept
 their progress. If an edit elsewhere loses a studied card, MDlearn offers to reconnect it. Coding assistants get the same rules.
 
+**Colour with a job.** Callouts, formula terms and key words now use colour that means something, checked for contrast and colour
+blindness. Select a passage to highlight it as important, confusing or for the exam: confusing passages wait on Today with *Explain*, and
+exam passages offer *Make a card*. You can turn colour off in Settings, and icons and underlines still say the same thing.
+
 **Courses appear wherever they are written.** A course from a topic, from a chat or from an assistant sits in its
 own folder, and until now its lessons opened from a link but never reached the library, Today or Study. They now
 do, in Studio, the CLI and the MCP tools. Lessons sit under their `course.md`.

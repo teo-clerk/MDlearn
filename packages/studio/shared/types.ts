@@ -101,7 +101,8 @@ export interface ApiError { error: { code: string; message: string } }
 /** `t`: a note on a moment of a video (seconds); the quote is then the video's label. */
 export interface NoteAnchor { section: string | null; quote: { exact: string; prefix: string; suffix: string }; t?: number }
 export interface NoteMessage { id: string; role: 'user' | 'ai'; text: string; engine?: string; at: number; error?: string; done: boolean }
-export interface Note { id: string; doc: string; anchor: NoteAnchor; body: string; thread: NoteMessage[]; created: number; updated: number }
+export type NoteColor = 'important' | 'confusing' | 'exam'
+export interface Note { id: string; doc: string; anchor: NoteAnchor; body: string; thread: NoteMessage[]; created: number; updated: number; color?: NoteColor }
 export interface EnginesInfo { local: { available: boolean; model: string; models: string[]; error?: string; busy: number }; claude: { available: boolean; version?: string; error?: string } }
 
 // ---- local AI models (Ollama)
@@ -155,7 +156,10 @@ export interface CourseInfo { doc: string; lessons: CourseLesson[]; lost: LostCa
 // ---- Today, goals, leeches
 export interface PaceInfo { scope: string; label: string; status: 'on-track' | 'behind' | 'overdue' | 'done'; deadline: string; daysLeft: number; remaining: number; perDay: number; daysBehind: number | null; text: string }
 export interface LeechInfo { key: string; title: string; lessonTitle: string; lessonPath: string; lapses: number; wrongAnswers: string[]; sourceDoc?: string; sourceSection?: string }
+export interface ConfusingPassage { id: string; doc: string; anchor: NoteAnchor; explained: boolean }
 export interface TodayResponse {
+  /** Passages you marked as confusing, to look at again. */
+  confusing: ConfusingPassage[]
   plan: StudyPlan
   goal: { daily: number; doneToday: number; percent: number }
   forecast: { date: string; count: number }[]

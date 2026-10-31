@@ -183,3 +183,32 @@ describe('changing a started course with an AI', () => {
     expect((s.jobs as unknown as { jobs: Map<string, { spec: { keepOut?: string[] } }> }).jobs.get(next.id)!.spec.keepOut).toContain(join(s.root, 'sources'))
   })
 })
+
+describe('highlights with a purpose', () => {
+  const anchor = { section: null, quote: { exact: 'heat flows downhill', prefix: '', suffix: '' } }
+  it('saves one with no text, and lists confusing passages on Today, newest first', async () => {
+    const s = setup()
+    writeFileSync(join(s.root, 'notes.md'), '# Notes\n\nheat flows downhill and work does not\n')
+    const add = async (exact: string, color?: string) => await (await s.post('/notes', { doc: 'notes.md', anchor: { ...anchor, quote: { ...anchor.quote, exact } }, body: '', color })).json() as { id: string; color?: string }
+    const first = await add('heat flows downhill', 'confusing')
+    await new Promise((r) => setTimeout(r, 5))
+    await add('work does not', 'confusing')
+    await add('Notes', 'important')
+    await add('plain note')
+    expect(first.color).toBe('confusing')
+    expect(today(s.h).confusing.map((c) => c.anchor.quote.exact)).toEqual(['work does not', 'heat flows downhill'])
+    expect(today(s.h).confusing[0].explained).toBe(false)
+  })
+  it('refuses a colour that has no meaning', async () => {
+    const s = setup()
+    writeFileSync(join(s.root, 'notes.md'), '# Notes\n')
+    expect((await s.post('/notes', { doc: 'notes.md', anchor, body: '', color: 'red' })).status).toBe(400)
+  })
+  it('asks the AI to mark key terms and change nothing else', async () => {
+    const s = setup()
+    const r = await s.post('/ai/jobs', { recipe: 'lesson.improve', lesson: '01-heat.learn.md', focus: 'marks' })
+    const job = await finished(s, (await r.json() as JobSummary).id)
+    expect(job.prompt).toContain('Mark the key terms')
+    expect(job.prompt).toContain('change no other text')
+  })
+})

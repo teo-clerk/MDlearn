@@ -112,6 +112,8 @@ export function compile(source: string, opts: CompileOptions = {}): CompileResul
     const prose = raw.filter((n) => n.type !== 'containerDirective')
     const words = toString({ type: 'root', children: prose }).split(/\s+/).filter(Boolean).length
     if (words > 150) diag('W601', heading, `${words} words`)
+    const marked = markedPhrases(prose), markedWords = marked.join(' ').split(/\s+/).filter(Boolean).length
+    if (marked.length > MAX_MARKS || markedWords > Math.max(MIN_MARKED_WORDS, words / 6)) diag('W610', heading, `${marked.length} marks, ${markedWords} of ${words} words`)
     const expo = toString({ type: 'root', children: prose }).toLowerCase()
     for (const b of blocks) {
       const keys = b.type === 'cloze' || b.type === 'steps' ? b.blanks.filter((x) => x.kind === 'text').flatMap((x) => x.answers) : []
@@ -139,6 +141,24 @@ export function compile(source: string, opts: CompileOptions = {}): CompileResul
 function blockMinutes(b: Block): number {
   if (b.type !== 'video') return WIDGET_MINUTES[b.type] ?? 0
   return b.end !== undefined ? (b.end - (b.start ?? 0)) / 60 : 2
+}
+
+const MAX_MARKS = 3, MIN_MARKED_WORDS = 6
+/** The text inside each `<mark>…</mark>`: Markdown parses the tags as separate nodes around it. */
+function markedPhrases(nodes: RootContent[]): string[] {
+  const out: string[] = []
+  const walk = (list: Nodes[]) => {
+    let open: string | null = null
+    for (const n of list) {
+      const html = n.type === 'html' ? (n as { value?: string }).value ?? '' : ''
+      if (/^<mark\b/i.test(html)) open = ''
+      else if (/^<\/mark>/i.test(html)) { if (open !== null) out.push(open); open = null }
+      else if (open !== null) open += toString(n)
+      else if ('children' in n) walk(n.children)
+    }
+  }
+  walk(nodes)
+  return out
 }
 
 /** Heading text that keeps inline math as `$…$`, so surfaces can render it (ids still use plain text). */

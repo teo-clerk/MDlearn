@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Check, Monitor, Moon, Sun } from 'lucide-react'
 import { useUi, type Theme } from '../state/ui'
 import { ACCENTS, applyAccent, parseHex, savedAccent, swatch, type Accent, type AccentId } from '../lib/accent'
+import { applyColour, colourOn } from '../lib/colour'
 import { LANGS, currentLang, setLang, t } from '../i18n'
 import { Section } from './Section'
 
@@ -15,6 +16,7 @@ const option = (on: boolean) => `inline-flex h-8 items-center gap-1.5 rounded-[6
 export function Appearance() {
   const theme = useUi((s) => s.theme), setTheme = useUi((s) => s.setTheme)
   const [accent, setAccent] = useState<Accent>(savedAccent)
+  const [colour, setColour] = useState(colourOn)
   const custom = parseHex(accent) ? accent : null
   const pick = (a: Accent) => { applyAccent(a); setAccent(a) }
   const themes: [Theme, typeof Sun, string][] = [['light', Sun, t('Light')], ['dark', Moon, t('Dark')], ['system', Monitor, t('Match system')]]
@@ -30,6 +32,10 @@ export function Appearance() {
           ))}
         </div>
       </div>
+      <label className="flex items-start gap-2 text-[13.5px]">
+        <input type="checkbox" checked={colour} onChange={(e) => { setColour(e.target.checked); applyColour(e.target.checked) }} className="mt-0.5" />
+        <span>{t('Colour in notes')}<span className="block text-[12.5px] text-muted">{t('Callouts, formula terms and highlights. Each colour has a job, and icons and text say the same thing.')}</span></span>
+      </label>
       <div>
         <p className="text-[12.5px] text-muted" id="accent-label">{t('Accent colour')}</p>
         <div role="radiogroup" aria-labelledby="accent-label" className="mt-1.5 flex flex-wrap items-center gap-2">

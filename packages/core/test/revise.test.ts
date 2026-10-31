@@ -133,3 +133,17 @@ describe('carriedOver', () => {
     expect(carriedOver([...log, ...copies], 'heat/old', 'heat/new').map((c) => c.id)).toEqual(copies.map((c) => c.id)) // the same ids: never recorded twice
   })
 })
+
+describe('marked words', () => {
+  const lint = (body: string) => compile(lesson(body), { path: '/c/a.learn.md' }).diagnostics.filter((d) => d.code === 'W610')
+  const words = 'word '.repeat(40)
+  it('leaves the key term alone', () => {
+    expect(lint(`## Term\n\nThe <mark>base rate</mark> is what ${words} and also the <mark>prior</mark>.\n`)).toEqual([])
+  })
+  it('warns about a marked sentence', () => {
+    expect(lint(`## Term\n\n<mark>This whole long sentence has been marked by someone who liked it.</mark> ${words}\n`)).toHaveLength(1)
+  })
+  it('warns about too many marks, and looks inside lists', () => {
+    expect(lint(`## Term\n\n${words}\n\n- <mark>a</mark>\n- <mark>b</mark>\n- <mark>c</mark>\n- <mark>d</mark>\n`)).toHaveLength(1)
+  })
+})

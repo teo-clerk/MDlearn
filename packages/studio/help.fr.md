@@ -26,6 +26,12 @@ Les leçons apparaissent au fur et à mesure. Dans l'éditeur, collez ou dépose
 
 Pour changer un cours déjà commencé, ouvrez sa page de présentation. Vous pouvez déplacer ou mettre en pause une leçon, ajouter des fichiers ou demander un changement. Les cartes gardent leur calendrier, même avec de nouveaux titres.
 
+## La couleur dans vos notes
+
+Ici, la couleur a un rôle : le type d'encadré, un terme d'une formule et son explication, le mot clé d'une carte. Sélectionnez un passage pour le
+surligner comme **Important**, **Pas clair** ou **Pour l'examen**, sans rien écrire. Les passages pas clairs vous attendent sur **Aujourd'hui**, et
+ceux de l'examen proposent **Créer une carte**. **Réglages → Apparence → Couleur dans les notes** la désactive.
+
 ## Les pages
 
 | Page | À quoi elle sert |

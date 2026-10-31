@@ -26,6 +26,12 @@ Lessons appear as they are written. In the editor, paste or drop a screenshot to
 
 To change a course after you've started, open its overview page. You can move or pause a lesson, add class files, or ask for a change. Cards keep their schedule, even with new titles.
 
+## Colour in your notes
+
+Colour has a job here: the kind of a callout, a formula term and its explanation, the key word of a card. Select a passage to highlight it as
+**Important**, **Confusing** or **For the exam**, with no typing. Confusing passages wait on **Today**, and exam passages offer **Make a card**.
+**Settings → Appearance → Colour in notes** turns it off.
+
 ## The pages
 
 | Page | What it is for |

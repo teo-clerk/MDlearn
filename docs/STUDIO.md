@@ -447,6 +447,13 @@ same rules in `AGENTS.md`, `lint.mjs --pin` before editing, and a report from `s
 the panel offers *Reconnect to…* or *Let go*. Reconnecting appends copies of the card's reviews under the new key (ids `moved:…`, left out
 of daily counts by `isOriginalReview`) and pins the new card; both choices add the old key to `goals.settled`. The log keeps every event.
 
+**Colour in the reading column.** `web/styles/app.css` has five hues, one set for each theme, used only in the text: callouts with an
+icon each, the first five terms of an explained formula matched with their explanation, `<mark>` on key terms (W610 warns when a card
+marks too much, and *Improve a lesson → Mark key terms* adds them to an existing lesson), and three one-click highlights (`Note.color`:
+`important`, `confusing`, `exam`). A highlight needs no text. *Confusing* passages are listed on Today with *Explain*; *For the exam* offers
+*Make a card*. *Settings → Appearance → Colour in notes* turns every hue grey per device (`data-colour="off"`, set before the first paint by
+`public/theme.js`). Icons, underlines and labels carry the same meaning, so nothing depends on seeing colour.
+
 **Coding assistants.** A folder can carry the instructions, so Codex, OpenCode, Pi and Claude Code need no setup:
 `mdlearn agents [folder]`, or *Get this folder ready for my AI* in the palette (`POST /api/w/:ws/agents/prepare`), writes
 `AGENTS.md`, `CLAUDE.md` (a line that points to it) and `.agents/skills/`, the location those assistants share. It runs only

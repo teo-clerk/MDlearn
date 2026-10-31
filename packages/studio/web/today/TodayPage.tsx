@@ -8,6 +8,7 @@ import { duration } from '../lib/title'
 import { Button, Empty, ErrorNote, MemoryMark, Spinner } from '../ui/primitives'
 import { TopLeft } from '../layout/Shell'
 import { Forecast, Heatmap } from './Charts'
+import { Confusing } from './Confusing'
 import { Leeches } from './Leeches'
 import { GoalsEditor } from './GoalsEditor'
 import { FileText } from 'lucide-react'
@@ -92,6 +93,7 @@ export default function TodayPage({ ws }: { ws: string }) {
           </dl>
           {cal && <p className="mt-3 text-[13.5px] text-muted">{cal}</p>}
           <div className="mt-8 flex flex-col gap-8">
+            <Confusing ws={ws} passages={d.confusing} />
             <Leeches ws={ws} leeches={d.leeches} />
             <GoalsEditor ws={ws} goal={d.goal} paces={d.paces} docs={f.docs} suspended={d.suspended} />
           </div>

@@ -94,7 +94,7 @@ components:
 
 ## Overview
 
-The notes-app standard (Obsidian, Notion), kept minimal and nearly colourless: a warm-grey sidebar, a white
+The notes-app standard (Obsidian, Notion), kept minimal, with colourless chrome and colour with a job in the text: a warm-grey sidebar, a white
 page, an outline/notes panel, hairline borders, and an ink accent. Long technical text is set in a serif
 and is the first thing on screen; the app's chrome is the system sans and stays out of the way. Colour is
 reserved for meaning a reader must not miss: right, nearly right, wrong, and how well a section is remembered
@@ -111,6 +111,13 @@ reserved for meaning a reader must not miss: right, nearly right, wrong, and how
   rating pill (solid / shaky / again), lint results and memory dots. Their soft tints back a result row.
 - **Notes.** Noted passages use a pale yellow highlight (`note-highlight`, stronger when the note is
   active), drawn with the CSS Custom Highlight API so the document's markup never changes.
+- **Colour in the reading column** (`--hue-blue`, `green`, `violet`, `amber`, `rose`). The research says signalling helps when it means
+  something and stays sparse, so colour has jobs here: callouts (note blue, tip green, important violet, warning amber, each with an icon),
+  formula terms (the first five; a term and its explanation match; the rest stay ink), the key term in a card (`<mark>`, at most a few, W610),
+  and your highlights (important amber, confusing rose with a wavy underline, for the exam blue with a straight one). Light and dark are
+  separate sets, each at least 4.5:1 on the page and at least ΔE 11 apart in OKLab under protan, deutan and tritan simulation (15 is the floor in
+  normal vision). The obvious blue and violet looked fine and were 2.4 apart for red-green colour blindness, which is why lightness differs so much
+  between hues. Check any change the same way.
 - **Focus** is a muted indigo outline (`focus`), the one hue that exists only to be found.
 
 ## Typography
@@ -188,7 +195,10 @@ the study card. Borders are 1px hairlines; blockquote and quote rules are 1px.
 
 - Do let the document lead: no banners, hero areas or cards around the reading column.
 - Do put meaning in words first and colour second (verdicts, ratings, memory, lint).
-- Do keep one accent: ink. Use `good` / `warn` / `bad` only for results.
+- Do keep one accent in the app's chrome: ink. Use `good` / `warn` / `bad` only for results.
+- Do keep hues to the reading column, and give each one a job: a callout's kind, a formula term and its explanation, a
+  key term, or a highlight you chose. Each comes with an icon, a shape or a label, and *Colour in notes* turns them grey.
+- Don't add a hue without running the checks below, and don't colour text that is only decoration.
 - Don't add uppercase tracked labels, kickers or eyebrows; use sentence-case `muted` labels.
 - Don't use side stripes thicker than 1px, gradients, glass, or coloured icon tiles.
 - Don't render AI output as HTML; it goes through the Markdown/KaTeX renderers like everything else.

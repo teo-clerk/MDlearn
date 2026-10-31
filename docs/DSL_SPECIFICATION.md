@@ -971,6 +971,7 @@ Format of the compact report (one line per diagnostic, designed for an agent to 
 | I607 | info | `time-drift` | Declared `time` differs >50% from the compiler estimate (the player shows the estimate). |
 | W608 | warning | `heading-promoted` | No `##` cards; `###` headings promoted to cards. |
 | W609 | warning | `widget-in-intro` | Widgets belong in cards; a widget before the first `##` is locked. |
+| W610 | warning | `too-much-marked` | A card with more than three `<mark>`s, or with over a sixth of its words marked: mark the key term, not the sentence. |
 
 **Math**
 
