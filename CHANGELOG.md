@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.3.0 — 2026-10-31
 
 **Study papers from SciNet.** *Import → From SciNet* finds a paper in your SciNet library, by meaning or by title, and
 brings it into the folder with its details, ready for *Make a course*. Most papers arrive with formulas as plain
