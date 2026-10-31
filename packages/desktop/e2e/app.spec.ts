@@ -53,8 +53,7 @@ test('the capture window saves one thought into the folder and closes', async ()
   const closed = capture.waitForEvent('close')
   const box = capture.getByRole('textbox', { name: 'Capture a thought' })
   await box.fill('A thought from anywhere')
-  await box.press('Enter')
-  await closed
+  await Promise.all([closed, box.press('Enter').catch(() => {})]) // Enter closes the window, sometimes before the press has returned
   await win.goto(new URL(today, win.url()).href)
   await expect(win.getByText('A thought from anywhere')).toBeVisible()
 })
