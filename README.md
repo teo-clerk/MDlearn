@@ -139,7 +139,7 @@ accuracy, what's due and your streak.
 **A good habit:** one short session a day (`mdlearn review`, 5–10 minutes). Add new lessons for the
 document you're reading this week, rather than converting everything up front.
 
-## Use with any AI: Claude Code, Claude.ai, ChatGPT
+## Use with any AI: Claude Code, Codex, OpenCode, Pi, Claude.ai, ChatGPT
 
 Ask any assistant for a course on a topic, with or without your notes; it writes MDlearn lessons with
 the same method Studio uses (retrieval every few cards, misconception feedback, worked examples that
@@ -149,6 +149,7 @@ real paths; Studio shows them under **Settings → Use MDlearn in other apps**.
 | Where | How |
 |---|---|
 | **Claude Code**, any folder | Install the plugin once: `claude plugin marketplace add "/path/to/MDlearn/packages/studio/dist/integrations/claude-plugin"`, then `claude plugin install mdlearn@mdlearn`. In any project, `/mdlearn:course how vaccines work, beginner` writes a lint-checked course into that folder; `/mdlearn:study` quizzes you. The plugin brings the MCP server (one file, no setup), the four skills and the ready-made prompts `create_course`, `companion_lessons` and `study`. |
+| **Codex, OpenCode, Pi**, one folder | Nothing to install: `mdlearn agents "<folder>"` (or Ctrl+K in Studio → *Get this folder ready for my AI*) writes `AGENTS.md` and `.agents/skills/`. Start the assistant there and ask for a course. `mdlearn agents --mcp` prints how to add the tools that quiz you. |
 | **Claude.ai** | Upload `packages/studio/dist/integrations/mdlearn-skill.zip` under Settings → Capabilities → Skills; ask "Make an MDlearn course on …". |
 | **ChatGPT, Gemini, any chat** | Paste the output of `mdlearn prompt` into the chat (or a Custom GPT's or Project's instructions; `mdlearn prompt --full` is the whole guide, to attach as a file). Then paste the chat's answer into Studio → *Import* → **From a chat**, or run `mdlearn import-chat answer.md`: every file is checked, the good ones are saved in a new course folder, and errors become a message to paste back into the chat. |
 

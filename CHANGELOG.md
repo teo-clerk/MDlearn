@@ -10,6 +10,10 @@ do, in Studio, the CLI and the MCP tools. Lessons sit under their `course.md`.
 `<img>`; one that can't be loaded leaves its description and a link. Paste or drop a screenshot into the editor and
 it's saved under `assets/`. Click any picture, or press Enter on it, to see it larger.
 
+**Any coding assistant.** Codex, OpenCode, Pi and Claude Code can write lessons in a folder with nothing to install:
+`mdlearn agents`, or *Get this folder ready for my AI* in Ctrl+K, puts the instructions in the folder. Your own
+`AGENTS.md` or `CLAUDE.md` is never replaced. Optional MCP tools let them quiz you too (Settings → Use MDlearn in other apps).
+
 ## 1.3.0 — 2026-10-31
 
 **Study papers from SciNet.** *Import → From SciNet* finds a paper in your SciNet library, by meaning or by title, and

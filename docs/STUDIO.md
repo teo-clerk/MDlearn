@@ -426,6 +426,15 @@ the same fixed prompt the MCP server's `create_course` uses (`coursePrompt` in c
 given (read, never edited), otherwise from well-established knowledge with doubtful claims flagged
 `<!-- added: verify … -->` and sources listed. Its write scope is that new folder only.
 
+**Coding assistants.** A folder can carry the instructions, so Codex, OpenCode, Pi and Claude Code need no setup:
+`mdlearn agents [folder]`, or *Get this folder ready for my AI* in the palette (`POST /api/w/:ws/agents/prepare`), writes
+`AGENTS.md`, `CLAUDE.md` (a line that points to it) and `.agents/skills/`, the location those assistants share. It runs only
+when asked, never replaces an `AGENTS.md` or `CLAUDE.md` someone wrote, and writes nothing outside the folder.
+The MCP tools are optional: `POST /api/integrations/mcp` (local only) or `mdlearn agents --mcp` copies the one-file server
+to `~/.mdlearn/mcp`, because an installed app's own path can change, and gives each assistant's command. MDlearn prints
+them and never edits another app's settings. Tested with Codex 0.164, Pi 1.4 and OpenCode 2.2.5, whose `opencode.json` takes
+`mcp.<name>` (the `mcp.servers` form is for a later version).
+
 **Settings → Use MDlearn in other apps** (`GET /api/integrations`, files under `/api/integrations/…`) shows the
 Claude Code plugin's install commands (on the computer running Studio only), the Claude.ai skill download, and
 the prompt for other chats; `scripts/build-integrations.ts` builds them into `dist/integrations/` on every build.

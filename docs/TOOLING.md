@@ -114,6 +114,7 @@ live in `MDlearn/skills/` and `MDlearn/docs/AGENT_SKILL.md`.
 
 | Output | For |
 |---|---|
+| `agent-folder/` | `AGENTS.md` and the four skills with a one-file linter: `mdlearn agents` copies them into a folder (`skills/` becomes `.agents/skills/`), so Codex, OpenCode, Pi and Claude Code can write lessons there with nothing installed. |
 | `claude-plugin/` | A Claude Code marketplace with the `mdlearn` plugin: the four skills, `/mdlearn:course` and `/mdlearn:study`, and the MCP server bundled into one file (`mcp/server.mjs`, with its guide in `mcp/guide/`). `claude plugin marketplace add <dir>` then `claude plugin install mdlearn@mdlearn`; `claude --plugin-dir <dir>/mdlearn` tries it for one session |
 | `mdlearn-skill.zip` | Claude.ai (Settings → Capabilities → Skills): the course skill, the DSL spec and `scripts/lint.mjs`, the checker as one file |
 | `MDLEARN_PROMPT.md` | Chats without tools: [CHAT_PROMPT.md](CHAT_PROMPT.md) below its marker line (under 8,000 characters, so it fits a Custom GPT's instructions); its example is compiled by `check-docs` |

@@ -2,8 +2,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation } from 'wouter'
 import { useQueryClient } from '@tanstack/react-query'
-import { BookA, BookOpenCheck, ChartNoAxesColumn, ClipboardCheck, CloudOff, Cpu, FileCode, FileText, FolderOpen, GraduationCap, Inbox, MessageSquareText, Network, Search, Settings, Sigma, TextSearch, LifeBuoy } from 'lucide-react'
-import { inboxApi, keys, search, useTree } from '../api/queries'
+import { BookA, BookOpenCheck, ChartNoAxesColumn, ClipboardCheck, CloudOff, Cpu, FileCode, FileText, FolderOpen, GraduationCap, Inbox, LifeBuoy, MessageSquareText, Network, Search, Settings, Sigma, TerminalSquare, TextSearch } from 'lucide-react'
+import { agentsApi, inboxApi, keys, search, useSession, useTree } from '../api/queries'
 import { MAX_CAPTURE } from '../inbox/CaptureForm'
 import { Kbd } from '../ui/primitives'
 import { useUi } from '../state/ui'
@@ -41,6 +41,7 @@ export function CommandPalette({ ws }: { ws: string }) {
     const t = setTimeout(() => { search(ws, q.trim()).then(setHits).catch(() => setHits([])) }, 180)
     return () => clearTimeout(t)
   }, [q, ws])
+  const canWrite = useSession().data?.caps.includes('write')
   const items = useMemo<Item[]>(() => {
     const actions: Item[] = [
       { id: 'a-study', icon: BookOpenCheck, title: t('Study now'), detail: tree.data?.totals.due ? tp(tree.data.totals.due, '{n} due', '{n} due') : undefined, href: `/w/${ws}/study`, group: t('Actions') },
@@ -52,6 +53,10 @@ export function CommandPalette({ ws }: { ws: string }) {
       { id: 'a-formulas', icon: Sigma, title: t('Formulas'), href: `/w/${ws}/formulas`, group: t('Actions') },
       { id: 'a-glossary', icon: BookA, title: t('Glossary'), href: `/w/${ws}/glossary`, group: t('Actions') },
       { id: 'a-map', icon: Network, title: t('Map of documents'), href: `/w/${ws}/map`, group: t('Actions') },
+      ...(canWrite ? [{ id: 'a-agents', icon: TerminalSquare, title: t('Get this folder ready for my AI'), detail: t('Lets Codex, OpenCode, Pi or Claude Code write lessons here'), group: t('Actions'), run: () => {
+        setPalette(false)
+        agentsApi.prepare(ws).then((r) => notify(r.kept.length ? t('Ready, and your own {file} was kept. Add a line to it: follow .agents/skills/mdlearn-course/SKILL.md.', { file: r.kept[0] }) : t('Ready. Start your assistant in this folder and ask for a course.')), (e: Error) => notify(e.message))
+      } }] : []),
       { id: 'a-open', icon: FolderOpen, title: t('Open or upload a folder'), href: '/', group: t('Actions') },
       { id: 'a-settings', icon: Settings, title: t('Settings'), detail: t('Appearance, language, local AI, and MDlearn in Claude Code, Claude.ai and ChatGPT'), href: `/w/${ws}/settings`, group: t('Actions') },
       { id: 'a-local-ai', icon: Cpu, title: t('Local AI models'), detail: t('Download a model, or choose the one Studio answers with'), href: `/w/${ws}/settings#local-ai`, group: t('Actions') },
@@ -69,7 +74,7 @@ export function CommandPalette({ ws }: { ws: string }) {
       inboxApi.capture(ws, { text: q.trim().slice(0, MAX_CAPTURE) }).then(() => { void qc.invalidateQueries({ queryKey: keys.inbox(ws) }); setPalette(false); notify(t('Saved to your inbox')) }, (e: Error) => setCaptureError(e.message))
     } }
     return [...ranked, ...text, ...(q.trim().split(/\s+/).length >= 3 ? [askItem] : []), captureItem]
-  }, [q, hits, tree.data, ws])
+  }, [q, hits, tree.data, ws, canWrite])
   useEffect(() => { setSel((s) => Math.min(s, Math.max(0, items.length - 1))) }, [items.length])
   // keep the chosen row in view while moving with the arrow keys
   useEffect(() => { if (palette) document.getElementById(`pi-${sel}`)?.scrollIntoView({ block: 'nearest' }) }, [sel, palette])

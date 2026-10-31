@@ -235,5 +235,9 @@ export const helpApi = {
   tourDone: (tourDone: boolean) => api.post<{ tourDone: boolean }>('/api/onboarding', { tourDone }),
   tutorial: (reset = false) => api.post<{ id: string; name: string; root: string }>('/api/workspaces/tutorial', { reset }),
 }
+export const agentsApi = {
+  prepare: (ws: string) => api.post<import('../../shared/types').PreparedFolder>(`/api/w/${ws}/agents/prepare`, {}),
+  mcp: () => api.post<import('../../shared/types').McpSetup>('/api/integrations/mcp', {}),
+}
 export const useIntegrations = () => useQuery({ queryKey: ['integrations'], queryFn: () => api.get<Integrations>('/api/integrations'), staleTime: Infinity })
 export const useHelpDoc = () => useQuery({ queryKey: ['help', currentLang()], queryFn: () => api.get<{ doc: import('@mdlearn/core').DocModel }>(`/api/help?lang=${currentLang()}`), staleTime: Infinity })

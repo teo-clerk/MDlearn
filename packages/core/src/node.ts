@@ -11,6 +11,8 @@ import type { Lesson } from './ast.js'
 import { mergeLogs, type ReviewEvent } from './learn/srs.js'
 
 /** Folders never treated as curriculum content (shared with file watchers). */
+/** Instructions for coding assistants at the top of a folder: not notes. */
+const ASSISTANT_FILES: ReadonlySet<string> = new Set(['AGENTS.md', 'CLAUDE.md', 'GEMINI.md'])
 export const IGNORED_DIRS: ReadonlySet<string> = new Set(['node_modules', '.git', '.venv', 'venv', '.claude', '.pytest_cache', '.ruff_cache', '__pycache__', 'dist', '.mdlearn', 'learn'])
 
 /** Outline cache keyed by absolute path + mtime, so long sessions re-read only changed documents. */
@@ -113,7 +115,7 @@ export function workspace(root: string, learnDirName = 'learn'): Workspace {
 }
 /** Source documents of a curriculum (Markdown outside learn/, tooling and hidden dirs). */
 export function sourceDocs(ws: Workspace): string[] {
-  return walk(ws.root, (f) => f.endsWith('.md') && !f.endsWith('.learn.md'))
+  return walk(ws.root, (f) => f.endsWith('.md') && !f.endsWith('.learn.md')).filter((p) => !(dirname(p) === ws.root && ASSISTANT_FILES.has(basename(p))))
 }
 /** `00_FOUNDATIONS/04_sar….md` → `<learn>/00_FOUNDATIONS/04_sar…/` */
 export function lessonDirFor(ws: Workspace, docAbs: string): string {

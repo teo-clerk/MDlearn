@@ -7,6 +7,7 @@ import { bodyLimit } from 'hono/body-limit'
 import { readFileSync, statSync, existsSync } from 'node:fs'
 import { MEDIA_TYPES, mediaResponse } from './media.js'
 import { MAX_PICTURE_BYTES, savePicture } from './pictures.js'
+import { installMcp, mcpCommands, prepareFolder } from './agents.js'
 import { extname, relative, join, dirname, posix } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { z } from 'zod'
@@ -51,7 +52,7 @@ import type { EventBus, Envelope } from './bus.js'
 import type { SettingsStore } from './settings.js'
 import { Latex } from './latex.js'
 import { TEX_FILE, texRoot } from './latex-files.js'
-import type { SessionInfo, LessonResponse, CompileResponse, PreviewResponse, Integrations, MapNode, MapResponse, Hardware, ImportResult, LocalAiInfo } from '../shared/types.js'
+import type { SessionInfo, LessonResponse, CompileResponse, PreviewResponse, Integrations, MapNode, MapResponse, Hardware, ImportResult, LocalAiInfo, McpSetup, PreparedFolder } from '../shared/types.js'
 
 /** Languages with a translated help page (help.<lang>.md). */
 const HELP_LANGS = new Set(['it', 'es', 'fr', 'ca'])
@@ -158,6 +159,11 @@ export function createApp(deps: Deps): Hono {
       skillZip: existsSync(integration('mdlearn-skill.zip')), guide: existsSync(integration('MDLEARN_GUIDE.md')),
     })
   })
+  app.post('/api/integrations/mcp', need('fs', o), (c) => {
+    const server = installMcp(integration('claude-plugin'))
+    return c.json<McpSetup>({ server, commands: mcpCommands(server) })
+  })
+  app.post('/api/w/:ws/agents/prepare', need('write', o), (c) => c.json<PreparedFolder>(prepareFolder(ws(c).root, integration('agent-folder'))))
   app.get('/api/integrations/:file{mdlearn-skill\\.zip|MDLEARN_GUIDE\\.md}', need('read', o), (c) => {
     const name = c.req.param('file'), file = integration(name)
     if (!existsSync(file)) throw new UserError('not-found', 'Not built yet.')

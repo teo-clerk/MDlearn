@@ -17,6 +17,8 @@ import { ClaudeEngine, claudeStatus, claudeOnce } from './ai/claude.js'
 import { Latex, fakeEngines, fakeRunner } from './latex.js'
 import { FakeEngine, fakeOnce } from './ai/fake.js'
 
+export { installMcp, mcpCommands, prepareFolder, READ_THE_SKILL } from './agents.js'
+
 export interface StudioOptions {
   root?: string
   port?: number

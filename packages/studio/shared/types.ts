@@ -218,6 +218,9 @@ export interface ScinetPaper { id: number; title: string; year: number | null; s
 export interface ScinetDetail extends ScinetPaper { authors: string[]; venue: string | null; abstract: string | null; doi: string | null; arxivId: string | null; pages: number | null; parsedBy: string | null; formulas: 'latex' | 'text' }
 /** MDlearn for other assistants: the prompt for chats, where the Claude Code plugin is, what can be downloaded. */
 export interface Integrations { prompt: string; pluginDir?: string; skillZip: boolean; guide: boolean }
+/** What getting a folder ready for coding assistants wrote, and which of the person's own files it left alone. */
+export interface PreparedFolder { written: string[]; kept: string[] }
+export interface McpSetup { server: string; commands: { codex: string; pi: string; opencode: string } }
 /** A pasted chat answer, checked before anything is written. */
 export interface ChatCheck {
   folder: string

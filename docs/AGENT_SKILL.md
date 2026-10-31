@@ -235,8 +235,8 @@ Callouts: `note` (side detail), `tip` (intuition; `[label]{fold}` = optional dep
 
 ## Output
 
-- **Claude Code**: write `NN-slug.learn.md` files (and `course.md` for several lessons) in the folder the
-  user names, else next to the notes; then validate (step 6).
+- **A coding assistant** (Claude Code, Codex, OpenCode, Pi): write `NN-slug.learn.md` files (and `course.md` for
+  several lessons) in the folder the user names, else next to the notes; then validate (step 6).
 - **Chat**: print the raw file content; before each file of a multi-file answer put a line
   `<!-- file: NN-slug.learn.md -->`.
 

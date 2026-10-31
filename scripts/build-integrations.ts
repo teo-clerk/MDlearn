@@ -4,6 +4,8 @@
 //   mdlearn-skill.zip    a skill to upload to Claude.ai (Settings → Capabilities → Skills), with a bundled linter
 //   MDLEARN_PROMPT.md    the prompt for ChatGPT, Gemini or any chat without tools (from docs/CHAT_PROMPT.md)
 //   MDLEARN_GUIDE.md     the full guide to attach as a knowledge file (method + DSL specification)
+//   agent-folder/        what a folder needs for any coding assistant (Codex, OpenCode, Pi, Claude Code): AGENTS.md and
+//                        the skills, copied in by `mdlearn agents` or Studio (skills/ becomes .agents/skills/)
 // Install the plugin: claude plugin marketplace add <…>/integrations/claude-plugin && claude plugin install mdlearn@mdlearn
 import { build } from 'esbuild'
 import { cpSync, mkdirSync, rmSync, writeFileSync, readFileSync, existsSync, readdirSync } from 'node:fs'
@@ -81,6 +83,24 @@ for (const f of readdirSync(skillDir, { recursive: true, withFileTypes: true }))
   if (f.isFile()) entries[['mdlearn-course', ...relative(skillDir, join(f.parentPath, f.name)).split(sep)].join('/')] = readFileSync(join(f.parentPath, f.name))
 }
 writeFileSync(join(out, 'mdlearn-skill.zip'), zipSync(entries, { level: 9 }))
+
+// ---------------------------------------------------------------- a folder any coding assistant can work in
+const agentDir = join(out, 'agent-folder'), agentSkills = join(agentDir, 'skills')
+const LINT = '.agents/skills/mdlearn-course/scripts/lint.mjs'
+mkdirSync(agentDir, { recursive: true })
+cpSync(join(repo, 'docs/FOLDER_AGENTS.md'), join(agentDir, 'AGENTS.md'))
+cpSync(skillDir, join(agentSkills, 'mdlearn-course'), { recursive: true })
+writeFileSync(join(agentSkills, 'mdlearn-course/SKILL.md'), read('docs/AGENT_SKILL.md').replace(
+  '6. **Validate.** Run `mdlearn lint <file>` (or the `lint_lesson` MCP tool)',
+  `6. **Validate.** Run \`node ${LINT} <file>\` from the course folder (or the \`lint_lesson\` MCP tool)`,
+))
+for (const name of ['mdlearn-curriculum', 'mdlearn-tutor', 'mdlearn-visuals']) cpSync(join(repo, 'skills', name), join(agentSkills, name), { recursive: true, dereference: true })
+// the Agent Skills format the other assistants load: only these two keys, and a description they will accept
+for (const name of readdirSync(agentSkills)) {
+  const head = /^---\n([\s\S]*?)\n---/.exec(readFileSync(join(agentSkills, name, 'SKILL.md'), 'utf8'))?.[1] ?? ''
+  const keys = [...head.matchAll(/^([a-zA-Z-]+):/gm)].map((m) => m[1]), about = /^description: (.*)$/m.exec(head)?.[1] ?? ''
+  if (keys.join() !== 'name,description' || !about || about.length > 1024) throw new Error(`${name}: SKILL.md needs only name and a description of at most 1024 characters`)
+}
 rmSync(zipDir, { recursive: true, force: true })
 
 // ---------------------------------------------------------------- chats without tools
