@@ -20,7 +20,7 @@ export interface TreeDoc {
   /** Mean predicted recall of seen cards (FSRS), null when nothing has been studied. */
   memory: number | null
 }
-export interface Tree { root: string; name: string; docs: TreeDoc[]; orphanLessons: TreeDoc['lessons']; latex: TexDoc[]; totals: { docs: number; lessons: number; cards: number; due: number; seen: number } }
+export interface Tree { root: string; name: string; docs: TreeDoc[]; orphanLessons: TreeDoc['lessons']; duplicateLessons: { id: string; paths: string[] }[]; latex: TexDoc[]; totals: { docs: number; lessons: number; cards: number; due: number; seen: number } }
 /** A LaTeX document in the folder (opens in the LaTeX editor). */
 export interface TexDoc { path: string; title: string }
 

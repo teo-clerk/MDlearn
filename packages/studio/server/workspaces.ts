@@ -5,7 +5,7 @@ import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statS
 import { basename, dirname, join, relative, resolve, sep } from 'node:path'
 import { homedir } from 'node:os'
 import { parseDocument, report, type Lesson, type DocModel } from '@mdlearn/core'
-import { workspace, sourceDocs, loadCourse, loadDoc, lessonDirFor, loadProgress, resolverFor, fileExistsFor, inRoot, checkJs, IGNORED_DIRS, type Workspace } from '@mdlearn/core/node'
+import { workspace, sourceDocs, loadLessons, lessonPaths, lessonOfDoc, loadDoc, loadProgress, type LoadedLesson, resolverFor, fileExistsFor, inRoot, checkJs, IGNORED_DIRS, type Workspace } from '@mdlearn/core/node'
 import type { SettingsStore } from './settings.js'
 import { texDocs } from './latex-files.js'
 import type { Tree, TreeDoc, WorkspaceSummary, BrowseResult } from '../shared/types.js'
@@ -45,7 +45,7 @@ export class Workspaces {
     const lib = this.settings.get().libraryDir
     return this.settings.get().recents.filter((r) => existsSync(r.root)).map((r) => {
       const ws = workspace(r.root)
-      return { id: workspaceId(r.root), name: basename(r.root), root: r.root, docs: sourceDocs(ws).length, lessons: countLessons(ws.learnDir), lastOpened: r.lastOpened, inLibrary: r.root.startsWith(lib + sep) }
+      return { id: workspaceId(r.root), name: basename(r.root), root: r.root, docs: sourceDocs(ws).length, lessons: lessonPaths(ws).length, lastOpened: r.lastOpened, inLibrary: r.root.startsWith(lib + sep) }
     })
   }
 
@@ -75,7 +75,7 @@ export class Workspaces {
   }
 
   tree(h: Handle): Tree {
-    const loaded = loadCourse(h.ws.learnDir)
+    const loaded = loadLessons(h.ws)
     const progress = safeProgress(h.ws)
     const lessons = loaded.map((l) => l.lesson).filter((l): l is Lesson => !!l)
     const rep = report(lessons, progress.reviews, Date.now(), progress.attempts)
@@ -87,8 +87,7 @@ export class Workspaces {
     const used = new Set<string>()
     const docs: TreeDoc[] = sourceDocs(h.ws).map((abs) => {
       const { outline } = loadDoc(abs, h.root)
-      const dir = lessonDirFor(h.ws, abs) + sep
-      const mine = loaded.filter((l) => l.path.startsWith(dir))
+      const mine = loaded.filter((l) => lessonOfDoc(h.ws, abs, l.path))
       mine.forEach((l) => used.add(l.path))
       const stats = mine.map((l) => (l.lesson ? perLesson.get(l.lesson.id) : undefined)).filter((r) => !!r)
       const seen = stats.reduce((n, r) => n + r.seen, 0)
@@ -100,7 +99,7 @@ export class Workspaces {
       }
     })
     const orphanLessons = loaded.filter((l) => !used.has(l.path)).map(lessonRow)
-    return { root: h.root, name: h.name, docs, orphanLessons, latex: texDocs(h.root),
+    return { root: h.root, name: h.name, docs, orphanLessons, duplicateLessons: duplicates(loaded, h.root), latex: texDocs(h.root),
       totals: { docs: docs.length, lessons: loaded.length, cards: rep.totals.cards, due: rep.totals.due, seen: rep.totals.seen } }
   }
 
@@ -145,14 +144,11 @@ export class UserError extends Error {
   constructor(public code: string, message: string) { super(message) }
 }
 
-function countLessons(dir: string): number {
-  if (!existsSync(dir)) return 0
-  let n = 0
-  for (const e of readdirSync(dir, { withFileTypes: true })) {
-    if (e.isDirectory() && !e.name.startsWith('.')) n += countLessons(join(dir, e.name))
-    else if (e.name.endsWith('.learn.md')) n++
-  }
-  return n
+/** Lessons that share an id: their cards would share one review history. */
+function duplicates(loaded: LoadedLesson[], root: string): Tree['duplicateLessons'] {
+  const byId = new Map<string, string[]>()
+  for (const l of loaded) if (l.lesson) byId.set(l.lesson.id, [...(byId.get(l.lesson.id) ?? []), posix(relative(root, l.path))])
+  return [...byId].filter(([, paths]) => paths.length > 1).map(([id, paths]) => ({ id, paths }))
 }
 /** A broken progress file must not take the library down; the study views report it instead. */
 function safeProgress(ws: Workspace) {

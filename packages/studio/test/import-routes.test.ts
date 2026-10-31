@@ -104,7 +104,7 @@ describe('import from a chat', () => {
     expect(r.files).toEqual([{ path: 'tides/course.md', kind: 'document' }, { path: 'tides/01-why.learn.md', kind: 'lesson' }])
     expect(r.warnings.join(' ')).toMatch(/02-bad\.learn\.md was not saved/)
     expect(r.fix).toMatch(/E202/)
-    expect(readFileSync(join(root, 'tides/01-why.learn.md'), 'utf8')).toBe(lesson('Why'))
+    expect(readFileSync(join(root, 'tides/01-why.learn.md'), 'utf8')).toBe(lesson('Why').replace('---\n', '---\nid: tides-why\n'))
     // a second import goes to a new folder instead of touching the first
     expect((await (await json('/import/chat/check', { text: answer })).json() as { folder: string }).folder).toBe('tides-2')
   })

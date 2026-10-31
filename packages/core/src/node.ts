@@ -101,6 +101,9 @@ export function loadCourse(learnDir: string): LoadedLesson[] {
   if (!existsSync(learnDir)) return []
   return walk(learnDir, (f) => f.endsWith('.learn.md'), false).map(loadLesson)
 }
+/** Every lesson file of a folder: companions in learn/, and courses an assistant wrote anywhere else in it. */
+export const lessonPaths = (ws: Workspace): string[] => walk(ws.root, (f) => f.endsWith('.learn.md'), false)
+export const loadLessons = (ws: Workspace): LoadedLesson[] => lessonPaths(ws).map(loadLesson)
 
 // ---------------------------------------------------------------- curriculum layout
 export interface Workspace { root: string; learnDir: string }
@@ -116,6 +119,11 @@ export function sourceDocs(ws: Workspace): string[] {
 export function lessonDirFor(ws: Workspace, docAbs: string): string {
   return join(ws.learnDir, relative(ws.root, docAbs).replace(/\.md$/, ''))
 }
+/** A lesson belongs to a document as a companion in learn/<doc>/, or by sitting beside a course.md overview. */
+export function lessonOfDoc(ws: Workspace, docAbs: string, lessonAbs: string): boolean {
+  if (lessonAbs.startsWith(lessonDirFor(ws, docAbs) + sep)) return true
+  return basename(docAbs).toLowerCase() === 'course.md' && dirname(lessonAbs) === dirname(docAbs)
+}
 /** Resolve a document reference: a path relative to the root, or a unique file-name fragment. */
 export function findDoc(ws: Workspace, ref: string): string | null {
   const direct = resolve(ws.root, ref)
@@ -130,13 +138,12 @@ export interface DocStatus {
   planned: number; existing: number; errors: number; warnings: number; cards: number; widgets: number
 }
 export function curriculumStatus(ws: Workspace, filter?: string): DocStatus[] {
-  const lessons = loadCourse(ws.learnDir)
+  const lessons = loadLessons(ws)
   return sourceDocs(ws)
     .filter((p) => !filter || relative(ws.root, p).toLowerCase().includes(filter.toLowerCase()))
     .map((abs) => {
       const { outline } = loadDoc(abs, ws.root)
-      const dir = lessonDirFor(ws, abs)
-      const mine = lessons.filter((l) => l.path.startsWith(dir + sep))
+      const mine = lessons.filter((l) => lessonOfDoc(ws, abs, l.path))
       const ok = mine.map((l) => l.lesson).filter((l): l is Lesson => !!l)
       return {
         doc: relative(ws.root, abs).split(sep).join('/'), title: outline.title, kind: outline.kind, words: outline.words,

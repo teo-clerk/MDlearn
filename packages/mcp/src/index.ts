@@ -16,7 +16,7 @@ import {
   type Lesson,
 } from '@mdlearn/core'
 import {
-  workspace, curriculumStatus, findDoc, loadDoc, planFor, loadCourse, loadProgress, loadGoals, appendProgress, compileSource, compileFile, searchCurriculum, inRoot as insideRoot,
+  workspace, curriculumStatus, findDoc, loadDoc, planFor, loadLessons, loadProgress, loadGoals, appendProgress, compileSource, compileFile, searchCurriculum, inRoot as insideRoot,
 } from '@mdlearn/core/node'
 
 // a plugin's .mcp.json may pass an unexpanded "${…}" when the host does not know the variable
@@ -28,7 +28,7 @@ const server = new McpServer({ name: 'mdlearn', version: '1.3.0' })
 const text = (s: string) => ({ content: [{ type: 'text' as const, text: s }] })
 const json = (v: unknown) => text(JSON.stringify(v, null, 1))
 const error = (s: string) => ({ content: [{ type: 'text' as const, text: s }], isError: true })
-const lessons = (): Lesson[] => loadCourse(ws.learnDir).map((l) => l.lesson).filter((l): l is Lesson => !!l)
+const lessons = (): Lesson[] => loadLessons(ws).map((l) => l.lesson).filter((l): l is Lesson => !!l)
 const inRoot = (p: string) => insideRoot(ws.root, p)
 const RO = { readOnlyHint: true, openWorldHint: false }
 

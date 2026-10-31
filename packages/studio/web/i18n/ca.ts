@@ -1202,4 +1202,5 @@ export default {
   'That is not an inbox file.': 'Això no és un fitxer de la safata.',
   'Today’s inbox file is full. Sort some of it first.': 'El fitxer de la safata d’avui és ple. Endreça’n una part primer.',
   'That section is no longer in the document.': 'Aquesta secció ja no és al document.',
+  'Two lessons have the id {id}, so they share their progress. Give one a different id in its frontmatter.': 'Dues lliçons tenen l’id {id}, així que comparteixen el progrés. Dona-li a una d’elles un altre id al frontmatter.',
 } satisfies Dict

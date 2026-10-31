@@ -2,7 +2,7 @@
 // suggests, per idea, covered / partly / missing. A suggestion only: the learner still rates themselves.
 import { z } from 'zod'
 import { locate, toMarkdown, type Lesson } from '@mdlearn/core'
-import { loadCourse } from '@mdlearn/core/node'
+import { loadLessons } from '@mdlearn/core/node'
 import { ollamaChat, type OllamaConfig } from './ollama.js'
 import type { Handle } from '../workspaces.js'
 import { UserError } from '../workspaces.js'
@@ -20,7 +20,7 @@ const SCHEMA = {
   },
 }
 export async function judge(h: Handle, cfg: OllamaConfig, widgetId: string, text: string): Promise<JudgeResult> {
-  const lessons = loadCourse(h.ws.learnDir).map((l) => l.lesson).filter((l): l is Lesson => !!l)
+  const lessons = loadLessons(h.ws).map((l) => l.lesson).filter((l): l is Lesson => !!l)
   const loc = locate(lessons, widgetId)
   if (!loc || loc.widget.type !== 'explain') throw new UserError('not-found', 'Feedback is available for explanation cards only.')
   const ideas = loc.widget.ideas.map((i, k) => `${k + 1}. ${toMarkdown(i).replace(/\s+/g, ' ')}`).join('\n')

@@ -5,7 +5,7 @@ import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parseArgs } from 'node:util'
 import { formatDiagnostic, severityOf, sectionText, studyQueue, report, whenText, displayTitle, leeches, splitBundle, planBundle, fixMessage, type Lesson } from '@mdlearn/core'
-import { compileFile, compileSource, inRoot, workspace, curriculumStatus, findDoc, loadDoc, planFor, loadCourse, loadProgress, loadGoals, scaffoldLessons, type Workspace } from '@mdlearn/core/node'
+import { compileFile, compileSource, inRoot, workspace, curriculumStatus, findDoc, loadDoc, planFor, loadLessons, lessonPaths, loadProgress, loadGoals, scaffoldLessons, type Workspace } from '@mdlearn/core/node'
 import { outlineText } from './author.js'
 import { reviewSession } from './session.js'
 import { bold, dim, out, fail, plural, closest, wrap } from './ui.js'
@@ -100,7 +100,7 @@ function findRoot(): string {
 }
 const ws: Workspace = workspace(findRoot())
 const needLearn = () => {
-  if (!existsSync(ws.learnDir)) fail(`no learn/ folder in ${ws.root}. Run inside a curriculum (e.g. ~/CODING/ESA-PROJECTS) or pass --root <dir>.`)
+  if (!lessonPaths(ws).length) fail(`no lessons in ${ws.root}. Run inside a folder with lessons (e.g. ~/CODING/ESA-PROJECTS) or pass --root <dir>.`)
 }
 const doc = (ref?: string) => (ref && findDoc(ws, ref)) || fail(ref ? `no document matches "${ref}" in ${ws.root}. Try \`mdlearn status\` to list documents.` : 'which document? e.g. mdlearn outline 04_sar')
 
@@ -110,10 +110,10 @@ function lessonFiles(p: string): string[] {
   if (statSync(abs).isFile()) return [abs]
   return readdirSync(abs, { recursive: true }).map(String).filter((f) => f.endsWith('.learn.md')).map((f) => join(abs, f)).sort()
 }
-const lessons = (): Lesson[] => loadCourse(ws.learnDir).map((l) => l.lesson).filter((l): l is Lesson => !!l)
+const lessons = (): Lesson[] => loadLessons(ws).map((l) => l.lesson).filter((l): l is Lesson => !!l)
 
 async function studio(): Promise<void> {
-  const folder = args[0] ? resolve(args[0]) : existsSync(ws.learnDir) ? ws.root : undefined
+  const folder = args[0] ? resolve(args[0]) : lessonPaths(ws).length ? ws.root : undefined
   if (args[0] && !existsSync(folder!)) fail(`no such folder: ${args[0]}`)
   let mod: typeof import('@mdlearn/studio/server')
   try { mod = await import('@mdlearn/studio/server') } catch { return fail('MDlearn Studio is not installed or not built (npm run build).') }
@@ -268,8 +268,7 @@ async function main(): Promise<void> {
       return
     }
     case 'lint': {
-      const targets = args.length ? args : existsSync(ws.learnDir) ? [ws.learnDir] : fail('what should I check? e.g. mdlearn lint learn/')
-      const files = targets.flatMap(lessonFiles)
+      const files = args.length ? args.flatMap(lessonFiles) : lessonPaths(ws)
       if (!files.length) return out('No .learn.md files found.')
       let errors = 0, warnings = 0, notes = 0
       for (const f of files) {
@@ -295,7 +294,7 @@ async function main(): Promise<void> {
       const kinds = opt.kind ? [opt.kind] : ['fix', 'added']
       const rows: { doc: string; section: string; kind: string; note: string; lesson: string }[] = []
       needLearn()
-      for (const f of lessonFiles(ws.learnDir)) {
+      for (const f of lessonPaths(ws)) {
         const src = readFileSync(f, 'utf8')
         const source = /^source:\s*(.+)$/m.exec(src)?.[1].trim()
         const doc = source ? relative(ws.root, resolve(dirname(f), source)) : '(notes)'

@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+**Courses appear wherever they are written.** A course from a topic, from a chat or from an assistant sits in its
+own folder, and until now its lessons opened from a link but never reached the library, Today or Study. They now
+do, in Studio, the CLI and the MCP tools. Lessons sit under their `course.md`.
+
 ## 1.3.0 — 2026-10-31
 
 **Study papers from SciNet.** *Import → From SciNet* finds a paper in your SciNet library, by meaning or by title, and

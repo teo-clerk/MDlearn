@@ -108,7 +108,17 @@ export function planBundle(files: BundleFile[], o: { folder?: string; exists: (r
     folder = base
     for (let n = 2; o.exists(folder); n++) folder = `${base}-${n}`
   }
-  return { folder, files: files.map((f) => ({ ...f, target: `${folder}/${common ? f.path.slice(common.length + 1) : f.path}` })) }
+  return { folder, files: files.map((f) => {
+    const rel = common ? f.path.slice(common.length + 1) : f.path
+    return { ...f, content: withLessonId(f, folder), target: `${folder}/${rel}` }
+  }) }
+}
+/** Courses share one review log, so a lesson id starts with its course folder: two courses can both have "01-intro". */
+function withLessonId(f: BundleFile, folder: string): string {
+  const open = /^---\r?\n/.exec(f.content)
+  if (!f.path.endsWith('.learn.md') || !open || /^id:/m.test(f.content.slice(0, f.content.search(/\n---\s*(\n|$)/) + 1))) return f.content
+  const name = f.path.split('/').pop()!.replace(/\.learn\.md$/, '').replace(/^\d+[-_]/, '')
+  return `${open[0]}id: ${slug(folder)}-${slug(name)}\n${f.content.slice(open[0].length)}`
 }
 /** A folder name typed by the user: plain characters, inside the folder, at most three levels. */
 export function cleanFolder(folder: string): string {
@@ -166,7 +176,7 @@ ${source}
 
 1. Call \`authoring_guide\` and follow its method exactly: one idea per card, never more than three cards without a check, misconception feedback on every quiz option, worked examples that fade, a recap with free recall. These are retrieval practice, spacing, interleaving and faded worked examples; MDlearn schedules the reviews.
 2. Plan the course: lesson titles in prerequisite order, each with 2–4 goals that start with a verb. Show the plan in a few lines.
-3. Write \`${folder}/course.md\`, a short overview document (a \`# Title\` heading, what the course covers, the lessons in order, the sources), and the lessons as \`${folder}/01-slug.learn.md\`, \`${folder}/02-slug.learn.md\`, …
+3. Write \`${folder}/course.md\`, a short overview document (a \`# Title\` heading, what the course covers, the lessons in order, the sources), and the lessons as \`${folder}/01-slug.learn.md\`, \`${folder}/02-slug.learn.md\`, …, each with \`id: ${slug(folder)}-slug\` in its frontmatter (progress is kept by id, so ids stay unique across courses)
 4. ${save}
 5. Finish with one line per file (path, cards, lint result) and how to study it: open the folder in MDlearn Studio, or run \`mdlearn review\`.`
 }

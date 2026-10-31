@@ -10,7 +10,7 @@ import { extname, relative, join, dirname, posix } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { z } from 'zod'
 import { compile, parseDocument, findSection, sectionText, isWidget, parseWebAnswer, checkStructured, MAX_EXAM_QUESTIONS } from '@mdlearn/core'
-import { loadCourse, compileSource, searchCurriculum, loadDoc, loadGoals, saveGoals, inRoot } from '@mdlearn/core/node'
+import { loadLessons, compileSource, searchCurriculum, loadDoc, loadGoals, saveGoals, inRoot } from '@mdlearn/core/node'
 import { security, capsOf, clientOf, need, type SecurityOptions } from './security.js'
 import { Workspaces, UserError, browse, type Handle } from './workspaces.js'
 import { redactLesson, redactDoc, findDocWidget } from './redact.js'
@@ -274,7 +274,7 @@ export function createApp(deps: Deps): Hono {
   app.get('/api/w/:ws/lesson', need('read', o), (c) => {
     const h = ws(c), rel = pathParam(c)
     const abs = deps.workspaces.resolve(h, rel, /\.learn\.md$/i)
-    const hit = loadCourse(h.ws.learnDir).find((l) => l.path === abs)
+    const hit = loadLessons(h.ws).find((l) => l.path === abs)
     const r = hit ?? compileSource(readFileSync(abs, 'utf8'), abs)
     return c.json<LessonResponse>({ path: rel, lesson: r.lesson ? redactLesson(r.lesson) : null, diagnostics: r.diagnostics })
   })
