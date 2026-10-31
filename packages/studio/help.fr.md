@@ -24,6 +24,8 @@ n'importe quelle IA. Choisissez ensuite qui écrit les leçons :
 
 Les leçons apparaissent au fur et à mesure. Dans l'éditeur, collez ou déposez une capture pour ajouter une image. Cliquez sur une image pour l'agrandir.
 
+Pour changer un cours déjà commencé, ouvrez sa page de présentation. Vous pouvez déplacer ou mettre en pause une leçon, ajouter des fichiers ou demander un changement. Les cartes gardent leur calendrier, même avec de nouveaux titres.
+
 ## Les pages
 
 | Page | À quoi elle sert |

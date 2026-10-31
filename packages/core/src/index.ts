@@ -1,5 +1,6 @@
 // @mdlearn/core — public API (DOM- and fs-free). File-system helpers live in `@mdlearn/core/node`.
-export { compile, processor, isWidget, safeUrl, type CompileResult, type CompileOptions, type SourceResolver } from './compile.js'
+export { pinIds, courseChanges, lostCards, type CourseChanges, type CardRef, type LostCard } from './revise.js'
+export { compile, CARD_ID, processor, isWidget, safeUrl, type CompileResult, type CompileOptions, type SourceResolver } from './compile.js'
 export { stage0, type Stage0Result, type Stage0Options } from './stage0.js'
 export { parseDocument, type DocModel, type ParseDocumentOptions } from './document.js'
 export { CODES, format as formatDiagnostic, severityOf, type Code, type Diagnostic, type Severity } from './registry.js'
@@ -13,7 +14,7 @@ export { GAME_TYPES, rightOrder, memoryTiles, sortItems, speedItems, type GameAn
 export { INLINE_TAGS, CONTAINER_TAGS, cleanStyle, unsafeHtml, htmlText } from './html.js'
 export { start, reduce, rate, cardRatings, type Session, type Event as SessionEvent, type Rating, type Help, type WidgetRun } from './learn/session.js'
 export { examQueue, examSummary, examOutcome, EXAM_KINDS, MAX_EXAM_QUESTIONS, type ExamAnswer, type ExamOptions, type ExamSummary } from './learn/exam.js'
-export { deriveCards, mergeLogs, due, retrievability, type ReviewEvent } from './learn/srs.js'
+export { deriveCards, mergeLogs, due, retrievability, carriedOver, isOriginalReview, type ReviewEvent } from './learn/srs.js'
 export { reviewStreak, type Day } from './learn/streak.js'
 export { VISUAL_TYPES, parseFormula, texTokens } from './visuals.js'
 export { evaluate, compileExpr, freeSymbols, type MathJson } from './mathfn.js'

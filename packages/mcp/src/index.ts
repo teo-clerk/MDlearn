@@ -12,7 +12,7 @@ import { readFileSync, existsSync, mkdirSync, writeFileSync, renameSync, rmSync 
 import { relative, dirname, join, basename } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
-  formatDiagnostic, sectionText, outlineDoc, studyQueue, locate, pose, check, hint, ratingFor, ratingWords, scheduleAfter, whenText, report, coursePrompt,
+  formatDiagnostic, sectionText, outlineDoc, studyQueue, locate, pose, check, hint, ratingFor, ratingWords, scheduleAfter, whenText, report, coursePrompt, courseChanges,
   type Lesson,
 } from '@mdlearn/core'
 import {
@@ -136,7 +136,7 @@ server.registerTool('authoring_guide', {
 
 if (!readOnly) server.registerTool('save_lesson', {
   title: 'Save lesson',
-  description: 'Lint a lesson and save it in this folder. `path` ends in .learn.md (or is a course.md overview); folders are created. Refuses files with lint errors (fix every E line it returns and save again) and existing files unless overwrite is true. Never writes source documents.',
+  description: 'Lint a lesson and save it in this folder. `path` ends in .learn.md (or is a course.md overview); folders are created. Refuses files with lint errors (fix every E line it returns and save again) and existing files unless overwrite is true. When replacing a lesson, keep every `{#id}` on its headings: it ties the card to the student\'s progress, and the result reports any studied card that went missing. Never writes source documents.',
   inputSchema: {
     path: z.string().describe('Folder-relative path, e.g. "tides/01-why-tides.learn.md" or "tides/course.md"'),
     content: z.string().max(400_000),
@@ -156,6 +156,8 @@ if (!readOnly) server.registerTool('save_lesson', {
     const lines = r.diagnostics.filter((d) => !d.code.startsWith('I')).map(formatDiagnostic)
     if (errs.length || !r.lesson) return error(`✗ not saved: ${errs.length} error(s)\n${lines.join('\n')}`)
     summary = `✓ saved ${relative(ws.root, abs)} · ${r.lesson.cards.length} cards${lines.length ? `\n${lines.join('\n')}` : ''}`
+    const was = existsSync(abs) ? compileSource(readFileSync(abs, 'utf8'), abs).lesson : null
+    if (was) summary += `\n${replacedReport(was, r.lesson)}`
   } else if (!content.trim()) return error('The overview is empty.')
   mkdirSync(dirname(abs), { recursive: true })
   const tmp = `${abs}.${process.pid}.tmp`
@@ -165,6 +167,14 @@ if (!readOnly) server.registerTool('save_lesson', {
   } catch (e) { rmSync(tmp, { force: true }); return error(`Could not save ${path}: ${(e as Error).message}`) }
   return text(lesson ? summary : `✓ saved ${relative(ws.root, abs)}`)
 })
+
+/** What replacing a lesson did to the student's cards, so the AI can put back a card it should have kept. */
+function replacedReport(was: Lesson, now: Lesson): string {
+  const c = courseChanges([was], [now]), studied = new Set(loadProgress(ws).reviews.map((r) => r.key))
+  const lost = c.removed.filter((x) => studied.has(x.key))
+  return `${c.kept} cards kept their progress · ${c.added.length} new · ${c.removed.length} removed`
+    + (lost.length ? `\nStudied cards no longer in this lesson (their progress is cut off): ${lost.map((x) => `"${x.title}" {#${x.key.split('/')[1]}}`).join(', ')}. If a card was only rewritten, put that id back on its heading.` : '')
+}
 
 // ------------------------------------------------------------------ tutor
 server.registerTool('study_queue', {

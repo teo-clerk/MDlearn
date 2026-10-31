@@ -83,6 +83,12 @@ export function JobView({ ws, id, onBack }: { ws: string; id: string; onBack(): 
           {live && j.events.length > 0 && <li className="flex items-center gap-1.5 py-1 text-muted"><Loader2 className="size-3.5 animate-spin" aria-hidden />{t('Working…')}</li>}
         </ol>
       </section>
+      {j.changes && !live && !j.undone && (
+        <section aria-label={t('What happened to your cards')} className="mt-6 text-[14px]">
+          <p>{tp(j.changes.kept, '{n} card kept its progress', '{n} cards kept their progress')} · {tp(j.changes.added.length, '{n} new', '{n} new')} · {tp(j.changes.removed.length, '{n} removed', '{n} removed')}</p>
+          {!!j.changes.removed.length && <ul className="mt-1 list-disc pl-5 text-[13.5px] text-muted">{j.changes.removed.map((c) => <li key={c.key}>{c.title}</li>)}</ul>}
+        </section>
+      )}
       {j.summary && !live && <section className="mt-6"><h2 className="text-[13px] font-medium text-muted">{t('Claude’s summary')}</h2><div className="prose-note mt-2 text-[14px]"><MiniMarkdown text={j.summary} /></div></section>}
 
       {!live && j.sessionId && !j.undone && (

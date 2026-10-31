@@ -228,7 +228,7 @@ Callouts: `note` (side detail), `tip` (intuition; `[label]{fold}` = optional dep
 ## Token discipline
 
 - Output only lesson files: no preface, no closing remarks, no wrapping code fence.
-- No ids except a scaffold's frontmatter `id`; attributes only `{fold}`, `{exact}`, `{memory}` and `{time=N}`. `time` is your estimate in minutes (≈ 1 per card, more
+- Write no ids of your own except a scaffold's frontmatter `id`, and keep every id already in a file: a `{#id}` on a heading is what ties the card to the student's progress, so it stays when the title changes; attributes only `{fold}`, `{exact}`, `{memory}` and `{time=N}`. `time` is your estimate in minutes (≈ 1 per card, more
   for `steps` and `code`); the compiler re-estimates it.
 - Math only as `$…$` and `$$…$$` (a one-line `$$…$$` is fine); money as `\$5`.
 - Everything is closed: each `:::` widget ends with its own `:::` line before the next `##`.

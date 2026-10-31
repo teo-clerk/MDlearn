@@ -20,4 +20,15 @@ When the student asks for a course from this folder:
    line. If you can't run it, follow the checklist at the end of the skill.
 5. Finish with one line per file: path, cards, check result.
 
+## Change a course the student has started
+
+Their progress belongs to each card's id, and without a written id a card's id is its title. So:
+
+1. Before you edit a lesson, run `node .agents/skills/mdlearn-course/scripts/lint.mjs --pin <file>`. It writes each
+   card's id on its heading as `{#id}`.
+2. Keep every `{#id}` and the frontmatter `id` exactly as they are. A card with an id may get a new title, clearer
+   text or better questions.
+3. Put new ideas in new cards, with no id. A new lesson takes the next number. Don't rename or renumber lesson files.
+4. Remove a card only if the student asks for that, and name every card you remove.
+
 To quiz the student or add visuals, use the `mdlearn-tutor` and `mdlearn-visuals` skills in `.agents/skills/`.

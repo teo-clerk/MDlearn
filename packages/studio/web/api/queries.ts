@@ -9,6 +9,7 @@ export const keys = {
   session: ['session'] as const,
   workspaces: ['workspaces'] as const,
   tree: (ws: string) => ['tree', ws] as const,
+  course: (ws: string, doc: string) => ['course', ws, doc] as const,
   doc: (ws: string, path: string) => ['doc', ws, path] as const,
   lesson: (ws: string, path: string) => ['lesson', ws, path] as const,
   report: (ws: string) => ['report', ws] as const,
@@ -150,6 +151,7 @@ export type JobRequest =
   | { recipe: 'course.create'; doc: string }
   | { recipe: 'lesson.improve'; lesson: string; focus: 'questions' | 'clarity' | 'lint' | 'all' | 'leech'; note?: string; card?: { key: string; title: string; wrong: string[] } }
   | { recipe: 'custom'; request: string; scope?: string }
+  | { recipe: 'course.change'; doc: string; request: string }
   | { recipe: 'course.class'; name: string; level?: 'beginner' | 'intermediate' | 'advanced'; language?: string; request?: string }
   | { recipe: 'course.topic'; topic: string; level?: 'beginner' | 'intermediate' | 'advanced'; language?: string; minutes?: number; notes?: string }
 export const jobsApi = {
@@ -240,6 +242,13 @@ const classForm = (files: File[]) => { const form = new FormData(); for (const f
 export const classApi = {
   create: (name: string, files: File[]) => api.upload<import('../../shared/types').ClassUpload>(`/api/courses?name=${encodeURIComponent(name)}`, classForm(files)),
   add: (ws: string, files: File[]) => api.upload<import('../../shared/types').ClassUpload>(`/api/w/${ws}/sources`, classForm(files)),
+}
+export const useCourse = (ws: string, doc: string) => useQuery({ queryKey: keys.course(ws, doc), queryFn: () => api.get<import('../../shared/types').CourseInfo>(`/api/w/${ws}/course?${qs({ doc })}`) })
+export const courseApi = {
+  move: (ws: string, doc: string, lesson: string, by: -1 | 1) => api.post<{ ok: true }>(`/api/w/${ws}/course/move`, { doc, lesson, by }),
+  pause: (ws: string, doc: string, lesson: string, paused: boolean) => api.post<{ ok: true }>(`/api/w/${ws}/course/pause`, { doc, lesson, paused }),
+  reconnect: (ws: string, from: string, to: string) => api.post<{ ok: true }>(`/api/w/${ws}/course/reconnect`, { from, to }),
+  letGo: (ws: string, key: string) => api.post<{ ok: true }>(`/api/w/${ws}/course/let-go`, { key }),
 }
 export const agentsApi = {
   prepare: (ws: string) => api.post<import('../../shared/types').PreparedFolder>(`/api/w/${ws}/agents/prepare`, {}),

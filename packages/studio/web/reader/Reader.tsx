@@ -17,6 +17,7 @@ import { assetUrl, linkTarget } from '../lib/paths'
 import { anchorForMoment } from '../lib/anchor'
 import { DocBlocks, type BlockEnv } from './DocBlocks'
 import { Outline } from './Outline'
+import { CoursePanel } from './CoursePanel'
 import { RelatedPanel } from './RelatedPanel'
 import { LinksPanel } from '../knowledge/LinksPanel'
 import { PreviewLink } from '../knowledge/PreviewLink'
@@ -156,6 +157,7 @@ export default function Reader({ ws }: { ws: string }) {
               {doc.data.diagnostics.some((d) => d.code.startsWith('E')) && <span title={doc.data.diagnostics.filter((d) => d.code.startsWith('E')).map((d) => `${t('line {n}', { n: d.line })}: ${d.code} ${d.message ?? ''}`).join('\n')}>{tp(errorCount, '{n} formatting problem', '{n} formatting problems')}</span>}
             </p>
           </header>
+          {/(^|\/)course\.md$/i.test(path) && <CoursePanel ws={ws} doc={path} caps={session.data?.caps ?? []} />}
           <div className="read" ref={setArticle}>
             <DocBlocks blocks={doc.data.blocks.filter((b, i) => !(i < 3 && b.type === 'heading' && b.depth === 1))} env={env} />
           </div>

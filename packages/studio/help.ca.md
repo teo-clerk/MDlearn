@@ -24,6 +24,8 @@ fer servir. Després tria qui escriu les lliçons:
 
 Les lliçons apareixen a mesura que s'escriuen. A l'editor, enganxa o deixa anar una captura per afegir una imatge. Fes clic en una imatge per veure-la més gran.
 
+Per canviar un curs ja començat, obre la seva pàgina de presentació. Pots moure o posar en pausa una lliçó, afegir fitxers o demanar un canvi. Les targetes conserven el calendari, fins i tot amb títols nous.
+
 ## Les pàgines
 
 | Pàgina | Per a què serveix |

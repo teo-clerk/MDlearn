@@ -12,7 +12,14 @@ import { FrontmatterSchema, FRONTMATTER_SYNONYMS, LessonSchema, type Block, type
 import { processor } from './parser.js'
 export { processor, remarkBlockDirectives } from './parser.js'
 
-export interface CompileResult { lesson: Lesson | null; diagnostics: Diagnostic[]; stage0: Stage0Result }
+/** `## Title {#id}`. An id holds what a slug can, so that a card with an Italian or French title can keep the id it was given. */
+export const CARD_ID = /\s*\{#([\p{L}\p{M}\p{N}_-]+)\}\s*$/u
+
+export interface CompileResult {
+  lesson: Lesson | null; diagnostics: Diagnostic[]; stage0: Stage0Result
+  /** The source line of each card's heading, in card order. */
+  cardLines: number[]
+}
 export type { SourceResolver }
 export interface CompileOptions {
   path?: string; resolveSource?: SourceResolver; checkJs?: (code: string) => string | null
@@ -79,15 +86,17 @@ export function compile(source: string, opts: CompileOptions = {}): CompileResul
     if (!isWidget(b)) return b
     diag('W609', 1, b.type); return { type: 'unavailable', id: b.id, kind: b.type, codes: ['W609'] }
   })
-  const cards: Card[] = []
+  const cards: Card[] = [], cardLines: number[] = []
   for (let i = Math.max(firstCard, 0); firstCard >= 0 && i < children.length; ) {
     const h = children[i]
     let j = i + 1; while (j < children.length && !isCard(children[j])) j++
-    const ctitle = toString(h).replace(/\s*\{#[a-z0-9][a-z0-9-]*\}\s*$/, '')
-    const explicit = /\{#([a-z0-9][a-z0-9-]*)\}\s*$/.exec(toString(h))?.[1]
-    const cid = explicit ?? slugger.slug(ctitle)
+    const ctitle = toString(h).replace(CARD_ID, '')
+    const explicit = CARD_ID.exec(toString(h))?.[1]
+    const slugged = slugger.slug(explicit ?? ctitle) // an explicit id is counted too, so a card of the same title can't take it
+    const cid = explicit ?? slugged
     const blocks = toBlocks(children.slice(i + 1, j), cid)
-    cards.push({ id: cid, title: headingTitle(h).replace(/\s*\{#[a-z0-9][a-z0-9-]*\}\s*$/, ''), blocks })
+    cards.push({ id: cid, title: headingTitle(h).replace(CARD_ID, ''), blocks })
+    cardLines.push(lineOf(h))
     cardLint(blocks, children.slice(i + 1, j), h)
     i = j
   }
@@ -123,7 +132,7 @@ export function compile(source: string, opts: CompileOptions = {}): CompileResul
   const checked = LessonSchema.safeParse(candidate)
   if (!checked.success) throw new Error('compiler produced invalid CourseAST: ' + checked.error.message)
   // only a missing title or a truncated file stops the whole lesson; everything else fails closed per widget
-  return { lesson: diagnostics.some((d) => d.code === 'E102' || d.code === 'E109') ? null : checked.data, diagnostics, stage0: s0 }
+  return { lesson: diagnostics.some((d) => d.code === 'E102' || d.code === 'E109') ? null : checked.data, diagnostics, stage0: s0, cardLines }
 }
 
 /** Minutes a block adds to the estimate: a video its segment when its length is known (else 2). */

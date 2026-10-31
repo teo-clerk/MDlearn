@@ -89,7 +89,7 @@ GIFT and LiaScript are cheaper only because they drop features this spec require
 | Lesson file | One lesson per file: `NN-slug.learn.md` (UTF-8; CRLF and a BOM are accepted and normalised). The `.learn.md` suffix keeps the file a valid Markdown document. |
 | Lesson id | Frontmatter `id`, else the file name without `.learn.md` and without the numeric prefix (`02-bayes-theorem.learn.md` → `bayes-theorem`), so renumbering lessons keeps progress. |
 | Course | A folder of lesson files with a `course.md` overview beside them. Lessons are ordered by file name, and their numeric prefix can change without touching progress. A folder may hold several courses: lesson ids must then be unique, so `<course>-<slug>` is the convention. |
-| Card id | `## Title {#id}` (`[a-z0-9][a-z0-9-]*`) if given, else the GitHub slug of the title (`base-rate-neglect`), de-duplicated (`-1`, `-2`). |
+| Card id | `## Title {#id}` (letters, digits, `-`, `_`) if given, else the GitHub slug of the title (`base-rate-neglect`), de-duplicated (`-1`, `-2`). |
 | Widget id | `<card id>/<kind>-<fingerprint>`, where the fingerprint is FNV-1a of the normalised stem and answer key. Editing an unrelated widget never re-keys another one; editing a question's key re-keys it (reset beats attaching history to a different question). Identical widgets in one card get `-1`, `-2` suffixes. `:::kind{#id}` pins the id to `<card id>/<id>`. |
 
 Authors (and LLMs) never write ids unless they need to pin one.

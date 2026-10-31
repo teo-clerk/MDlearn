@@ -92,3 +92,47 @@ test('an old PowerPoint is kept and the person is told what to do', async ({ pag
   await page.getByRole('button', { name: 'Continue' }).click()
   await expect(page.getByText(/Save it as \.pptx or \.docx/)).toBeVisible()
 })
+
+test('a week in: change the course, reorder it, and keep what you studied', async ({ page, request }) => {
+  await page.goto('/start')
+  const name = fresh()
+  await page.getByLabel('What is the course called?').fill(name)
+  await page.getByLabel('Choose files').setInputFiles(fixture('Lecture 3.pptx'))
+  await page.getByRole('button', { name: 'Continue' }).click()
+  await page.getByRole('radio', { name: /My coding assistant/ }).click()
+  await page.getByRole('button', { name: 'Get the folder ready' }).click()
+  const root = /cd "([^"]+)"/.exec(await page.locator('code').first().innerText())![1]
+  writeFileSync(join(root, 'course.md'), '# Heat engines\n\nWhat limits an engine.\n')
+  writeFileSync(join(root, '01-heat-engines.learn.md'), LESSON)
+  writeFileSync(join(root, '02-pumps.learn.md'), LESSON.replace('title: Heat engines', 'title: Heat pumps').replace('The Carnot limit', 'Pump cycle'))
+  const ws = /ws=([^&]+)/.exec(page.url())![1]
+  await expect(page.getByRole('status').filter({ hasText: '2 lessons' })).toBeVisible({ timeout: 10_000 })
+
+  // a week of study
+  const cardKey = 'heat-engines/the-carnot-limit'
+  const headers = { 'x-mdl': '1', 'content-type': 'application/json' }
+  expect((await request.post(`/api/w/${ws}/study/record`, { headers, data: { cardKey, outcome: { correct: true, help: 'none', sure: true } } })).ok()).toBe(true)
+
+  await page.goto(`/w/${ws}/doc?path=course.md`)
+  const lessons = page.getByRole('list', { name: 'Lessons' })
+  await expect(lessons.getByRole('listitem')).toHaveCount(2)
+  await expect(lessons.getByRole('listitem').first()).toContainText('1/1')
+
+  // the order changes, the progress stays
+  await page.getByRole('button', { name: 'Move Heat pumps up' }).click()
+  await expect(lessons.getByRole('listitem').first()).toContainText('Heat pumps')
+  await expect(lessons.getByRole('listitem').nth(1)).toContainText('1/1')
+
+  // an outside edit renames the studied card
+  writeFileSync(join(root, '02-heat-engines.learn.md'), LESSON.replace('The Carnot limit', 'The Carnot efficiency limit'))
+  await expect(page.getByRole('heading', { name: '1 card you studied is gone' })).toBeVisible({ timeout: 10_000 })
+  await page.getByLabel('Reconnect the carnot limit').selectOption({ label: 'The Carnot efficiency limit' })
+  await expect(page.getByRole('heading', { name: '1 card you studied is gone' })).toBeHidden()
+  await expect(lessons.getByRole('listitem').nth(1)).toContainText('1/1')
+
+  // an AI changes it, and says what happened to the cards
+  await page.getByRole('button', { name: 'Change this course' }).click()
+  await page.getByLabel('What should change?').fill('Add a card on heat pumps')
+  await page.getByRole('button', { name: 'Change the course' }).click()
+  await expect(page.getByRole('region', { name: 'What happened to your cards' })).toContainText('2 cards kept their progress', { timeout: 10_000 })
+})

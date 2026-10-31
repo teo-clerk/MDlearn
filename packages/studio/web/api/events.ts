@@ -19,11 +19,11 @@ export function useLiveEvents(ws: string | undefined): void {
               qc.invalidateQueries({ queryKey: keys.doc(e.ws, p.path) })
               for (const k of ['formulas', 'glossary', 'glossary-compact', 'links', 'knowledge-map', 'doc-summary']) qc.invalidateQueries({ queryKey: [k, e.ws] })
             }
-            if (p.kind === 'lesson') qc.invalidateQueries({ queryKey: keys.lesson(e.ws, p.path) })
+            if (p.kind === 'lesson') { qc.invalidateQueries({ queryKey: keys.lesson(e.ws, p.path) }); qc.invalidateQueries({ queryKey: ['course', e.ws] }) }
           }
           break
-        case 'tree.changed': qc.invalidateQueries({ queryKey: keys.tree(e.ws) }); qc.invalidateQueries({ queryKey: keys.inbox(e.ws) }); break
-        case 'progress.changed': qc.invalidateQueries({ queryKey: keys.today(e.ws) }); qc.invalidateQueries({ queryKey: keys.report(e.ws) }); qc.invalidateQueries({ queryKey: ['map', e.ws] }); qc.invalidateQueries({ queryKey: keys.tree(e.ws) }); break
+        case 'tree.changed': qc.invalidateQueries({ queryKey: keys.tree(e.ws) }); qc.invalidateQueries({ queryKey: keys.inbox(e.ws) }); qc.invalidateQueries({ queryKey: ['course', e.ws] }); break
+        case 'progress.changed': qc.invalidateQueries({ queryKey: ['course', e.ws] }); qc.invalidateQueries({ queryKey: keys.today(e.ws) }); qc.invalidateQueries({ queryKey: keys.report(e.ws) }); qc.invalidateQueries({ queryKey: ['map', e.ws] }); qc.invalidateQueries({ queryKey: keys.tree(e.ws) }); break
         case 'notes.changed': qc.invalidateQueries({ queryKey: keys.notes(e.ws, e.doc) }); break
         case 'ai.delta': useStream.getState().append(e.messageId, e.text); break
         case 'ai.done': useStream.getState().finish(e.messageId); qc.invalidateQueries({ queryKey: keys.notes(e.ws, e.doc) }); if (e.noteId === 'ask') qc.invalidateQueries({ queryKey: ['ask-history', e.ws] }); break

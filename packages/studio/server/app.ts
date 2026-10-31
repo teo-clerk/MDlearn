@@ -47,7 +47,8 @@ import { insertAfterQuote } from './insert.js'
 import { capture, cardFromItem, listInbox, moveItem, settle } from './inbox.js'
 import type { JobManager } from './ai/jobs.js'
 import type { AiEngine } from './ai/engine.js'
-import { classCourse, createCourse, improveLesson, customJob, importPdf, topicCourse } from './ai/recipes.js'
+import { changeCourse, classCourse, createCourse, improveLesson, customJob, importPdf, keptOut, topicCourse } from './ai/recipes.js'
+import { courseInfo, letGo, moveLesson, pauseLesson, reconnect } from './course.js'
 import { BatchRunner } from './ai/batch.js'
 import type { EventBus, Envelope } from './bus.js'
 import type { SettingsStore } from './settings.js'
@@ -212,6 +213,33 @@ export function createApp(deps: Deps): Hono {
     return c.json(await classFiles(c, deps.workspaces.course(name)))
   })
   app.post('/api/w/:ws/sources', need('write', o), classLimit, async (c) => c.json(await classFiles(c, ws(c))))
+
+  // ---- a course you have started
+  const docPath = z.string().min(1).max(1024)
+  app.get('/api/w/:ws/course', need('read', o), (c) => c.json(courseInfo(ws(c), docPath.parse(c.req.query('doc')))))
+  app.post('/api/w/:ws/course/move', need('write', o), async (c) => {
+    const { doc, lesson, by } = z.object({ doc: docPath, lesson: docPath, by: z.union([z.literal(-1), z.literal(1)]) }).parse(await c.req.json())
+    moveLesson(ws(c), doc, lesson, by)
+    deps.bus.publish({ type: 'tree.changed', ws: ws(c).id })
+    return c.json({ ok: true })
+  })
+  app.post('/api/w/:ws/course/pause', need('study', o), async (c) => {
+    const { doc, lesson, paused } = z.object({ doc: docPath, lesson: docPath, paused: z.boolean() }).parse(await c.req.json())
+    pauseLesson(ws(c), doc, lesson, paused)
+    return c.json({ ok: true })
+  })
+  const cardKey = z.string().min(3).max(300)
+  app.post('/api/w/:ws/course/reconnect', need('write', o), async (c) => {
+    const { from, to } = z.object({ from: cardKey, to: cardKey }).parse(await c.req.json())
+    reconnect(ws(c), from, to)
+    deps.bus.publish({ type: 'progress.changed', ws: ws(c).id })
+    return c.json({ ok: true })
+  })
+  app.post('/api/w/:ws/course/let-go', need('study', o), async (c) => {
+    const { key } = z.object({ key: cardKey }).parse(await c.req.json())
+    letGo(ws(c), key)
+    return c.json({ ok: true })
+  })
 
   // ---- reading
   app.get('/api/w/:ws/tree', need('read', o), (c) => c.json(deps.workspaces.tree(ws(c))))
@@ -738,6 +766,7 @@ export function createApp(deps: Deps): Hono {
       z.object({ recipe: z.literal('course.create'), doc: z.string().min(1).max(1024) }),
       z.object({ recipe: z.literal('lesson.improve'), lesson: z.string().min(1).max(1024), focus: z.enum(['questions', 'clarity', 'lint', 'all', 'leech']).default('all'), note: z.string().max(2000).default(''),
         card: z.object({ key: z.string().max(300), title: z.string().max(200), wrong: z.array(z.string().max(300)).max(5).default([]) }).optional() }),
+      z.object({ recipe: z.literal('course.change'), doc: z.string().min(1).max(1024), request: z.string().trim().min(2).max(2000) }),
       z.object({ recipe: z.literal('course.class'), name: z.string().trim().min(1).max(200), level: z.enum(['beginner', 'intermediate', 'advanced']).default('beginner'), language: z.string().max(40).optional(), request: z.string().max(2000).optional() }),
       z.object({ recipe: z.literal('custom'), request: z.string().min(3).max(4000), scope: z.string().max(512).default('learn') }),
       z.object({ recipe: z.literal('course.topic'), topic: z.string().trim().min(2).max(300), level: z.enum(['beginner', 'intermediate', 'advanced']).default('beginner'),
@@ -747,9 +776,9 @@ export function createApp(deps: Deps): Hono {
       const st = await deps.claudeStatus()
       if (!st.available) throw new UserError('engine', st.error ?? 'Claude Code is not available.')
     }
-    const r = body.recipe === 'course.class' ? classCourse(h, body) : body.recipe === 'course.topic' ? topicCourse(h, body) : body.recipe === 'course.create' ? createCourse(h, body.doc) : body.recipe === 'lesson.improve' ? improveLesson(h, body.lesson, body.focus, body.note, body.card ? { cardKey: body.card.key, title: body.card.title, wrong: body.card.wrong } : undefined) : customJob(h, body.request, body.scope)
+    const r = body.recipe === 'course.change' ? changeCourse(h, body.doc, body.request) : body.recipe === 'course.class' ? classCourse(h, body) : body.recipe === 'course.topic' ? topicCourse(h, body) : body.recipe === 'course.create' ? createCourse(h, body.doc) : body.recipe === 'lesson.improve' ? improveLesson(h, body.lesson, body.focus, body.note, body.card ? { cardKey: body.card.key, title: body.card.title, wrong: body.card.wrong } : undefined) : customJob(h, body.request, body.scope)
     const { jobs: jm, engine } = jobs()
-    return c.json(jm.start(h, engine, r.spec, r.preWrite ? { preWrite: r.preWrite } : {}))
+    return c.json(jm.start(h, engine, r.spec, { ...(r.preWrite ? { preWrite: r.preWrite } : {}), ...(r.after ? { after: r.after } : {}) }))
   })
   // ---- a course for many documents, one after another
   let batches: BatchRunner | undefined
@@ -782,7 +811,7 @@ export function createApp(deps: Deps): Hono {
     if (!prev.sessionId) throw new UserError('session', 'This job cannot be continued; start a new one.')
     const scope = prev.files.length ? [...new Set(prev.files.map((f) => f.path.split('/').slice(0, -1).join('/')))] : ['learn']
     const r = customJob(h, request, scope[0])
-    return c.json(jm.start(h, engine, { ...r.spec, recipe: 'followup', title: request.slice(0, 80), writeScope: scope.map((s) => `${h.root}/${s}`), resume: prev.sessionId }, { parent: prev.id }))
+    return c.json(jm.start(h, engine, { ...r.spec, recipe: 'followup', title: request.slice(0, 80), writeScope: scope.map((s) => `${h.root}/${s}`), keepOut: keptOut(h.root), resume: prev.sessionId }, { parent: prev.id }))
   })
 
   // ---- simulation sandbox (its own strict policy: scripts only from here, workers from blobs, no network)

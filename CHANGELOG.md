@@ -6,6 +6,10 @@
 files* takes PDFs, PowerPoint, Word files and pictures, keeps the originals, reads what it can, and says what it couldn't.
 Then Claude, your coding assistant or a chat writes the lessons, and they appear as they are written.
 
+**Change a course after you've started.** A course's page now shows where you stand in each lesson. Move lessons, pause one, add
+class files, or tell Claude what should change: cards keep their schedule even with new titles, and the job ends by saying how many kept
+their progress. If an edit elsewhere loses a studied card, MDlearn offers to reconnect it. Coding assistants get the same rules.
+
 **Courses appear wherever they are written.** A course from a topic, from a chat or from an assistant sits in its
 own folder, and until now its lessons opened from a link but never reached the library, Today or Study. They now
 do, in Studio, the CLI and the MCP tools. Lessons sit under their `course.md`.

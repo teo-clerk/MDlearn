@@ -325,9 +325,11 @@ const GoalsSchema = z.object({
   deadlines: z.array(z.object({ scope: z.string().max(1024), date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), label: z.string().max(80).optional() })).max(50),
   /** Cards (`lessonId/cardId`) you set aside; they never appear in a session. */
   suspended: z.array(z.string().max(300)).max(5000),
+  /** Studied cards with no card left, dealt with: reconnected to another card, or let go. Their history stays. */
+  settled: z.array(z.string().max(300)).max(5000).default([]),
 })
 export type Goals = z.infer<typeof GoalsSchema>
-export const DEFAULT_GOALS: Goals = { version: 1, dailyGoal: 20, deadlines: [], suspended: [] }
+export const DEFAULT_GOALS: Goals = { version: 1, dailyGoal: 20, deadlines: [], suspended: [], settled: [] }
 export const goalsPath = (ws: Workspace) => join(ws.learnDir, '.mdlearn', 'goals.json')
 export function loadGoals(ws: Workspace): Goals {
   const p = goalsPath(ws)

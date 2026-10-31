@@ -136,13 +136,21 @@ export type JobEvent =
   | { kind: 'usage'; turns: number; costUsd?: number; durationMs: number }
   | { kind: 'session'; sessionId: string }
   | { kind: 'limit'; message: string }
+import type { CourseChanges, LostCard } from '@mdlearn/core'
 export interface JobSummary {
   id: string; ws: string; recipe: string; title: string; status: JobStatus; engine: string
   created: number; finished?: number; summary?: string; error?: string
   files: { path: string; change: 'created' | 'modified' }[]
   lint: { path: string; errors: number; warnings: number }[]
   sessionId?: string; undone?: boolean; parent?: string
+  /** What a change to a started course did to its cards. */
+  changes?: CourseChanges
 }
+
+// ---- a course you have started
+export interface CourseLesson { path: string; title: string; cards: number; seen: number; memory: number | null; paused: boolean; numbered: boolean }
+export type LostCardInfo = LostCard
+export interface CourseInfo { doc: string; lessons: CourseLesson[]; lost: LostCard[] }
 
 // ---- Today, goals, leeches
 export interface PaceInfo { scope: string; label: string; status: 'on-track' | 'behind' | 'overdue' | 'done'; deadline: string; daysLeft: number; remaining: number; perDay: number; daysBehind: number | null; text: string }

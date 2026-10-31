@@ -24,6 +24,8 @@ scrive le lezioni:
 
 Le lezioni compaiono man mano che vengono scritte. Nell'editor, incolla o trascina uno screenshot per aggiungere un'immagine. Clicca su un'immagine per vederla più grande.
 
+Per cambiare un corso già iniziato, apri la sua pagina di presentazione. Puoi spostare o mettere in pausa una lezione, aggiungere file o chiedere una modifica. Le carte mantengono la loro programmazione, anche con nuovi titoli.
+
 ## Le pagine
 
 | Pagina | A cosa serve |

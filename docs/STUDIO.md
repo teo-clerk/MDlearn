@@ -436,6 +436,17 @@ keeps its picture of the equation, a Word file doesn't. Old `.ppt`/`.doc` files 
 one file that can't be read never stops the others. The `course.class` job writes `course.md` and the lessons at the top of the
 folder (`coursePrompt` with `classFiles`), and its `keepOut` stops it changing `sources/`, `AGENTS.md` or `CLAUDE.md`.
 
+**Changing a started course.** Progress belongs to `lessonId/cardId`, and a card's id is its title's slug unless the heading says
+`{#id}`, so a renamed card would silently start over. `core/src/revise.ts` guards that: `pinIds` writes ids into a lesson, `courseChanges`
+says what an edit did, and `lostCards` finds studied keys with no card and the unstudied cards most likely to be them. A `course.md`
+page shows `web/reader/CoursePanel.tsx`: each lesson's standing, move up and down (`server/course.ts` swaps the `NN-` numbers, which
+lesson ids ignore, and updates links in `course.md` and the notes file), pause (the cards go to `goals.suspended`), add class files, and
+*Change this course*. That `course.change` job pins every studied card in `preWrite`, so undo covers it, tells the AI each lesson's
+recall and hardest cards, and ends with `JobSummary.changes`: "28 cards kept their progress · 4 new · 1 removed". Outside AIs get the
+same rules in `AGENTS.md`, `lint.mjs --pin` before editing, and a report from `save_lesson` with `overwrite`. When a studied card is gone anyway,
+the panel offers *Reconnect to…* or *Let go*. Reconnecting appends copies of the card's reviews under the new key (ids `moved:…`, left out
+of daily counts by `isOriginalReview`) and pins the new card; both choices add the old key to `goals.settled`. The log keeps every event.
+
 **Coding assistants.** A folder can carry the instructions, so Codex, OpenCode, Pi and Claude Code need no setup:
 `mdlearn agents [folder]`, or *Get this folder ready for my AI* in the palette (`POST /api/w/:ws/agents/prepare`), writes
 `AGENTS.md`, `CLAUDE.md` (a line that points to it) and `.agents/skills/`, the location those assistants share. It runs only
