@@ -2,7 +2,7 @@
 // theme switch: they live in localStorage and apply before the first paint.
 import { useState } from 'react'
 import { Check, Monitor, Moon, Sun } from 'lucide-react'
-import { useUi, type Theme } from '../state/ui'
+import { useUi, type CompanionKind, type Theme } from '../state/ui'
 import { ACCENTS, applyAccent, parseHex, savedAccent, swatch, type Accent, type AccentId } from '../lib/accent'
 import { applyColour, colourOn } from '../lib/colour'
 import { LANGS, currentLang, setLang, t } from '../i18n'
@@ -17,6 +17,8 @@ export function Appearance() {
   const theme = useUi((s) => s.theme), setTheme = useUi((s) => s.setTheme)
   const [accent, setAccent] = useState<Accent>(savedAccent)
   const [colour, setColour] = useState(colourOn)
+  const companion = useUi((s) => s.companion), setCompanion = useUi((s) => s.setCompanion)
+  const companions: [CompanionKind, string][] = [['off', t('Off')], ['orb', t('Orb')], ['pixel', t('Pixel')]]
   const custom = parseHex(accent) ? accent : null
   const pick = (a: Accent) => { applyAccent(a); setAccent(a) }
   const themes: [Theme, typeof Sun, string][] = [['light', Sun, t('Light')], ['dark', Moon, t('Dark')], ['system', Monitor, t('Match system')]]
@@ -36,6 +38,13 @@ export function Appearance() {
         <input type="checkbox" checked={colour} onChange={(e) => { setColour(e.target.checked); applyColour(e.target.checked) }} className="mt-0.5" />
         <span>{t('Colour in notes')}<span className="block text-[12.5px] text-muted">{t('Callouts, formula terms and highlights. Each colour has a job, and icons and text say the same thing.')}</span></span>
       </label>
+      <div>
+        <p className="text-[12.5px] text-muted" id="companion-label">{t('Companion')}</p>
+        <div role="radiogroup" aria-labelledby="companion-label" className="mt-1.5 flex flex-wrap gap-1.5">
+          {companions.map(([value, label]) => <button key={value} type="button" role="radio" aria-checked={companion === value} onClick={() => setCompanion(value)} className={option(companion === value)}>{label}</button>)}
+        </div>
+        <p className="mt-1.5 text-[12.5px] text-muted">{t('A small sign of what MDlearn is doing, at the foot of the sidebar. A test. It never rewards or nags you, and it hides during questions.')}</p>
+      </div>
       <div>
         <p className="text-[12.5px] text-muted" id="accent-label">{t('Accent colour')}</p>
         <div role="radiogroup" aria-labelledby="accent-label" className="mt-1.5 flex flex-wrap items-center gap-2">

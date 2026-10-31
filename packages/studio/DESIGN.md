@@ -198,6 +198,7 @@ the study card. Borders are 1px hairlines; blockquote and quote rules are 1px.
 - Do keep one accent in the app's chrome: ink. Use `good` / `warn` / `bad` only for results.
 - Do keep hues to the reading column, and give each one a job: a callout's kind, a formula term and its explanation, a
   key term, or a highlight you chose. Each comes with an icon, a shape or a label, and *Colour in notes* turns them grey.
+- Don't let the companion ask for anything: it is status and a door, never a score, and it hides during questions.
 - Don't add a hue without running the checks below, and don't colour text that is only decoration.
 - Don't add uppercase tracked labels, kickers or eyebrows; use sentence-case `muted` labels.
 - Don't use side stripes thicker than 1px, gradients, glass, or coloured icon tiles.

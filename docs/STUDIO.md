@@ -454,6 +454,13 @@ marks too much, and *Improve a lesson → Mark key terms* adds them to an existi
 *Make a card*. *Settings → Appearance → Colour in notes* turns every hue grey per device (`data-colour="off"`, set before the first paint by
 `public/theme.js`). Icons, underlines and labels carry the same meaning, so nothing depends on seeing colour.
 
+**Companion (a test).** *Settings → Appearance → Companion*: off by default, or an orb (`thinking-orbs`, loaded only for someone who picks it) or a
+12×12 one-colour pixel creature (`web/companion/sprites.ts`, plain data). It sits at the foot of the sidebar and shows what is really happening,
+from `useActivity.ts`: a job, an answer on its way, a teach-back, the end of a session, or five minutes without input. Clicking it shows cards
+due, the inbox and any running job. It hides on Study and Mock exam until the session ends, stays off phones, and always says in words what it
+shows. There is no hunger, currency, sound, or reward for time in the app: the research found agents help a little and virtual pets mixed at best,
+and that engagement without a link to study didn't raise learning. Keep one or remove it after a week of use; it's one folder and one commit.
+
 **Coding assistants.** A folder can carry the instructions, so Codex, OpenCode, Pi and Claude Code need no setup:
 `mdlearn agents [folder]`, or *Get this folder ready for my AI* in the palette (`POST /api/w/:ws/agents/prepare`), writes
 `AGENTS.md`, `CLAUDE.md` (a line that points to it) and `.agents/skills/`, the location those assistants share. It runs only

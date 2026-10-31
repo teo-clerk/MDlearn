@@ -4,6 +4,7 @@ import { openFolder, resetProgress } from './helpers'
 test.beforeEach(() => resetProgress())
 
 test('a study session runs to the summary, asking "sure?" before feedback', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('mdl-companion', 'pixel'))
   const ws = await openFolder(page)
   await page.goto(`/w/${ws}/study`)
   await expect(page.getByText(/^Today:/)).toBeVisible()
@@ -19,6 +20,10 @@ test('a study session runs to the summary, asking "sure?" before feedback', asyn
   }
   await expect(page.getByRole('heading', { name: 'Session done' })).toBeVisible()
   await expect(page.getByText('Worth rereading')).toBeVisible()
+  // the companion waits out the questions, and comes back glad for a moment
+  if (test.info().project.name === 'phone') return // it stays off phones
+  await expect(page.locator('[data-companion]').getByRole('status')).toHaveText('Session done')
+  await expect(page.locator('[data-companion]')).toHaveCount(0, { timeout: 10_000 })
 })
 
 test('a right answer gets "were you sure?" first, then the verdict and the next review', async ({ page }) => {

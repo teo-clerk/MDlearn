@@ -63,6 +63,17 @@
     color-scheme: dark;
   }
 }
+/* The pixel companion: two frames taking turns. Reduced motion leaves the first one standing. */
+.pet-b { opacity: 0; }
+.pet-steady .pet-a { animation: pet-a 900ms steps(1) infinite; } .pet-steady .pet-b { animation: pet-b 900ms steps(1) infinite; }
+.pet-slow .pet-a { animation: pet-a 2600ms steps(1) infinite; } .pet-slow .pet-b { animation: pet-b 2600ms steps(1) infinite; }
+.pet-blink .pet-a { animation: pet-blink-a 5200ms steps(1) infinite; } .pet-blink .pet-b { animation: pet-blink-b 5200ms steps(1) infinite; }
+@keyframes pet-a { 0% { opacity: 1; } 50% { opacity: 0; } }
+@keyframes pet-b { 0% { opacity: 0; } 50% { opacity: 1; } }
+@keyframes pet-blink-a { 0% { opacity: 1; } 96% { opacity: 0; } }
+@keyframes pet-blink-b { 0% { opacity: 0; } 96% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .pet :is(.pet-a, .pet-b) { animation: none !important; } }
+
 /* Settings → Appearance → Colour in notes, off: every hue turns grey, formula terms stay ink, and shape and text still carry the meaning. */
 :root[data-colour="off"] .formula-explained [class*="mdl-t-"], :root[data-colour="off"] :is(.term-0, .term-1, .term-2, .term-3, .term-4) { color: inherit; }
 :root[data-colour="off"], :root[data-colour="off"][data-theme] {

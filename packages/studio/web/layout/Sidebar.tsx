@@ -4,6 +4,7 @@ import { Link, useLocation } from 'wouter'
 import { BookA, BookOpenCheck, ClipboardCheck, LifeBuoy, FilePlus, FileInput, ChartNoAxesColumn, ChevronsUpDown, FolderOpen, House, MessageSquareText, Monitor, Moon, Network, PanelLeftClose, Search, Settings, Sigma, Sparkles, Sun, Loader2 } from 'lucide-react'
 import { useJobs, useSession, useTree, useWorkspaces } from '../api/queries'
 import { useUi, type Theme } from '../state/ui'
+import { Companion } from '../companion/Companion'
 import { FileTree } from './FileTree'
 import { IconButton, Kbd } from '../ui/primitives'
 import { NewNote } from '../editor/NewNote'
@@ -60,6 +61,7 @@ export function Sidebar({ ws }: { ws: string }) {
         <FileTree ws={ws} tree={tree.data} loading={tree.isLoading} error={tree.error} />
       </div>
       {newNote && <NewNote ws={ws} folder="" onClose={() => setNewNote(false)} />}
+      <Companion ws={ws} />
       <div className="flex items-center gap-1 border-t border-border px-2 py-1.5">
         <ThemeSwitch />
         <Link href={`/w/${ws}/settings`} aria-label={t('Settings')} title={t('Settings')} className={`ml-auto inline-flex size-7 items-center justify-center rounded-[6px] text-muted hover:bg-hover hover:text-text ${location.startsWith(`/w/${ws}/settings`) ? 'bg-active text-text' : ''}`}>

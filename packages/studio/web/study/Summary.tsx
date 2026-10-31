@@ -1,4 +1,5 @@
 // End of a session: what went well, what to reread (with links to the exact sections), what comes next.
+import { useEffect } from 'react'
 import { Link } from 'wouter'
 import { useQuery } from '@tanstack/react-query'
 import { RotateCcw } from 'lucide-react'
@@ -7,6 +8,7 @@ import { docRoute } from '../lib/paths'
 import { prettyTitle } from '../lib/title'
 import { Button } from '../ui/primitives'
 import { useTree, type ReportResponse } from '../api/queries'
+import { useUi } from '../state/ui'
 import type { SessionState } from './useSession'
 import { t, tp } from '../i18n'
 import { whenText } from '../lib/when'
@@ -14,6 +16,8 @@ import { whenText } from '../lib/when'
 export function Summary({ ws, state, onAgain }: { ws: string; state: SessionState; onAgain: () => void }) {
   const tree = useTree(ws)
   const rep = useQuery({ queryKey: ['report', ws, 'summary'], queryFn: () => api.get<ReportResponse>(`/api/w/${ws}/study/report`) })
+  const celebrate = useUi((u) => u.celebrate)
+  useEffect(() => { celebrate() }, [celebrate])
   const r = state.results
   const solid = r.filter((x) => x.rating === 3), shaky = r.filter((x) => x.rating === 2), missed = r.filter((x) => x.rating === 1)
   const mins = Math.max(1, Math.round((Date.now() - state.startedAt) / 6e4))

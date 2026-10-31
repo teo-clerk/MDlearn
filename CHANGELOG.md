@@ -14,6 +14,9 @@ their progress. If an edit elsewhere loses a studied card, MDlearn offers to rec
 blindness. Select a passage to highlight it as important, confusing or for the exam: confusing passages wait on Today with *Explain*, and
 exam passages offer *Make a card*. You can turn colour off in Settings, and icons and underlines still say the same thing.
 
+**A companion to try.** Off by default. In Settings you can choose a small orb or a pixel creature at the foot of the sidebar. It shows what
+MDlearn is really doing, stays away from questions, and never rewards or nags you.
+
 **Courses appear wherever they are written.** A course from a topic, from a chat or from an assistant sits in its
 own folder, and until now its lessons opened from a link but never reached the library, Today or Study. They now
 do, in Studio, the CLI and the MCP tools. Lessons sit under their `course.md`.
