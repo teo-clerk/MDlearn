@@ -17,7 +17,7 @@
   --border: #e8e7e4;
   --border-strong: #d6d5d1;
   --hover: rgb(40 38 33 / 0.05);
-  --active: rgb(40 38 33 / 0.085);
+  --active: var(--accent-soft-l, rgb(40 38 33 / 0.085));
   /* accent: graphite unless Settings → Appearance sets --accent-l … (light) and --accent-d … (dark) on <html> */
   --accent: var(--accent-l, #2c2c2b);
   --accent-ink: var(--accent-ink-l, #2c2c2b);
@@ -30,6 +30,8 @@
   --warn-soft: rgb(196 125 20 / 0.12);
   --bad: #c03a2b;
   --bad-soft: rgb(192 58 43 / 0.09);
+  /* Colour in the reading column only, each with a job. Checked for 4.5:1 and for colour-blind separation. */
+  --hue-blue: #104494; --hue-green: #248372; --hue-violet: #962be7; --hue-amber: #ac5802; --hue-rose: #752c42;
   --code-bg: #f5f5f3;
   --shadow: 0 1px 2px rgb(30 28 24 / 0.05), 0 6px 20px rgb(30 28 24 / 0.08);
   --font-ui: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans", sans-serif;
@@ -41,8 +43,9 @@
   --bg: #191919; --sidebar: #202020; --panel: #1d1d1d; --raised: #252525;
   --text: #e7e6e2; --muted: #a09f9b; --subtle: #858480;
   --border: #2f2f2e; --border-strong: #3b3b3a;
-  --hover: rgb(255 255 255 / 0.055); --active: rgb(255 255 255 / 0.09);
+  --hover: rgb(255 255 255 / 0.055); --active: var(--accent-soft-d, rgb(255 255 255 / 0.09));
   --accent: var(--accent-d, #e7e6e2); --accent-ink: var(--accent-ink-d, #e7e6e2); --accent-soft: var(--accent-soft-d, rgb(255 255 255 / 0.08)); --on-accent: var(--on-accent-d, #191919); --focus: var(--focus-d, #8d9be0);
+  --hue-blue: #4894e6; --hue-green: #72e89d; --hue-violet: #dbadf8; --hue-amber: #f99c15; --hue-rose: #dd5c67;
   --good: #6cc391; --good-soft: rgb(108 195 145 / 0.13); --warn: #e0a54a; --warn-soft: rgb(224 165 74 / 0.14); --bad: #f08074; --bad-soft: rgb(240 128 116 / 0.13);
   --code-bg: #222221; --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.35);
   color-scheme: dark;
@@ -52,13 +55,31 @@
     --bg: #191919; --sidebar: #202020; --panel: #1d1d1d; --raised: #252525;
     --text: #e7e6e2; --muted: #a09f9b; --subtle: #858480;
     --border: #2f2f2e; --border-strong: #3b3b3a;
-    --hover: rgb(255 255 255 / 0.055); --active: rgb(255 255 255 / 0.09);
+    --hover: rgb(255 255 255 / 0.055); --active: var(--accent-soft-d, rgb(255 255 255 / 0.09));
     --accent: var(--accent-d, #e7e6e2); --accent-ink: var(--accent-ink-d, #e7e6e2); --accent-soft: var(--accent-soft-d, rgb(255 255 255 / 0.08)); --on-accent: var(--on-accent-d, #191919); --focus: var(--focus-d, #8d9be0);
-    --good: #6cc391; --good-soft: rgb(108 195 145 / 0.13); --warn: #e0a54a; --warn-soft: rgb(224 165 74 / 0.14); --bad: #f08074; --bad-soft: rgb(240 128 116 / 0.13);
+    --hue-blue: #4894e6; --hue-green: #72e89d; --hue-violet: #dbadf8; --hue-amber: #f99c15; --hue-rose: #dd5c67;
+  --good: #6cc391; --good-soft: rgb(108 195 145 / 0.13); --warn: #e0a54a; --warn-soft: rgb(224 165 74 / 0.14); --bad: #f08074; --bad-soft: rgb(240 128 116 / 0.13);
     --code-bg: #222221; --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.35);
     color-scheme: dark;
   }
 }
+/* The pixel companion: two frames taking turns. Reduced motion leaves the first one standing. */
+.pet-b { opacity: 0; }
+.pet-steady .pet-a { animation: pet-a 900ms steps(1) infinite; } .pet-steady .pet-b { animation: pet-b 900ms steps(1) infinite; }
+.pet-slow .pet-a { animation: pet-a 2600ms steps(1) infinite; } .pet-slow .pet-b { animation: pet-b 2600ms steps(1) infinite; }
+.pet-blink .pet-a { animation: pet-blink-a 5200ms steps(1) infinite; } .pet-blink .pet-b { animation: pet-blink-b 5200ms steps(1) infinite; }
+@keyframes pet-a { 0% { opacity: 1; } 50% { opacity: 0; } }
+@keyframes pet-b { 0% { opacity: 0; } 50% { opacity: 1; } }
+@keyframes pet-blink-a { 0% { opacity: 1; } 96% { opacity: 0; } }
+@keyframes pet-blink-b { 0% { opacity: 0; } 96% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .pet :is(.pet-a, .pet-b) { animation: none !important; } }
+
+/* Settings → Appearance → Colour in notes, off: every hue turns grey, formula terms stay ink, and shape and text still carry the meaning. */
+:root[data-colour="off"] .formula-explained [class*="mdl-t-"], :root[data-colour="off"] :is(.term-0, .term-1, .term-2, .term-3, .term-4) { color: inherit; }
+:root[data-colour="off"], :root[data-colour="off"][data-theme] {
+  --hue-blue: var(--muted); --hue-green: var(--muted); --hue-violet: var(--muted); --hue-amber: var(--muted); --hue-rose: var(--muted);
+}
+
 @theme inline {
   --color-bg: var(--bg); --color-sidebar: var(--sidebar); --color-panel: var(--panel); --color-raised: var(--raised);
   --color-text: var(--text); --color-muted: var(--muted); --color-subtle: var(--subtle);
@@ -77,6 +98,8 @@
    Otherwise a touchpad overscroll at the end of a pane, or anything taller than the window, slides the whole
    app up and leaves an empty band below it. */
 html, body, #root { height: 100%; overflow: clip; overscroll-behavior: none; }
+/* Fixed, so nothing inside can reach the page itself: on the root, clip still lets scrollIntoView move the whole app. */
+#root { position: fixed; inset: 0; }
 body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font-ui); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
 ::selection { background: var(--accent-soft); color: inherit; }
 * { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
@@ -86,6 +109,7 @@ body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--
   /* focused by the app, not a tab stop (the page, a question's options): no ring */
   [tabindex="-1"]:focus-visible { outline: none; }
   input, textarea { caret-color: var(--accent); }
+  input[type="checkbox"], input[type="radio"], input[type="range"], progress { accent-color: var(--accent); }
   ::placeholder { color: var(--muted); opacity: 1; }
 }
 .tabular { font-variant-numeric: tabular-nums; }
@@ -95,13 +119,14 @@ body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--
 .read { font-family: var(--font-read); font-size: 18px; line-height: 1.68; font-optical-sizing: auto; color: var(--text); }
 .read > * + * { margin-top: 0.85em; }
 .read p { margin: 0; }
-.read p + p { margin-top: 0.85em; }
+.read p + p, .read .callout + p { margin-top: 0.85em; }
 .read h1, .read h2, .read h3, .read h4 { font-family: var(--font-ui); color: var(--text); line-height: 1.3; letter-spacing: -0.01em; scroll-margin-top: 72px; text-wrap: balance; }
 .read h2 { font-size: 1.42rem; font-weight: 650; margin-top: 2.1em; margin-bottom: 0.2em; }
 .read h3 { font-size: 1.16rem; font-weight: 640; margin-top: 1.7em; margin-bottom: 0.1em; }
 .read h4, .read h5, .read h6 { font-size: 1rem; font-weight: 640; margin-top: 1.4em; }
-.read a { color: inherit; text-decoration: underline; text-decoration-color: var(--border-strong); text-underline-offset: 3px; text-decoration-thickness: 1px; }
-.read a:hover { text-decoration-color: var(--text); }
+.read a { color: inherit; text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--accent-ink) 55%, transparent); text-underline-offset: 3px; text-decoration-thickness: 1px; }
+.read a:hover { text-decoration-color: var(--accent-ink); }
+[data-colour="off"] .read a { text-decoration-color: var(--border-strong); }
 .read strong { font-weight: 640; }
 .read code { font-family: var(--font-mono); font-size: 0.84em; background: var(--code-bg); border: 1px solid var(--border); border-radius: 4px; padding: 0.08em 0.32em; }
 .read ul, .read ol { padding-left: 1.4em; }
@@ -111,7 +136,15 @@ body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--
 .read li::marker { color: var(--subtle); }
 .read blockquote { border-left: 1px solid var(--border-strong); padding-left: 1em; color: var(--muted); }
 .read hr { border: 0; border-top: 1px solid var(--border); margin: 2em 0; }
-.read img { max-width: 100%; border-radius: 6px; }
+.read img { max-width: 100%; border-radius: 6px; cursor: zoom-in; }
+.read a img { cursor: pointer; }
+.picture-failed { display: inline-block; padding: 8px 12px; border: 1px dashed var(--border-strong); border-radius: 6px; font-family: var(--font-ui); font-size: 13.5px; color: var(--muted); }
+.picture-held { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; padding: 8px 12px; border: 1px dashed var(--border-strong); border-radius: 6px; font-family: var(--font-ui); font-size: 13.5px; color: var(--muted); }
+.picture-held button { color: var(--accent-ink); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.picture-zoom { max-width: 100vw; max-height: 100vh; width: 100vw; height: 100vh; margin: 0; padding: 24px; border: none; background: transparent; cursor: zoom-out; text-align: center; }
+.picture-zoom::backdrop { background: rgb(15 15 14 / 0.86); }
+.picture-zoom img { display: block; max-width: 100%; max-height: calc(100vh - 96px); margin: 0 auto; border-radius: 6px; object-fit: contain; }
+.picture-zoom p { margin-top: 12px; font-family: var(--font-ui); font-size: 14px; color: #e7e6e2; }
 .table-wrap { overflow-x: auto; margin: 1.1em 0; border: 1px solid var(--border); border-radius: 6px; }
 .read table { border-collapse: collapse; width: 100%; font-family: var(--font-ui); font-size: 14px; line-height: 1.5; font-variant-numeric: tabular-nums; }
 .read th { text-align: left; font-weight: 600; background: var(--panel); color: var(--text); }
@@ -135,11 +168,13 @@ body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--
 .diagram { margin: 1.4em 0; display: flex; justify-content: center; overflow-x: auto; }
 .diagram svg { max-width: 100%; height: auto; }
 .diagram-error figcaption { color: var(--bad); font-size: 13px; font-family: var(--font-ui); }
-.callout { border: 1px solid var(--border); background: var(--panel); border-radius: 6px; padding: 12px 16px; font-size: 0.95em; }
+.callout { --tone: var(--muted); --tone-soft: var(--panel); position: relative; background: color-mix(in srgb, var(--tone) 8%, var(--bg)); border-radius: 6px; padding: 12px 16px 12px 42px; font-size: 0.95em; }
+.callout-icon { position: absolute; left: 14px; top: 16px; width: 18px; height: 18px; color: var(--tone); }
 .callout-title { font-family: var(--font-ui); font-weight: 600; font-size: 14px; margin-bottom: 4px; }
-.callout-warning { background: var(--warn-soft); border-color: transparent; }
-.callout-tip { background: var(--hover); border-color: transparent; }
-.callout-important { background: var(--hover); border-color: transparent; }
+.callout-note { --tone: var(--hue-blue); }
+.callout-tip { --tone: var(--hue-green); }
+.callout-important { --tone: var(--hue-violet); }
+.callout-warning { --tone: var(--hue-amber); }
 details.callout > summary, details.doc-details > summary { cursor: pointer; font-family: var(--font-ui); font-weight: 560; font-size: 15px; list-style: none; display: flex; gap: 6px; align-items: center; }
 details > summary::-webkit-details-marker { display: none; }
 .doc-details { border: 1px solid var(--border); border-radius: 6px; padding: 10px 16px; margin: 1em 0; }
@@ -149,6 +184,10 @@ details > summary::-webkit-details-marker { display: none; }
 /* ---------------------------------------------------------------- notes */
 ::highlight(mdl-note) { background-color: rgb(214 170 40 / 0.22); }
 ::highlight(mdl-note-active) { background-color: rgb(214 170 40 / 0.45); }
+::highlight(mdl-mark-important) { background-color: color-mix(in srgb, var(--hue-amber) 24%, transparent); }
+::highlight(mdl-mark-confusing) { background-color: color-mix(in srgb, var(--hue-rose) 18%, transparent); text-decoration: underline wavy var(--hue-rose) 1px; }
+::highlight(mdl-mark-exam) { background-color: color-mix(in srgb, var(--hue-blue) 16%, transparent); text-decoration: underline var(--hue-blue) 1.5px; }
+.tone-important { color: var(--hue-amber); } .tone-confusing { color: var(--hue-rose); } .tone-exam { color: var(--hue-blue); }
 .prose-note { line-height: 1.55; }
 .prose-note > * + * { margin-top: 0.5em; }
 .prose-note ul { list-style: disc; padding-left: 1.2em; }
@@ -157,6 +196,12 @@ details > summary::-webkit-details-marker { display: none; }
 .prose-note .katex { font-size: 1em; }
 
 /* ---------------------------------------------------------------- visuals */
+/* A term and its explanation share a colour. Five is all that stay apart; the rest stay ink. */
+.formula-explained .mdl-t-0, .term-0 { color: var(--hue-blue); }
+.formula-explained .mdl-t-1, .term-1 { color: var(--hue-green); }
+.formula-explained .mdl-t-2, .term-2 { color: var(--hue-violet); }
+.formula-explained .mdl-t-3, .term-3 { color: var(--hue-amber); }
+.formula-explained .mdl-t-4, .term-4 { color: var(--hue-rose); }
 .formula-explained [class*="mdl-t-"] { border-radius: 3px; transition: background-color 120ms ease-out, box-shadow 120ms ease-out; cursor: help; }
 .formula-explained[data-active="0"] .mdl-t-0, .formula-explained[data-active="1"] .mdl-t-1, .formula-explained[data-active="2"] .mdl-t-2,
 .formula-explained[data-active="3"] .mdl-t-3, .formula-explained[data-active="4"] .mdl-t-4, .formula-explained[data-active="5"] .mdl-t-5,
@@ -170,7 +215,7 @@ details > summary::-webkit-details-marker { display: none; }
 
 /* printing: any page prints its content only; the cheat sheet sets A4 in two columns */
 @media print {
-  html, body, #root { height: auto !important; overflow: visible !important; background: #fff !important; }
+  html, body, #root { position: static !important; height: auto !important; overflow: visible !important; background: #fff !important; }
   .read a { text-decoration: none; color: inherit; }
   .no-print { display: none !important; }
   .sheet { font-size: 9.5pt; }
@@ -215,7 +260,7 @@ details > summary::-webkit-details-marker { display: none; }
 .html-block :where(figure) { margin: 1.2em 0; }
 .html-block :where(figcaption) { font-family: var(--font-ui); font-size: 13px; color: var(--muted); margin-top: 6px; }
 .read :where(kbd) { font-family: var(--font-mono); font-size: 0.8em; padding: 1px 5px; border: 1px solid var(--border-strong); border-bottom-width: 2px; border-radius: 4px; background: var(--raised); }
-.read :where(mark) { background: color-mix(in srgb, var(--warn) 22%, transparent); color: inherit; padding: 0 2px; border-radius: 2px; }
+.read :where(mark) { background: color-mix(in srgb, var(--hue-amber) 20%, transparent); color: inherit; padding: 0 2px; border-radius: 2px; }
 .html-details { margin: 1em 0; border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; }
 .html-details > summary { cursor: pointer; font-family: var(--font-ui); font-size: 14px; font-weight: 500; }
 

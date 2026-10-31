@@ -10,6 +10,28 @@ Vos notes restent de simples fichiers Markdown. Les **leçons** (`learn/*.learn.
 **Réviser** vous remontre chaque fiche juste avant que vous ne l'oubliiez. Cinq à dix minutes par jour sur
 **Aujourd'hui** : c'est l'habitude qui paie.
 
+## Comment naissent les leçons
+
+Commencez sur la première page avec **Créer un cours à partir de mes fichiers**. Donnez-lui vos PDF, PowerPoint, Word et
+images. Les originaux restent dans `sources/`, et ce qui peut être lu devient du texte et des images utilisables par
+n'importe quelle IA. Choisissez ensuite qui écrit les leçons :
+
+| Qui | Comment |
+|---|---|
+| **Claude, depuis ici** | Il démarre tout de suite, et vous pouvez le suivre, l'arrêter et l'annuler. |
+| **Votre assistant de code** | Claude Code, Codex, OpenCode ou Pi : MDlearn prépare le dossier et vous donne une seule commande. |
+| **Un chat** | ChatGPT, Claude.ai ou Gemini : joignez vos fichiers, collez le prompt MDlearn et rapportez la réponse avec **Importer → Depuis un chat**. |
+
+Les leçons apparaissent au fur et à mesure. Dans l'éditeur, collez ou déposez une capture pour ajouter une image. Cliquez sur une image pour l'agrandir. Une image du web attend que vous autorisiez son site, car un document pourrait s’en servir pour faire sortir des informations.
+
+Pour changer un cours déjà commencé, ouvrez sa page de présentation. Vous pouvez déplacer ou mettre en pause une leçon, ajouter des fichiers ou demander un changement. Les cartes gardent leur calendrier, même avec de nouveaux titres.
+
+## La couleur dans vos notes
+
+Ici, la couleur a un rôle : le type d'encadré, un terme d'une formule et son explication, le mot clé d'une carte. Sélectionnez un passage pour le
+surligner comme **Important**, **Pas clair** ou **Pour l'examen**, sans rien écrire. Les passages pas clairs vous attendent sur **Aujourd'hui**, et
+ceux de l'examen proposent **Créer une carte**. **Réglages → Apparence → Couleur dans les notes** la désactive.
+
 ## Les pages
 
 | Page | À quoi elle sert |
@@ -24,7 +46,7 @@ Vos notes restent de simples fichiers Markdown. Les **leçons** (`learn/*.learn.
 | **IA locale** | *Réglages → IA locale* : installez Ollama s’il manque, téléchargez un modèle recommandé (chacun indique si cet ordinateur le fait bien tourner) et choisissez celui avec lequel Studio répond. |
 | **Importer** | *Importer…* dans la barre latérale : une page web, un PDF, un paquet Anki, un notebook, des leçons d’un chat, ou un article de **SciNet** s’il tourne sur cet ordinateur. |
 | **Boîte de réception** | Ctrl+Maj+K enregistre une idée depuis n'importe quelle page, et *Boîte de réception* dans la barre d'une sélection enregistre un passage. Triez-les dans Aujourd'hui : **Fiche**, **Déplacer** vers un document, ou **Terminé**. C'est du Markdown simple dans `Inbox/`. |
-| **AI Studio** | Claude Code écrit ou améliore des leçons à partir d'une note (utilise votre abonnement Claude). |
+| **AI Studio** | Claude Code écrit ou améliore des leçons à partir d'une note (il tourne sur cet ordinateur, avec votre propre compte). |
 | **Formules** · **Glossaire** · **Carte** | Chaque formule, chaque terme défini, et quelles notes s'appuient sur lesquelles : un graphe en 2D ou en 3D, coloré selon ce que vous retenez de chaque note. |
 
 ## Pendant la lecture

@@ -1,6 +1,6 @@
 // AI Studio: ask Claude Code to build or improve the course; every job is visible, stoppable, undoable.
 import { useEffect, useMemo, useState } from 'react'
-import { useLocation, useSearch } from 'wouter'
+import { Link, useLocation, useSearch } from 'wouter'
 import { GraduationCap, Layers, PencilLine, Sparkles, Wand2 } from 'lucide-react'
 import { jobsApi, useEngines, useJobs, useSession, useTree, type JobRequest } from '../api/queries'
 import { Button, ErrorNote } from '../ui/primitives'
@@ -67,7 +67,7 @@ function NewJob({ ws, onStarted, onBatch, params }: { ws: string; onStarted: (id
   // the course language starts as the interface language (English means: the language of the topic)
   const [topic, setTopic] = useState({ topic: '', level: 'beginner' as 'beginner' | 'intermediate' | 'advanced', language: currentLang() === 'en' ? '' : LANGS.find((l) => l.code === currentLang())!.english, minutes: 45, notes: '' })
   const [lesson, setLesson] = useState(params.get('lesson') ?? '')
-  const [focus, setFocus] = useState<'all' | 'questions' | 'clarity' | 'lint'>('all')
+  const [focus, setFocus] = useState<'all' | 'questions' | 'clarity' | 'marks' | 'lint'>('all')
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<unknown>(null)
@@ -92,7 +92,7 @@ function NewJob({ ws, onStarted, onBatch, params }: { ws: string; onStarted: (id
       </button>
     )
   }
-  const select = 'h-9 w-full rounded-[6px] border border-border-strong bg-bg px-2.5 text-[14px] outline-none focus:border-text'
+  const select = 'h-9 w-full rounded-[6px] border border-border-strong bg-bg px-2.5 text-[14px] outline-none focus:border-accent'
   return (
     <section className="mt-8 rounded-[10px] border border-border p-5" aria-label={t('New job')}>
       <div role="tablist" className="flex flex-wrap gap-1">
@@ -105,13 +105,14 @@ function NewJob({ ws, onStarted, onBatch, params }: { ws: string; onStarted: (id
         {kind === 'course' && (
           <div role="radiogroup" aria-label={t('Build the course from')} className="mb-3 flex gap-1.5">
             {(['topic', 'doc'] as const).map((k) => (
-              <label key={k} className={`cursor-pointer rounded-[6px] border px-2.5 py-1 text-[13px] ${source === k ? 'border-text bg-hover' : 'border-border hover:bg-hover'}`}>
+              <label key={k} className={`cursor-pointer rounded-[6px] border px-2.5 py-1 text-[13px] ${source === k ? 'border-accent bg-accent-soft' : 'border-border hover:bg-hover'}`}>
                 <input type="radio" name="source" value={k} checked={source === k} onChange={() => setSource(k)} className="sr-only" />
                 {k === 'topic' ? t('Any topic') : t('One of my documents')}
               </label>
             ))}
           </div>
         )}
+        {kind === 'course' && <p className="mb-1 text-[13px] text-muted">{t('Have the files from a class?')} <Link href={`/start?ws=${ws}&add=1`} className="underline underline-offset-2 hover:text-text">{t('Make a course from them')}</Link></p>}
         {kind === 'course' && source === 'topic' && (
           <div className="flex flex-col gap-3">
             <label className="block text-[13px] font-medium">{t('What do you want to learn?')}
@@ -160,28 +161,28 @@ function NewJob({ ws, onStarted, onBatch, params }: { ws: string; onStarted: (id
             </label>
             <fieldset><legend className="text-[13px] font-medium">{t('Focus')}</legend>
               <div className="mt-1.5 flex flex-wrap gap-1.5">
-                {(['all', 'questions', 'clarity', 'lint'] as const).map((f) => (
-                  <label key={f} className={`cursor-pointer rounded-[6px] border px-2.5 py-1 text-[13px] ${focus === f ? 'border-text bg-hover' : 'border-border hover:bg-hover'}`}>
+                {(['all', 'questions', 'clarity', 'marks', 'lint'] as const).map((f) => (
+                  <label key={f} className={`cursor-pointer rounded-[6px] border px-2.5 py-1 text-[13px] ${focus === f ? 'border-accent bg-accent-soft' : 'border-border hover:bg-hover'}`}>
                     <input type="radio" name="focus" value={f} checked={focus === f} onChange={() => setFocus(f)} className="sr-only" />
-                    {f === 'all' ? t('Everything') : f === 'questions' ? t('Better questions') : f === 'clarity' ? t('Clearer text') : t('Fix problems')}
+                    {f === 'all' ? t('Everything') : f === 'questions' ? t('Better questions') : f === 'clarity' ? t('Clearer text') : f === 'marks' ? t('Mark key terms') : t('Fix problems')}
                   </label>
                 ))}
               </div>
             </fieldset>
-            <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} placeholder={t('Anything else? (optional)')} aria-label={t('Extra instructions')} className="rounded-[6px] border border-border-strong bg-bg px-2.5 py-2 text-[14px] outline-none focus:border-text" />
+            <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} placeholder={t('Anything else? (optional)')} aria-label={t('Extra instructions')} className="rounded-[6px] border border-border-strong bg-bg px-2.5 py-2 text-[14px] outline-none focus:border-accent" />
           </div>
         )}
         {kind === 'custom' && (
           <textarea value={text} onChange={(e) => setText(e.target.value)} rows={4} aria-label={t('What should Claude do?')}
-            placeholder={t('e.g. Add a lesson of ten flashcard-style questions on the radar equation, or: make every quiz in 04_sar harder.')}
-            className="w-full rounded-[6px] border border-border-strong bg-bg px-2.5 py-2 text-[14px] outline-none focus:border-text" />
+            placeholder={t('e.g. Add a lesson of ten questions on the first law, or: make every quiz in chapter 4 harder.')}
+            className="w-full rounded-[6px] border border-border-strong bg-bg px-2.5 py-2 text-[14px] outline-none focus:border-accent" />
         )}
       </div>
       {!!error && <ErrorNote error={error} />}
       {kind !== 'folder' && (
         <div className="mt-4 flex items-center gap-3">
           <Button variant="primary" icon={Sparkles} busy={busy} disabled={!req || engines.isLoading} onClick={start}>{t('Start')}</Button>
-          <span className="text-[12.5px] text-muted">{t('Runs on your Claude subscription; uses your usage limits.')}</span>
+          <span className="text-[12.5px] text-muted">{t('Runs Claude Code on this computer, under your own login.')}</span>
         </div>
       )}
     </section>

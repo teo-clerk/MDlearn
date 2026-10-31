@@ -34,7 +34,7 @@ text inside the notes. Edge cases, the full grammar and every diagnostic code: `
 
 ## Companion lessons (curated sources)
 
-When the source is already a polished document — a curriculum such as ESA-PROJECTS with numbered
+When the source is already a polished document — a curriculum with numbered
 sections, objectives and exercises — do not rewrite it. Write a **companion lesson**: the learner
 reads the document; the lesson supplies retrieval, worked practice and misconception checks.
 
@@ -75,6 +75,9 @@ reads the document; the lesson supplies retrieval, worked practice and misconcep
   each key term at first use.
 - Every display formula has, in the same card, a gloss naming each new symbol ("where $P(H)$ is …").
 - A diagram sits in the card whose text explains it. Prefer a tree or flow over a box of text.
+- A picture earns its place by carrying information (a graph, a circuit, an instrument, a slide's figure).
+  Use one from the sources by its relative path, with alt text that says what it shows. Never add a picture
+  for decoration: interesting extras that teach nothing make people learn less.
 - Write in the notes' language and set `lang`; keep the notes' notation.
 
 ## Choose the check
@@ -225,15 +228,16 @@ Callouts: `note` (side detail), `tip` (intuition; `[label]{fold}` = optional dep
 ## Token discipline
 
 - Output only lesson files: no preface, no closing remarks, no wrapping code fence.
-- No ids except a scaffold's frontmatter `id`; attributes only `{fold}`, `{exact}`, `{memory}` and `{time=N}`. `time` is your estimate in minutes (≈ 1 per card, more
+- Mark the key term: wrap the one or two words a card is about in `<mark>`, once, where they first appear. Never a sentence, never a label, and leave a card unmarked if no term stands out (W610).
+- Write no ids of your own except a scaffold's frontmatter `id`, and keep every id already in a file: a `{#id}` on a heading is what ties the card to the student's progress, so it stays when the title changes; attributes only `{fold}`, `{exact}`, `{memory}` and `{time=N}`. `time` is your estimate in minutes (≈ 1 per card, more
   for `steps` and `code`); the compiler re-estimates it.
 - Math only as `$…$` and `$$…$$` (a one-line `$$…$$` is fine); money as `\$5`.
 - Everything is closed: each `:::` widget ends with its own `:::` line before the next `##`.
 
 ## Output
 
-- **Claude Code**: write `NN-slug.learn.md` files (and `course.md` for several lessons) in the folder the
-  user names, else next to the notes; then validate (step 6).
+- **A coding assistant** (Claude Code, Codex, OpenCode, Pi): write `NN-slug.learn.md` files (and `course.md` for
+  several lessons) in the folder the user names, else next to the notes; then validate (step 6).
 - **Chat**: print the raw file content; before each file of a multi-file answer put a line
   `<!-- file: NN-slug.learn.md -->`.
 
@@ -247,6 +251,7 @@ Callouts: `note` (side detail), `tip` (intuition; `[label]{fold}` = optional dep
 - [ ] Blanks only in `cloze`/`steps`; braces balanced.
 - [ ] Every `explain` ends with `> - ` idea units; every `steps` and `order` has a numbered list.
 - [ ] Each display formula has its gloss; every image has alt text; widgets only after the first `##`.
+- [ ] `<mark>` only on the key term of a card, never a sentence; no more than three in a card.
 - [ ] Every answer key recomputed; ≤ 4 blanks per cloze; no cloze key printed in its own prompt.
 
 ## Visuals

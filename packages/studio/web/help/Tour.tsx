@@ -15,7 +15,7 @@ const STEPS = (): Step[] => [
   { anchor: 'files', title: t('Your notes'), body: t('Open any note to read it. Select text to leave a note beside it, ask about it, or turn it into a card.') },
   { anchor: 'today', title: t('Today'), body: t('Your daily session: the cards that are due, then a few new ones. Press Start — five to ten minutes is enough.') },
   { anchor: 'study', title: t('Study'), body: t('One card at a time. Say whether you were sure before you see the answer; what you miss comes back sooner.') },
-  { anchor: 'ai', title: t('AI Studio'), body: t('Claude Code turns a note into a lesson of cards. Every change is checked and can be undone.') },
+  { anchor: 'ai', title: t('AI Studio'), body: t('An AI turns your class files or a note into lessons of cards. Every change is checked and can be undone.') },
   { anchor: 'help', title: t('Help and the tutorial'), body: t('Shortcuts, how to write questions and games, and an interactive tutorial to try them. Press ? any time.') },
 ]
 const visible = (el: Element | null): el is HTMLElement => !!el && (el as HTMLElement).offsetParent !== null && el.getBoundingClientRect().width > 0
@@ -74,7 +74,7 @@ export function Tour() {
         <h2 id="tour-title" className="mt-0.5 text-[15.5px] font-semibold">{step.title}</h2>
         <p id="tour-body" className="mt-1 text-[13.5px] leading-relaxed text-text/85">{step.body}</p>
         <div className="mt-3.5 flex items-center gap-2">
-          <span className="flex gap-1" aria-hidden>{steps.map((_, k) => <span key={k} className={`size-1.5 rounded-full transition-colors ${k === i ? 'bg-text' : 'bg-border-strong'}`} />)}</span>
+          <span className="flex gap-1" aria-hidden>{steps.map((_, k) => <span key={k} className={`size-1.5 rounded-full transition-colors ${k === i ? 'bg-accent' : 'bg-border-strong'}`} />)}</span>
           <span className="ml-auto" />
           {i > 0 && <Button size="sm" variant="ghost" onClick={() => setI(i - 1)}>{t('Back')}</Button>}
           <Button size="sm" variant="primary" onClick={() => (last ? finish() : setI(i + 1))}>{last ? t('Done') : i === 0 ? t('Show me') : t('Next')}</Button>

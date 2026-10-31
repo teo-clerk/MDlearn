@@ -2,13 +2,14 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { api, qs } from './client'
 import { currentLang } from '../i18n'
-import type { SessionInfo, WorkspaceSummary, Tree, DocResponse, LessonResponse, BrowseResult, StudyPlan, StudyItem, RecordResponse, SearchHit, Note, NoteAnchor, EnginesInfo, JobSummary, JobEvent, TodayResponse, GoalsInfo, FormulasResponse, GlossaryResponse, LinksResponse, MapResponse, DocSummary, AskStatus, AskEntry, SheetResponse, FileInfo, HistoryEntry, PreviewResponse, ImportResult, ChatCheck, Integrations, Batch, BatchCandidate, ConfidenceInfo, ExamPlan, ExamResult, TexResult, TexStatus, LocalAiInfo, ModelDownload, ScinetDetail, ScinetPaper, ScinetStatus, RelatedResponse, InboxItem, InboxList } from '../../shared/types'
+import type { SessionInfo, WorkspaceSummary, Tree, DocResponse, LessonResponse, BrowseResult, StudyPlan, StudyItem, RecordResponse, SearchHit, Note, NoteAnchor, NoteColor, EnginesInfo, JobSummary, JobEvent, TodayResponse, GoalsInfo, FormulasResponse, GlossaryResponse, LinksResponse, MapResponse, DocSummary, AskStatus, AskEntry, SheetResponse, FileInfo, HistoryEntry, PreviewResponse, ImportResult, ChatCheck, Integrations, Batch, BatchCandidate, ConfidenceInfo, ExamPlan, ExamResult, TexResult, TexStatus, LocalAiInfo, ModelDownload, ScinetDetail, ScinetPaper, ScinetStatus, RelatedResponse, InboxItem, InboxList } from '../../shared/types'
 import type { Checked, MdNode, WebAnswer, Outcome } from '@mdlearn/core'
 
 export const keys = {
   session: ['session'] as const,
   workspaces: ['workspaces'] as const,
   tree: (ws: string) => ['tree', ws] as const,
+  course: (ws: string, doc: string) => ['course', ws, doc] as const,
   doc: (ws: string, path: string) => ['doc', ws, path] as const,
   lesson: (ws: string, path: string) => ['lesson', ws, path] as const,
   report: (ws: string) => ['report', ws] as const,
@@ -105,6 +106,10 @@ export const latexApi = {
 }
 
 export const fileApi = {
+  picture: (ws: string, doc: string, file: File) => {
+    const form = new FormData(); form.set('doc', doc); form.set('file', file)
+    return api.upload<{ path: string; url: string }>(`/api/w/${ws}/pictures`, form)
+  },
   get: (ws: string, path: string) => api.get<FileInfo>(`/api/w/${ws}/file?${qs({ path })}`),
   save: (ws: string, body: { path: string; text: string; baseMtime?: number; overwrite?: boolean }) => api.post<{ mtime: number }>(`/api/w/${ws}/files/save`, body),
   create: (ws: string, path: string, text: string) => api.post<{ path: string; mtime: number }>(`/api/w/${ws}/files/create`, { path, text }),
@@ -144,8 +149,10 @@ export const useJobs = (ws: string) => useQuery({ queryKey: keys.jobs(ws), query
 export const useJob = (ws: string, id: string | undefined) => useQuery({ queryKey: keys.job(ws, id ?? ''), enabled: !!id, queryFn: () => api.get<JobDetail>(`/api/w/${ws}/ai/jobs/${id}`) })
 export type JobRequest =
   | { recipe: 'course.create'; doc: string }
-  | { recipe: 'lesson.improve'; lesson: string; focus: 'questions' | 'clarity' | 'lint' | 'all' | 'leech'; note?: string; card?: { key: string; title: string; wrong: string[] } }
+  | { recipe: 'lesson.improve'; lesson: string; focus: 'questions' | 'clarity' | 'lint' | 'marks' | 'all' | 'leech'; note?: string; card?: { key: string; title: string; wrong: string[] } }
   | { recipe: 'custom'; request: string; scope?: string }
+  | { recipe: 'course.change'; doc: string; request: string }
+  | { recipe: 'course.class'; name: string; level?: 'beginner' | 'intermediate' | 'advanced'; language?: string; request?: string }
   | { recipe: 'course.topic'; topic: string; level?: 'beginner' | 'intermediate' | 'advanced'; language?: string; minutes?: number; notes?: string }
 export const jobsApi = {
   start: (ws: string, req: JobRequest) => api.post<JobSummary>(`/api/w/${ws}/ai/jobs`, req),
@@ -158,7 +165,7 @@ export const useNotes = (ws: string, doc: string | undefined) => useQuery({
 })
 export const useEngines = () => useQuery({ queryKey: keys.engines, queryFn: () => api.get<EnginesInfo>('/api/engines'), staleTime: 30_000, refetchInterval: 60_000 })
 export const notesApi = {
-  create: (ws: string, doc: string, anchor: NoteAnchor, body: string) => api.post<Note>(`/api/w/${ws}/notes`, { doc, anchor, body }),
+  create: (ws: string, doc: string, anchor: NoteAnchor, body: string, color?: NoteColor) => api.post<Note>(`/api/w/${ws}/notes`, { doc, anchor, body, color }),
   update: (ws: string, doc: string, id: string, body: string) => api.post<Note>(`/api/w/${ws}/notes/${id}/update`, { doc, body }),
   remove: (ws: string, doc: string, id: string) => api.post<{ ok: true }>(`/api/w/${ws}/notes/${id}/delete`, { doc }),
   ask: (ws: string, body: { doc: string; anchor: NoteAnchor; question?: string; mode: 'ask' | 'explain'; noteId?: string }) => api.post<{ note: Note; messageId: string }>(`/api/w/${ws}/ai/ask`, body),
@@ -230,6 +237,22 @@ export const useOnboarding = () => useQuery({ queryKey: ['onboarding'], queryFn:
 export const helpApi = {
   tourDone: (tourDone: boolean) => api.post<{ tourDone: boolean }>('/api/onboarding', { tourDone }),
   tutorial: (reset = false) => api.post<{ id: string; name: string; root: string }>('/api/workspaces/tutorial', { reset }),
+}
+const classForm = (files: File[]) => { const form = new FormData(); for (const f of files) form.append('files', f, f.name); return form }
+export const classApi = {
+  create: (name: string, files: File[]) => api.upload<import('../../shared/types').ClassUpload>(`/api/courses?name=${encodeURIComponent(name)}`, classForm(files)),
+  add: (ws: string, files: File[]) => api.upload<import('../../shared/types').ClassUpload>(`/api/w/${ws}/sources`, classForm(files)),
+}
+export const useCourse = (ws: string, doc: string) => useQuery({ queryKey: keys.course(ws, doc), queryFn: () => api.get<import('../../shared/types').CourseInfo>(`/api/w/${ws}/course?${qs({ doc })}`) })
+export const courseApi = {
+  move: (ws: string, doc: string, lesson: string, by: -1 | 1) => api.post<{ ok: true }>(`/api/w/${ws}/course/move`, { doc, lesson, by }),
+  pause: (ws: string, doc: string, lesson: string, paused: boolean) => api.post<{ ok: true }>(`/api/w/${ws}/course/pause`, { doc, lesson, paused }),
+  reconnect: (ws: string, from: string, to: string) => api.post<{ ok: true }>(`/api/w/${ws}/course/reconnect`, { from, to }),
+  letGo: (ws: string, key: string) => api.post<{ ok: true }>(`/api/w/${ws}/course/let-go`, { key }),
+}
+export const agentsApi = {
+  prepare: (ws: string) => api.post<import('../../shared/types').PreparedFolder>(`/api/w/${ws}/agents/prepare`, {}),
+  mcp: () => api.post<import('../../shared/types').McpSetup>('/api/integrations/mcp', {}),
 }
 export const useIntegrations = () => useQuery({ queryKey: ['integrations'], queryFn: () => api.get<Integrations>('/api/integrations'), staleTime: Infinity })
 export const useHelpDoc = () => useQuery({ queryKey: ['help', currentLang()], queryFn: () => api.get<{ doc: import('@mdlearn/core').DocModel }>(`/api/help?lang=${currentLang()}`), staleTime: Infinity })

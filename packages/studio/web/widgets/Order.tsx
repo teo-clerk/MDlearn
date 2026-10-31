@@ -29,7 +29,7 @@ export function Order({ widget, draft, setDraft, result }: WidgetProps<Extract<D
               onDragStart={() => setDrag(pos)} onDragOver={(e) => { e.preventDefault(); if (drag !== null && drag !== pos) { move(drag, pos); setDrag(pos) } }} onDragEnd={() => setDrag(null)}
               tabIndex={locked ? -1 : 0}
               onKeyDown={(e) => { if (e.altKey && e.key === 'ArrowUp') { e.preventDefault(); move(pos, pos - 1) } if (e.altKey && e.key === 'ArrowDown') { e.preventDefault(); move(pos, pos + 1) } }}
-              className={`flex items-start gap-2 rounded-[7px] border px-2 py-2 ${right === true ? 'border-good bg-good-soft' : right === false ? 'border-bad bg-bad-soft' : drag === pos ? 'border-text bg-hover' : 'border-border bg-raised'}`}>
+              className={`flex items-start gap-2 rounded-[7px] border px-2 py-2 ${right === true ? 'border-good bg-good-soft' : right === false ? 'border-bad bg-bad-soft' : drag === pos ? 'border-accent bg-accent-soft' : 'border-border bg-raised'}`}>
               {!locked && <GripVertical className="mt-1 size-4 shrink-0 cursor-grab text-subtle" aria-hidden />}
               <span className="mt-[3px] w-5 shrink-0 text-right tabular font-ui text-[12px] font-semibold text-muted">{pos + 1}</span>
               <div className="read min-w-0 flex-1 text-[16px] leading-[1.55] [&_p]:!m-0"><Prose nodes={widget.items[itemIdx]} /></div>

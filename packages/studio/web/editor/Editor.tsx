@@ -52,10 +52,20 @@ const MARKDOWN = (): EditorLanguage => ({
   placeholder: t('Write Markdown. Insert a question or a visual from the Insert menu.'), spellcheck: true,
 })
 
-export const Editor = forwardRef<EditorHandle, { initial: string; onChange(text: string): void; onSave(): void; problems: Problem[]; ariaLabel: string; language?: EditorLanguage }>(function Editor({ initial, onChange, onSave, problems, ariaLabel, language }, ref) {
+const pictureIn = (data: DataTransfer | null) => [...(data?.files ?? [])].find((f) => f.type.startsWith('image/'))
+
+export const Editor = forwardRef<EditorHandle, { initial: string; onChange(text: string): void; onSave(): void; onPicture?(file: File): Promise<string | null>; problems: Problem[]; ariaLabel: string; language?: EditorLanguage }>(function Editor({ initial, onChange, onSave, onPicture, problems, ariaLabel, language }, ref) {
   const host = useRef<HTMLDivElement>(null)
   const view = useRef<EditorView | null>(null)
-  const cb = useRef({ onChange, onSave }); cb.current = { onChange, onSave }
+  const cb = useRef({ onChange, onSave, onPicture }); cb.current = { onChange, onSave, onPicture }
+  // A pasted or dropped picture goes to the folder; its description is left selected, ready to be typed over.
+  const place = async (v: EditorView, file: File, at: number) => {
+    const url = await cb.current.onPicture?.(file)
+    if (!url) return
+    const alt = t('describe this picture'), pos = Math.min(at, v.state.doc.length)
+    v.dispatch({ changes: { from: pos, insert: `![${alt}](${url})` }, selection: { anchor: pos + 2, head: pos + 2 + alt.length }, scrollIntoView: true })
+    v.focus()
+  }
 
   useEffect(() => {
     const lang = language ?? MARKDOWN()
@@ -65,6 +75,10 @@ export const Editor = forwardRef<EditorHandle, { initial: string; onChange(text:
       EditorView.contentAttributes.of({ 'aria-label': ariaLabel, spellcheck: String(lang.spellcheck) }),
       keymap.of([{ key: 'Mod-s', preventDefault: true, run: () => { cb.current.onSave(); return true } }, ...completionKeymap, ...defaultKeymap, ...historyKeymap]),
       EditorView.updateListener.of((u) => { if (u.docChanged) cb.current.onChange(u.state.doc.toString()) }),
+      ...(cb.current.onPicture ? [EditorView.domEventHandlers({
+        paste: (e, v) => { const file = pictureIn(e.clipboardData); if (!file) return false; e.preventDefault(); void place(v, file, v.state.selection.main.head); return true },
+        drop: (e, v) => { const file = pictureIn(e.dataTransfer); if (!file) return false; e.preventDefault(); void place(v, file, v.posAtCoords({ x: e.clientX, y: e.clientY }) ?? v.state.selection.main.head); return true },
+      })] : []),
     ]
     const v = new EditorView({ state: EditorState.create({ doc: initial, extensions }), parent: host.current! })
     view.current = v

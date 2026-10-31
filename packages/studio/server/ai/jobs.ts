@@ -1,4 +1,4 @@
-// AI jobs: one at a time (they share your subscription limits), streamed to the browser, cancellable,
+// AI jobs: one at a time (they share one Claude Code login), streamed to the browser, cancellable,
 // linted when they finish, and undoable (every file they touch is snapshotted first).
 import { randomUUID } from 'node:crypto'
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
@@ -13,8 +13,8 @@ import { UserError } from '../workspaces.js'
 
 export type { JobSummary }
 /** Files the server writes for a job before the engine starts (recorded and undoable like the engine's own writes). */
-export type PreWrite = (write: (abs: string, content: string) => void) => void
-interface Job extends JobSummary { spec: JobSpec; events: JobEvent[]; ctl: AbortController; handle: Handle; engineImpl: AiEngine; preWrite?: PreWrite }
+export type PreWrite = (write: (abs: string, content: string, replace?: boolean) => void) => void
+interface Job extends JobSummary { spec: JobSpec; events: JobEvent[]; ctl: AbortController; handle: Handle; engineImpl: AiEngine; after?: () => JobSummary['changes']; preWrite?: PreWrite }
 const MAX_EVENTS = 1500
 const posix = (p: string) => p.split(sep).join('/')
 
@@ -29,11 +29,11 @@ export class JobManager {
     return join(h.root, '.mdlearn', 'jobs', id)
   }
   /** Queue a job. `preWrite` may create files (e.g. lesson scaffolds) under the job's snapshot, so undo removes them. */
-  start(h: Handle, engine: AiEngine, spec: Omit<JobSpec, 'id' | 'root'>, opts: { preWrite?: PreWrite; parent?: string } = {}): JobSummary {
+  start(h: Handle, engine: AiEngine, spec: Omit<JobSpec, 'id' | 'root'>, opts: { preWrite?: PreWrite; after?: () => JobSummary['changes']; parent?: string } = {}): JobSummary {
     const id = randomUUID()
     const job: Job = {
       id, ws: h.id, recipe: spec.recipe, title: spec.title, status: 'queued', engine: engine.name, created: Date.now(), files: [], lint: [],
-      spec: { ...spec, id, root: h.root }, events: [], ctl: new AbortController(), handle: h, engineImpl: engine, ...(opts.preWrite ? { preWrite: opts.preWrite } : {}), ...(opts.parent ? { parent: opts.parent } : {}),
+      spec: { ...spec, id, root: h.root }, events: [], ctl: new AbortController(), handle: h, engineImpl: engine, ...(opts.preWrite ? { preWrite: opts.preWrite } : {}), ...(opts.after ? { after: opts.after } : {}), ...(opts.parent ? { parent: opts.parent } : {}),
     }
     this.jobs.set(id, job)
     this.announce(job)
@@ -87,7 +87,7 @@ export class JobManager {
       this.bus.publish({ type: 'job.event', ws: job.ws, jobId: job.id, event: e })
     }
     const beforeWrite = (abs: string): 'allow' | string => {
-      const refused = writeAllowed(abs, job.spec.writeScope)
+      const refused = writeAllowed(abs, job.spec.writeScope, job.spec.keepOut)
       if (refused) { emit({ kind: 'denied', tool: 'Write', reason: `${posix(relative(job.handle.root, abs))}: ${refused}` }); return refused }
       const existed = existsSync(abs)
       snaps.take(abs)
@@ -96,16 +96,17 @@ export class JobManager {
     }
     this.setStatus(job, 'running')
     try {
-      job.preWrite?.((abs, content) => {
+      job.preWrite?.((abs, content, replace) => {
         if (beforeWrite(abs) !== 'allow') throw new Error(`Refused to prepare ${abs}.`)
         mkdirSync(dirname(abs), { recursive: true })
-        writeFileSync(abs, content, { flag: 'wx' })
+        writeFileSync(abs, content, replace ? {} : { flag: 'wx' })
       })
       const r = await job.engineImpl.run(job.spec, { emit, signal: job.ctl.signal, beforeWrite })
       job.summary = r.summary
       if (r.sessionId) job.sessionId = r.sessionId
       snaps.seal()
       this.lintTouched(job, emit)
+      if (job.after) job.changes = job.after()
       this.setStatus(job, job.ctl.signal.aborted ? 'cancelled' : r.ok ? 'done' : 'failed')
     } catch (e) {
       snaps.seal()
@@ -140,7 +141,7 @@ export class JobManager {
   }
   private announce(job: Job) { this.bus.publish({ type: 'job', ws: job.ws, job: this.summary(job) }) }
   private summary(j: Job): JobSummary {
-    const { spec: _s, events: _e, ctl: _c, handle: _h, engineImpl: _i, preWrite: _p, ...rest } = j
+    const { spec: _s, events: _e, ctl: _c, handle: _h, engineImpl: _i, preWrite: _p, after: _a, ...rest } = j
     return rest
   }
 }

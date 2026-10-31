@@ -39,7 +39,7 @@ export function Sort({ widget, draft, setDraft, result }: WidgetProps<Extract<Dr
   const chip = (i: number) => {
     const p = parts?.[i]
     const chosen = sel === i
-    const tone = p?.ok === true ? 'border-good/60 bg-good-soft' : p?.ok === false ? 'border-bad/50 bg-bad-soft' : chosen ? 'border-text bg-hover shadow-[0_0_0_1px_var(--text)]' : 'border-border-strong bg-raised hover:bg-hover'
+    const tone = p?.ok === true ? 'border-good/60 bg-good-soft' : p?.ok === false ? 'border-bad/50 bg-bad-soft' : chosen ? 'border-accent bg-accent-soft shadow-[0_0_0_1px_var(--accent)]' : 'border-border-strong bg-raised hover:bg-hover'
     return (
       <li key={i} data-flip={i}>
         <button type="button" disabled={locked} aria-pressed={chosen} onClick={() => setSel(chosen ? null : i)}

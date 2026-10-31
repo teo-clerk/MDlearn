@@ -1,12 +1,12 @@
 # MDlearn — Tooling: importer, CLI, MCP server, skills
 
-> How the specification becomes a working study system for a real curriculum (ESA-PROJECTS):
+> How the specification becomes a working study system for a real curriculum:
 > a deterministic importer, the `mdlearn` CLI, the `mdlearn` MCP server for Claude Code, and three
 > skills. Syntax: [DSL_SPECIFICATION.md](DSL_SPECIFICATION.md) · design: [ENGINE_ARCHITECTURE.md](ENGINE_ARCHITECTURE.md).
 
 ## 1. Why companion lessons
 
-The ESA-PROJECTS curriculum is ~95 house-styled documents (~800k words), each with numbered
+The curriculum this was built for is ~95 house-styled documents (~800k words), each with numbered
 sections, a front-matter block (track, time, difficulty, objectives, prerequisites, deliverable),
 LaTeX, Python exercises and a per-project assessment document. Rewriting that prose into cards would
 cost millions of generation tokens and fork the source of truth. A **companion lesson** instead links
@@ -28,7 +28,7 @@ Deterministic, no LLM:
   milestone, prerequisites, objectives, deliverable) and the section tree (number, title, anchor,
   role: content / bridge / worked / exercises / lookup / howto, line range, words, display formulas,
   code blocks).
-- Headings are found by a **fence-aware line scan**, not by a Markdown parser: ESA documents put
+- Headings are found by a **fence-aware line scan**, not by a Markdown parser: such documents put
   `$$ … $$` on content lines, which makes remark-math swallow the rest of the file (DSL §6).
 - `sectionText(md, outline, ref, maxWords?)` — exact Markdown of a section (`5.1`, `§5.1`, `A2`,
   anchor or title fragment), truncated only at paragraph boundaries.
@@ -65,7 +65,7 @@ Stdio server built on `@modelcontextprotocol/sdk` 1.31. Configuration: `MDLEARN_
 `CLAUDE_PROJECT_DIR`, else the working directory — an unexpanded `${…}` is ignored), `MDLEARN_LEARN_DIR`
 (default `learn`) and `MDLEARN_READONLY=1` (no `save_lesson`; MDlearn Studio sets it because its jobs guard
 writes themselves). It works in any folder, including one with no curriculum. Registered project-scoped in
-`ESA-PROJECTS/.mcp.json`, or everywhere through the Claude Code plugin (§5).
+the curriculum's own `.mcp.json`, or everywhere through the Claude Code plugin (§5).
 
 | Tool | Kind | What it returns |
 |---|---|---|
@@ -104,9 +104,9 @@ Progress lives in `learn/.mdlearn/progress.json` (git-ignored): an append-only l
 |---|---|
 | `mdlearn-course` | Write or fix one lesson — notes mode or companion mode ([AGENT_SKILL.md](AGENT_SKILL.md)) |
 | `mdlearn-curriculum` | Batch: survey → order → scaffold → fill (parallel subagents) → lint → audit → report |
-| `mdlearn-tutor` | Study session: queue → present → answer → check → feedback → record; Socratic follow-ups grounded in `get_section`; ESA interview drills from each project's assessment document |
+| `mdlearn-tutor` | Study session: queue → present → answer → check → feedback → record; Socratic follow-ups grounded in `get_section`; interview drills from each project's assessment document |
 
-Installed as symlinks in `MDlearn/.claude/skills/` and `ESA-PROJECTS/.claude/skills/`; the sources
+Installed as symlinks in `MDlearn/.claude/skills/` and the curriculum's `.claude/skills/`; the sources
 live in `MDlearn/skills/` and `MDlearn/docs/AGENT_SKILL.md`.
 
 `scripts/build-integrations.ts` (run by every Studio build) packages them for other assistants into
@@ -114,6 +114,7 @@ live in `MDlearn/skills/` and `MDlearn/docs/AGENT_SKILL.md`.
 
 | Output | For |
 |---|---|
+| `agent-folder/` | `AGENTS.md` and the four skills with a one-file linter: `mdlearn agents` copies them into a folder (`skills/` becomes `.agents/skills/`), so Codex, OpenCode, Pi and Claude Code can write lessons there with nothing installed. |
 | `claude-plugin/` | A Claude Code marketplace with the `mdlearn` plugin: the four skills, `/mdlearn:course` and `/mdlearn:study`, and the MCP server bundled into one file (`mcp/server.mjs`, with its guide in `mcp/guide/`). `claude plugin marketplace add <dir>` then `claude plugin install mdlearn@mdlearn`; `claude --plugin-dir <dir>/mdlearn` tries it for one session |
 | `mdlearn-skill.zip` | Claude.ai (Settings → Capabilities → Skills): the course skill, the DSL spec and `scripts/lint.mjs`, the checker as one file |
 | `MDLEARN_PROMPT.md` | Chats without tools: [CHAT_PROMPT.md](CHAT_PROMPT.md) below its marker line (under 8,000 characters, so it fits a Custom GPT's instructions); its example is compiled by `check-docs` |
@@ -122,20 +123,20 @@ live in `MDlearn/skills/` and `MDlearn/docs/AGENT_SKILL.md`.
 A chat's answer comes back through Studio's *Import → From a chat* or `mdlearn import-chat`
 (`splitBundle`, `planBundle` and `fixMessage` in core).
 
-## 6. Workflow for ESA-PROJECTS
+## 6. Workflow for a large curriculum
 
 ```bash
-cd ~/CODING/ESA-PROJECTS
-mdlearn status 01_FLOOD          # what exists for project 1
-mdlearn new 01_FLOOD_SAR_OPTICAL_FUSION/docs/01_sar_hydrology   # scaffold
-# in Claude Code: "convert project 01 with mdlearn-curriculum"   → fills, lints, reports
-mdlearn lint learn/01_FLOOD_SAR_OPTICAL_FUSION
-# studying, in Claude Code: "quiz me on SAR physics" (mdlearn-tutor) — or offline:
+cd ~/my-course
+mdlearn status 01_RADAR          # what exists for unit 1
+mdlearn new 01_RADAR/01_basics   # scaffold
+# in Claude Code: "convert unit 01 with mdlearn-curriculum"   → fills, lints, reports
+mdlearn lint learn/01_RADAR
+# studying, in Claude Code: "quiz me on radar" (mdlearn-tutor) — or offline:
 mdlearn review --scope f04
 mdlearn report
 ```
 
-Converting a project: one `mdlearn new` per document, then the curriculum skill fills the lessons
+Converting a unit: one `mdlearn new` per document, then the curriculum skill fills the lessons
 (one subagent per document), lints them clean and reports factual issues it found in the source.
 
 ## 7. Verification

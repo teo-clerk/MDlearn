@@ -120,7 +120,7 @@ export function VideoBlock({ b, cx, checkpoints, check, noteAt }: Props) {
           {checkpoints.map((c, i) => (
             <button key={c.widget.id} type="button" aria-pressed={open?.i === i} aria-label={t('Question at {time}', { time: formatTime(c.at) })}
               onClick={() => setOpen(open?.i === i ? null : { i, paused: false })}
-              className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 tabular cursor-pointer hover:text-text ${open?.i === i ? 'border-text text-text' : 'border-border-strong'}`}>
+              className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 tabular cursor-pointer hover:text-text ${open?.i === i ? 'border-accent text-accent-ink' : 'border-border-strong'}`}>
               {answered.has(i) && <Check className="size-3 text-good" aria-hidden />}{formatTime(c.at)}
             </button>
           ))}

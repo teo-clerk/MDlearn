@@ -54,7 +54,7 @@ export function FolderCourse({ ws, onStarted }: { ws: string; onStarted: (id: st
       <fieldset className="mt-4"><legend className="text-[13px] font-medium">{t('Model')}</legend>
         <div className="mt-1.5 flex flex-wrap gap-1.5">
           {MODELS().map((m) => (
-            <label key={m.id} title={m.hint} className={`cursor-pointer rounded-[6px] border px-2.5 py-1 text-[13px] ${model === m.id ? 'border-text bg-hover' : 'border-border hover:bg-hover'}`}>
+            <label key={m.id} title={m.hint} className={`cursor-pointer rounded-[6px] border px-2.5 py-1 text-[13px] ${model === m.id ? 'border-accent bg-accent-soft' : 'border-border hover:bg-hover'}`}>
               <input type="radio" name="batch-model" checked={model === m.id} onChange={() => setModel(m.id)} className="sr-only" />{m.label}
             </label>
           ))}
@@ -110,7 +110,7 @@ export function BatchView({ ws, id, onBack }: { ws: string; id: string; onBack()
           {b.status !== 'running' && left && <Button variant="primary" icon={Play} busy={busy === 'resume'} onClick={() => void act('resume', () => batchApi.resume(ws, id))}>{t('Continue')}</Button>}
         </div>
       </div>
-      <div className="mt-3 h-[3px] w-full overflow-hidden rounded bg-active" aria-hidden><div className="h-full bg-text transition-[width]" style={{ width: `${Math.round(100 * done / b.docs.length)}%` }} /></div>
+      <div className="mt-3 h-[3px] w-full overflow-hidden rounded bg-active" aria-hidden><div className="h-full bg-accent transition-[width]" style={{ width: `${Math.round(100 * done / b.docs.length)}%` }} /></div>
       {error && <p role="alert" className="mt-3 text-[13px] text-bad">{error}</p>}
       {b.error && <p role="alert" className="mt-3 text-[13px] text-bad">{b.error}</p>}
       <ul className="mt-4 divide-y divide-border rounded-[8px] border border-border" aria-label={t('Documents')}>{b.docs.map((d) => <DocRow key={d.path} ws={ws} d={d} />)}</ul>

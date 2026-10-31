@@ -2,19 +2,25 @@
 // theme switch: they live in localStorage and apply before the first paint.
 import { useState } from 'react'
 import { Check, Monitor, Moon, Sun } from 'lucide-react'
-import { useUi, type Theme } from '../state/ui'
+import { useUi, type CompanionKind, type Theme } from '../state/ui'
 import { ACCENTS, applyAccent, parseHex, savedAccent, swatch, type Accent, type AccentId } from '../lib/accent'
-import { LANGS, currentLang, setLang, t } from '../i18n'
+import { applyColour, colourOn } from '../lib/colour'
+import { forgetSites, useSitesAnywhere } from '../prose/webPictures'
+import { LANGS, currentLang, setLang, t, tp } from '../i18n'
 import { Section } from './Section'
 
 const ACCENT_NAMES: Record<AccentId, () => string> = {
   graphite: () => t('Graphite'), blue: () => t('Blue'), green: () => t('Green'), violet: () => t('Violet'), amber: () => t('Amber'), rose: () => t('Rose'),
 }
-const option = (on: boolean) => `inline-flex h-8 items-center gap-1.5 rounded-[6px] border px-3 text-[13px] cursor-pointer ${on ? 'border-text bg-hover font-medium' : 'border-border hover:bg-hover'}`
+const option = (on: boolean) => `inline-flex h-8 items-center gap-1.5 rounded-[6px] border px-3 text-[13px] cursor-pointer ${on ? 'border-accent bg-accent-soft font-medium' : 'border-border hover:bg-hover'}`
 
 export function Appearance() {
   const theme = useUi((s) => s.theme), setTheme = useUi((s) => s.setTheme)
   const [accent, setAccent] = useState<Accent>(savedAccent)
+  const [colour, setColour] = useState(colourOn)
+  const sites = useSitesAnywhere()
+  const companion = useUi((s) => s.companion), setCompanion = useUi((s) => s.setCompanion)
+  const companions: [CompanionKind, string][] = [['off', t('Off')], ['orb', t('Orb')], ['pixel', t('Pixel')]]
   const custom = parseHex(accent) ? accent : null
   const pick = (a: Accent) => { applyAccent(a); setAccent(a) }
   const themes: [Theme, typeof Sun, string][] = [['light', Sun, t('Light')], ['dark', Moon, t('Dark')], ['system', Monitor, t('Match system')]]
@@ -30,6 +36,21 @@ export function Appearance() {
           ))}
         </div>
       </div>
+      <label className="flex items-start gap-2 text-[13.5px]">
+        <input type="checkbox" checked={colour} onChange={(e) => { setColour(e.target.checked); applyColour(e.target.checked) }} className="mt-0.5" />
+        <span>{t('Colour in notes')}<span className="block text-[12.5px] text-muted">{t('Callouts, formula terms and highlights. Each colour has a job, and icons and text say the same thing.')}</span></span>
+      </label>
+      <p className="text-[13.5px]">
+        {tp(sites.length, 'Pictures from the web show from {n} site you allowed.', 'Pictures from the web show from {n} sites you allowed.')}
+        {sites.length > 0 && <> <button type="button" title={sites.join(', ')} onClick={forgetSites} className="text-muted underline underline-offset-2 hover:text-text cursor-pointer">{t('Forget them')}</button></>}
+      </p>
+      <div>
+        <p className="text-[12.5px] text-muted" id="companion-label">{t('Companion')}</p>
+        <div role="radiogroup" aria-labelledby="companion-label" className="mt-1.5 flex flex-wrap gap-1.5">
+          {companions.map(([value, label]) => <button key={value} type="button" role="radio" aria-checked={companion === value} onClick={() => setCompanion(value)} className={option(companion === value)}>{label}</button>)}
+        </div>
+        <p className="mt-1.5 text-[12.5px] text-muted">{t('A small sign of what MDlearn is doing, at the foot of the sidebar. A test. It never rewards or nags you, and it hides during questions.')}</p>
+      </div>
       <div>
         <p className="text-[12.5px] text-muted" id="accent-label">{t('Accent colour')}</p>
         <div role="radiogroup" aria-labelledby="accent-label" className="mt-1.5 flex flex-wrap items-center gap-2">
@@ -42,12 +63,12 @@ export function Appearance() {
               </span>
             </button>
           ))}
-          <label className={`ml-1 inline-flex h-8 items-center gap-2 rounded-[6px] border px-2.5 text-[13px] cursor-pointer ${custom ? 'border-text bg-hover font-medium' : 'border-border hover:bg-hover'}`}>
+          <label className={`ml-1 inline-flex h-8 items-center gap-2 rounded-[6px] border px-2.5 text-[13px] cursor-pointer ${custom ? 'border-accent bg-accent-soft font-medium' : 'border-border hover:bg-hover'}`}>
             <input type="color" value={custom ?? '#3b6fd4'} onChange={(e) => pick(e.target.value as Accent)} className="size-5 cursor-pointer rounded border-0 bg-transparent p-0" />
             {t('Custom colour')}
           </label>
         </div>
-        <p className="mt-1.5 max-w-[62ch] text-[12.5px] text-muted">{t('Buttons, focus rings and progress bars use it. Every choice keeps text readable in both themes.')}</p>
+        <p className="mt-1.5 max-w-[62ch] text-[12.5px] text-muted">{t('Selected items, buttons, links, focus rings and charts use it. Every choice keeps text readable in both themes.')}</p>
       </div>
     </Section>
   )

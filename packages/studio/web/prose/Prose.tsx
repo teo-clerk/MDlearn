@@ -6,7 +6,11 @@ import type { MdNode } from '@mdlearn/core'
 import { CONTAINER_TAGS, INLINE_TAGS, cleanStyle } from '@mdlearn/core/html'
 import { Tex } from './Tex'
 import { SafeHtml } from './SafeHtml'
+import { Picture } from './Picture'
+import { Info, Lightbulb, Star, TriangleAlert, type LucideIcon } from 'lucide-react'
 import { t } from '../i18n'
+
+const CALLOUT_ICONS: Record<string, LucideIcon> = { note: Info, tip: Lightbulb, important: Star, warning: TriangleAlert }
 
 const CodeBlock = lazy(() => import('./CodeBlock'))
 const Mermaid = lazy(() => import('./Mermaid'))
@@ -105,17 +109,17 @@ function Node({ node: n, cx }: { node: MdNode; cx: ProseContext }): ReactNode {
     }
     case 'image': {
       const url = String(n.url ?? '')
-      return url ? <img src={cx.imageSrc ? cx.imageSrc(url) : url} alt={String(n.alt ?? '')} loading="lazy" /> : null
+      return url ? <Picture key={url} src={cx.imageSrc ? cx.imageSrc(url) : url} alt={String(n.alt ?? '')} /> : null
     }
     case 'blank': return cx.blank ? cx.blank(String(n.id)) : <span className="gap" aria-label={t('gap')} />
     case 'strayBlank': return <span className="gap" aria-label={t('gap')} />
     case 'callout': {
-      const kind = String(n.kind)
+      const kind = String(n.kind), Icon = CALLOUT_ICONS[kind] ?? Info
       const summary = n.summary as MdNode[] | undefined
       const body = <Prose nodes={(n.children ?? []) as MdNode[]} cx={cx} />
       return n.fold
-        ? <details className={`callout callout-${kind}`}><summary>{summary ? <Inline nodes={summary} cx={cx} /> : kind}</summary>{body}</details>
-        : <aside className={`callout callout-${kind}`} aria-label={kind}>{summary && <p className="callout-title"><Inline nodes={summary} cx={cx} /></p>}{body}</aside>
+        ? <details className={`callout callout-${kind}`}><summary><Icon className="callout-icon" strokeWidth={1.8} aria-hidden />{summary ? <Inline nodes={summary} cx={cx} /> : kind}</summary>{body}</details>
+        : <aside className={`callout callout-${kind}`} aria-label={kind}><Icon className="callout-icon" strokeWidth={1.8} aria-hidden />{summary && <p className="callout-title"><Inline nodes={summary} cx={cx} /></p>}{body}</aside>
     }
     case 'htmlInline': {
       const tag = String(n.tag), a = attrsOf(n)

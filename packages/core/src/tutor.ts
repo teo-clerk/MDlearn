@@ -7,7 +7,7 @@ import { checkBlank, checkText, type Verdict } from './checkers.js'
 import { toMarkdown, inlineText, type MdOptions } from './md.js'
 import { prettyInline } from './tex.js'
 import { rate, type Help, type Rating } from './learn/session.js'
-import { deriveCards, retrievability, type ReviewEvent } from './learn/srs.js'
+import { deriveCards, isOriginalReview, retrievability, type ReviewEvent } from './learn/srs.js'
 import { seededOrder } from './seed.js'
 import { GAME_FORMAT, checkGame, fitsGame, parseGameText, poseGame, redactGame, type GameAnswer, type GameParts, type PosedGame } from './games.js'
 
@@ -465,7 +465,7 @@ export function report(lessons: Lesson[], reviews: ReviewEvent[], now = Date.now
   const nextDue = [...fsrs.values()].map((c) => c.due.getTime()).filter((t) => t > now).sort((a, b) => a - b)[0]
   return {
     lessons: perLesson,
-    totals: { cards: sum(perLesson, 'cards'), seen: sum(perLesson, 'seen'), due: sum(perLesson, 'due'), reviews: reviews.length },
+    totals: { cards: sum(perLesson, 'cards'), seen: sum(perLesson, 'seen'), due: sum(perLesson, 'due'), reviews: reviews.filter(isOriginalReview).length },
     /** Your own first-try results (each widget's first graded attempt per day). */
     accuracy: { today: accuracySince(attempts, startOfDay(now)), last7Days: accuracySince(attempts, startOfDay(now) - 6 * DAY) },
     nextDue: nextDue ? new Date(nextDue).toISOString() : null,

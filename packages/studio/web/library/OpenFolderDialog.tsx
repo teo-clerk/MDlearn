@@ -22,7 +22,7 @@ export function OpenFolderDialog({ onClose, onOpen, busy }: { onClose(): void; o
       </div>
       <form className="flex gap-2 px-4 pt-3" onSubmit={(e) => { e.preventDefault(); setPath(typed) }}>
         <input value={typed} onChange={(e) => setTyped(e.target.value)} aria-label={t('Folder path')} spellCheck={false}
-          className="h-8 min-w-0 flex-1 rounded-[6px] border border-border-strong bg-bg px-2.5 font-mono text-[12.5px] outline-none focus:border-text" />
+          className="h-8 min-w-0 flex-1 rounded-[6px] border border-border-strong bg-bg px-2.5 font-mono text-[12.5px] outline-none focus:border-accent" />
         <Button type="submit" size="sm">{t('Go')}</Button>
       </form>
       <div className="h-[340px] overflow-y-auto px-2 py-2">

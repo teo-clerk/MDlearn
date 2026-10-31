@@ -57,6 +57,8 @@ describe.skipIf(!ip)('sharing on the network (--lan)', () => {
     const item = await captured.json() as { file: string; id: string }
     expect((await fetch(`${base()}/api/w/${ws}/inbox`, { headers })).status).toBe(200)
     expect((await post('/inbox/move', { file: item.file, id: item.id, doc: 'x.md' })).status).toBe(403)
+    expect((await post('/pictures', {})).status).toBe(403)
+    expect((await post('/sources', {})).status).toBe(403)
     expect((await post('/inbox/done', { file: item.file, id: item.id })).status).toBe(200)
     // the paper library stays on this computer, as SciNet keeps it
     for (const path of ['/api/scinet/status', '/api/scinet/papers?q=x', '/api/scinet/papers/1']) expect((await fetch(`${base()}${path}`, { headers })).status).toBe(403)

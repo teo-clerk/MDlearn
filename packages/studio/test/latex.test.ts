@@ -92,7 +92,7 @@ describe('choosing and running an engine', () => {
     expect(installHelp('darwin', {}).command).toBe('brew install tectonic')
     expect(installHelp('win32', {})).toEqual({ command: null, url: expect.stringContaining('tectonic') })
   })
-  it('runs a real engine program from the PATH, in the file\'s folder, writing only to the output folder', async () => {
+  it.skipIf(process.platform === 'win32')('runs a real engine program from the PATH, in the file\'s folder, writing only to the output folder', async () => {
     const bin = tmp('mdl-texbin-')
     // a stand-in "tectonic": checks its rules, then writes a PDF and a log where it was told to
     writeFileSync(join(bin, 'tectonic'), `#!/bin/sh

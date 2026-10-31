@@ -30,8 +30,8 @@ describe('redactWidget', () => {
   it('never contains answer keys, feedback, ideas, solutions or tests', () => {
     for (const w of widgets) expect(keysIn(redactWidget(w)), w.id).toEqual([])
   })
-  const learn = join(process.env.HOME ?? '', 'CODING/ESA-PROJECTS/learn')
-  it.skipIf(!existsSync(learn))('contract holds for every ESA companion lesson', () => {
+  const learn = join(process.env.MDLEARN_CORPUS ?? '', 'learn') // a real curriculum, when one is at hand
+  it.skipIf(!existsSync(learn))('contract holds for every companion lesson of a real curriculum', () => {
     const all = loadCourse(learn).flatMap((l) => l.lesson?.cards.flatMap((c) => c.blocks.filter(askable)) ?? [])
     expect(all.length).toBeGreaterThan(100)
     for (const w of all) expect(keysIn(redactWidget(w)), w.id).toEqual([])

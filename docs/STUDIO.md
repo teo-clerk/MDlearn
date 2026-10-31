@@ -43,8 +43,8 @@ grades, schedules and progress.
 **Documents.** `parseDocument()` (core) reads any Markdown faithfully ("document mode": `---` kept,
 `{{…}}` literal, `<details>` folded, other HTML shown as text, a stray `$$` recovered, inline math across
 line breaks). Headings carry the outline's anchors and numbers (`§3.1`). Authored widgets and visual blocks
-inside a document work too. On the ESA corpus: 103 documents, 20,164 formulas, 0 lost math blocks, p95
-parse 150 ms (`npm run check-corpus -- ~/CODING/ESA-PROJECTS`).
+inside a document work too. On a real curriculum: 103 documents, 20,164 formulas, 0 lost math blocks, p95
+parse 150 ms (`npm run check-corpus -- <folder>`).
 
 **Lessons and answers.** Lessons reach the browser **redacted** (`redactWidget`: no keys, feedback, ideas,
 solutions). Answers are checked on the server (`checkStructured`) after validating their shape
@@ -104,7 +104,7 @@ downloader. The model in use and the search model cannot be removed.
 | Setting | Value | Why |
 |---|---|---|
 | executable | settings → SDK-bundled CLI → `mise which claude` | never the mise shim (it writes to stdout) |
-| auth | your Claude Code login; `env` is an allowlist (no `ANTHROPIC_*`) | an API key would silently take over |
+| auth | whatever the person's own Claude Code is signed in with; `env` is an allowlist that keeps `ANTHROPIC_API_KEY` | Studio never sees or stores a login, and a key set where Studio starts applies as it does in a terminal |
 | `settingSources` | `[]` + a local plugin (`dist/plugin`: the four MDlearn skills) | your user skills, hooks and MCP servers stay out |
 | MCP | `mdlearn` server only (`strictMcpConfig`) | outlines, sections, `lint_lesson` |
 | tools | Read, Glob, Grep, Write, Edit, MultiEdit, Skill, TodoWrite; no Bash, web or subagents | |
@@ -113,7 +113,7 @@ downloader. The model in use and the search model cannot be removed.
 Recipes: **create a course** (the server scaffolds lesson files from the document's outline, Claude fills
 them following the mdlearn-curriculum / mdlearn-course / mdlearn-visuals skills, then lints until clean),
 **improve a lesson** (one file), **something else** (free request, `learn/` by default), and **follow-up**
-(resumes the job's Claude session). One job runs at a time (they share your subscription limits; usage
+(resumes the job's Claude session). One job runs at a time (they share one Claude Code login; usage
 warnings are shown in the log). After a job the server re-lints every lesson it touched. **Undo** restores
 every file to its state before the job and deletes the files it created — except files you edited since.
 `--fake-ai` swaps Claude for a scripted engine (tests, demos).
@@ -266,7 +266,7 @@ reaches the browser. The CLI and MCP tutor keep self-checking, as before.
 
 The **knowledge index** (`<folder>/.mdlearn/index/knowledge.json`) holds, for each document, its display
 formulas (with section and the sentence before), defined terms, links to other documents and text chunks.
-It is built in the background on first use (about 4 s for the 105 ESA documents; instant afterwards because
+It is built in the background on first use (about 4 s for 105 documents; instant afterwards because
 unchanged files are skipped by mtime) and updated by the file watcher.
 
 - **Formulas** — every display formula in the folder, searchable by words and TeX, filtered by document;
@@ -299,7 +299,7 @@ unchanged files are skipped by mtime) and updated by the file watcher.
 **Ask** (`/w/:ws/ask`, also "Ask: …" in the search palette) answers a question from your own documents.
 
 1. **Passages.** The knowledge index splits every document into passages of at most ~400 words that know their
-   section (3,273 for the ESA folder).
+   section (3,273 for a 105-document folder).
 2. **Retrieval.** BM25 over the words (lightly stemmed, TeX ignored) and — when the search model is installed —
    cosine similarity over meaning vectors; the two rankings are fused with reciprocal-rank fusion (k = 60) and
    the best eight passages go on. Without vectors the search is by words only and says so.
@@ -426,6 +426,50 @@ the same fixed prompt the MCP server's `create_course` uses (`coursePrompt` in c
 given (read, never edited), otherwise from well-established knowledge with doubtful claims flagged
 `<!-- added: verify … -->` and sources listed. Its write scope is that new folder only.
 
+**From class files.** The first page's *Make a course from my class files* opens `/start`: name the course, drop the files,
+choose who writes the lessons. `POST /api/courses?name=` (local only) makes a library folder and `POST /api/w/:ws/sources` adds
+to one (100 MB a file, 400 MB at a time, 100 files). Originals go to `sources/`. `server/import/office.ts` turns `.pptx` (slide
+order, titles, bullets, tables, speaker notes, pictures; `fflate` + `linkedom`) and `.docx` (mammoth, then Turndown) into
+`sources/text/<name>.md` with pictures in `sources/media/<name>/`; a PDF goes through the quick reader when poppler is there.
+Each file reports what was read. An equation can't come through as text, so it is counted and the person is told: a PowerPoint
+keeps its picture of the equation, a Word file doesn't. Old `.ppt`/`.doc` files are kept, with a note to save them in the new format;
+one file that can't be read never stops the others. The `course.class` job writes `course.md` and the lessons at the top of the
+folder (`coursePrompt` with `classFiles`), and its `keepOut` stops it changing `sources/`, `AGENTS.md` or `CLAUDE.md`.
+
+**Changing a started course.** Progress belongs to `lessonId/cardId`, and a card's id is its title's slug unless the heading says
+`{#id}`, so a renamed card would silently start over. `core/src/revise.ts` guards that: `pinIds` writes ids into a lesson, `courseChanges`
+says what an edit did, and `lostCards` finds studied keys with no card and the unstudied cards most likely to be them. A `course.md`
+page shows `web/reader/CoursePanel.tsx`: each lesson's standing, move up and down (`server/course.ts` swaps the `NN-` numbers, which
+lesson ids ignore, and updates links in `course.md` and the notes file), pause (the cards go to `goals.suspended`), add class files, and
+*Change this course*. That `course.change` job pins every studied card in `preWrite`, so undo covers it, tells the AI each lesson's
+recall and hardest cards, and ends with `JobSummary.changes`: "28 cards kept their progress · 4 new · 1 removed". Outside AIs get the
+same rules in `AGENTS.md`, `lint.mjs --pin` before editing, and a report from `save_lesson` with `overwrite`. When a studied card is gone anyway,
+the panel offers *Reconnect to…* or *Let go*. Reconnecting appends copies of the card's reviews under the new key (ids `moved:…`, left out
+of daily counts by `isOriginalReview`) and pins the new card; both choices add the old key to `goals.settled`. The log keeps every event.
+
+**Colour in the reading column.** `web/styles/app.css` has five hues, one set for each theme, used only in the text: callouts with an
+icon each, the first five terms of an explained formula matched with their explanation, `<mark>` on key terms (W610 warns when a card
+marks too much, and *Improve a lesson → Mark key terms* adds them to an existing lesson), and three one-click highlights (`Note.color`:
+`important`, `confusing`, `exam`). A highlight needs no text. *Confusing* passages are listed on Today with *Explain*; *For the exam* offers
+*Make a card*. *Settings → Appearance → Colour in notes* turns every hue grey per device (`data-colour="off"`, set before the first paint by
+`public/theme.js`). Icons, underlines and labels carry the same meaning, so nothing depends on seeing colour.
+
+**Companion (a test).** *Settings → Appearance → Companion*: off by default, or an orb (`thinking-orbs`, loaded only for someone who picks it) or a
+12×12 one-colour pixel creature (`web/companion/sprites.ts`, plain data). It sits at the foot of the sidebar and shows what is really happening,
+from `useActivity.ts`: a job, an answer on its way, a teach-back, the end of a session, or five minutes without input. Clicking it shows cards
+due, the inbox and any running job. It hides on Study and Mock exam until the session ends, stays off phones, and always says in words what it
+shows. There is no hunger, currency, sound, or reward for time in the app: the research found agents help a little and virtual pets mixed at best,
+and that engagement without a link to study didn't raise learning. Keep one or remove it after a week of use; it's one folder and one commit.
+
+**Coding assistants.** A folder can carry the instructions, so Codex, OpenCode, Pi and Claude Code need no setup:
+`mdlearn agents [folder]`, or *Get this folder ready for my AI* in the palette (`POST /api/w/:ws/agents/prepare`), writes
+`AGENTS.md`, `CLAUDE.md` (a line that points to it) and `.agents/skills/`, the location those assistants share. It runs only
+when asked, never replaces an `AGENTS.md` or `CLAUDE.md` someone wrote, and writes nothing outside the folder.
+The MCP tools are optional: `POST /api/integrations/mcp` (local only) or `mdlearn agents --mcp` copies the one-file server
+to `~/.mdlearn/mcp`, because an installed app's own path can change, and gives each assistant's command. MDlearn prints
+them and never edits another app's settings. Tested with Codex 0.164, Pi 1.4 and OpenCode 2.2.5, whose `opencode.json` takes
+`mcp.<name>` (the `mcp.servers` form is for a later version).
+
 **Settings → Use MDlearn in other apps** (`GET /api/integrations`, files under `/api/integrations/…`) shows the
 Claude Code plugin's install commands (on the computer running Studio only), the Claude.ai skill download, and
 the prompt for other chats; `scripts/build-integrations.ts` builds them into `dist/integrations/` on every build.
@@ -447,8 +491,9 @@ choices; they live in `localStorage` and `public/theme.js` applies them before t
 - **Accent colour**: graphite (the default), blue, green, violet, amber, rose, or any colour from the picker.
   `web/lib/accent.ts` turns one hue into `--accent`, `--accent-ink`, `--accent-soft`, `--on-accent` and `--focus`
   for each theme (OKLCH, gamut-clamped), each checked for 4.5:1 contrast (3:1 for focus rings); they are set as
-  `--accent-l` / `--accent-d` … on `<html>`, and `app.css` falls back to graphite without them. Buttons, focus
-  rings, the text cursor, selections and the progress bars use it.
+  `--accent-l` / `--accent-d` … on `<html>`, and `app.css` falls back to graphite without them. Selected rows and
+  options, buttons, links, focus rings, the text cursor, text selections, charts and progress bars use it
+  (`e2e/accent.spec.ts` reads the painted colours, so a new control can't quietly fall back to ink).
 - **Language**: English, Italiano, Español, Français, Català. `web/i18n/`: the English text is the key
   (`t('Study now')`, `tp(n, '{n} card', '{n} cards')` with CLDR plurals); the dictionary loads before the app
   module, and changing the language reloads the page. Dates and numbers follow it (`Intl` with `locale()`), the
@@ -464,6 +509,8 @@ choices; they live in `localStorage` and `public/theme.js` applies them before t
 |---|---|
 | Another website in your browser (CSRF, DNS rebinding) | Host allowlist; every change needs same-origin `Origin`/`Sec-Fetch-Site`, the `X-MDL: 1` header and a JSON (or multipart) body; no CORS; GET never changes anything |
 | Other devices on the network | off by default (bound to 127.0.0.1); `--lan` binds 0.0.0.0 and requires a 32-byte token (link/QR → HttpOnly, SameSite=Strict cookie); LAN clients can read, study, take notes and ask the local model — not open folders, write files or run Claude jobs (`--lan-full` to allow). Plain HTTP: use trusted networks |
+| Class files | Word and PowerPoint files are untrusted zip files: the unpacked size is capped at 400 MB from the zip's own directory before anything is read, only named parts are opened, pictures are kept only if their first bytes prove them, and the Markdown is rendered like any document. A file name can't leave `sources/`. Text in slides is data: the job prompt and `AGENTS.md` say to take instructions only from the student. Needs `write`, so a phone can't add files. |
+| Pictures | The page policy blocks pictures from outside, which also stops the other ways a document could reach the web (`background` attributes, SVG `<image>` and `feImage`, Mermaid image shapes). A web picture shows its description and a button until you allow its site for that document on this device (Settings → Appearance can forget them). Then the server fetches it: `https` only, public addresses only (checked on every redirect, and a redirect must stay on the same site, so some pictures need their direct address), a real PNG, JPEG, GIF or WebP, 20 MB, 15 s. The route needs a header an `<img>` can't send, so naming it in a document does nothing. That site still sees your address, when you asked, and the picture's whole address, which the document wrote; that is why an allowance covers one document and not every later one. No referrer or cookie goes with it. A name that resolves to a public address and then changes between the check and the fetch isn't covered; the reply must still be a picture and only goes back to you. `:::html` stays offline. A pasted or dropped picture is checked by its first bytes (PNG, JPEG, GIF, WebP; 20 MB) whatever its name says, written under `assets/<document>/` and never replaces a file; it needs `write`, so a phone can't add one. |
 | Malicious Markdown / uploads | the compiler keeps only allowlisted HTML tags and attributes (other blocks are sanitised by DOMPurify in the browser, scripts/styles/frames/forms/handlers removed, E107) and drops unsafe URLs; the page CSP forbids inline scripts and handlers; React renders text; KaTeX trust allowlist; Mermaid `strict`; uploads limited to Markdown/text/images, 2 MB each, sanitised relative paths |
 | Path traversal | every path goes through `realPath`-based `inRoot` (symlinks and dangling links resolved), hidden folders refused; job ids must be UUIDs; undo only restores files inside the folder |
 | Desktop app | the same server in a locked-down Electron window (no Node in the page, sandbox, Studio's pages only, other links in the browser, permissions refused) — see DESKTOP.md |

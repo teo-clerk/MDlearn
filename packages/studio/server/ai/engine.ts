@@ -11,6 +11,8 @@ export interface JobSpec {
   prompt: string
   /** Folders (absolute) the job may write into; only `.md` files. */
   writeScope: string[]
+  /** Inside the write scope, what stays untouched. */
+  keepOut?: string[]
   maxTurns: number
   resume?: string
   /** Claude model alias for this job (defaults to the one in settings). */

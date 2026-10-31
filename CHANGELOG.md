@@ -1,5 +1,52 @@
 # Changelog
 
+## Unreleased
+
+**MDlearn is now open source,** under the MIT License. The README, contribution guide and security policy are written
+for people who are new to it, and the Help page lists the open-source licences of what's inside.
+
+**A first page that explains itself.** It says what MDlearn does in three steps with one main action, and the tutorial
+is right below. People who have been here before see their recent folders first. A folder with no lessons now says so
+and offers to make them, where Study used to say *You are all caught up*.
+
+**Accent colours that show.** Picking a colour used to change almost nothing, because selected rows, options, charts
+and borders were fixed to ink. They all follow your accent now, in both themes.
+
+**A course from your class files.** The first page now starts where most people do: *Make a course from my class
+files* takes PDFs, PowerPoint, Word files and pictures, keeps the originals, reads what it can, and says what it couldn't.
+Then Claude, your coding assistant or a chat writes the lessons, and they appear as they are written.
+
+**Change a course after you've started.** A course's page now shows where you stand in each lesson. Move lessons, pause one, add
+class files, or tell Claude what should change: cards keep their schedule even with new titles, and the job ends by saying how many kept
+their progress. If an edit elsewhere loses a studied card, MDlearn offers to reconnect it. Coding assistants get the same rules.
+
+**Colour with a job.** Callouts, formula terms and key words now use colour that means something, checked for contrast and colour
+blindness. Select a passage to highlight it as important, confusing or for the exam: confusing passages wait on Today with *Explain*, and
+exam passages offer *Make a card*. You can turn colour off in Settings, and icons and underlines still say the same thing.
+
+**A companion to try.** Off by default. In Settings you can choose a small orb or a pixel creature at the foot of the sidebar. It shows what
+MDlearn is really doing, stays away from questions, and never rewards or nags you.
+
+**Courses appear wherever they are written.** A course from a topic, from a chat or from an assistant sits in its
+own folder, and until now its lessons opened from a link but never reached the library, Today or Study. They now
+do, in Studio, the CLI and the MCP tools. Lessons sit under their `course.md`.
+
+**Pictures.** A document or lesson can show a picture from the web by its `https` address, in Markdown or in
+`<img>`. It waits until you allow its site for that document, because a document could use a picture's address to send
+information out, and one that can't be loaded leaves its description and a link. Paste or drop a screenshot into the editor and it's
+saved under `assets/`. Click any picture, or press Enter on it, to see it larger.
+
+**Every system.** The tests now run on Windows, macOS and Linux for every change. That found a lesson's id being its whole
+path on Windows, which would have lost your progress if you moved the folder, and wrong paths for a folder reached through
+a link.
+
+**Fixes.** Jumping to a section could shift the whole app up and hide its top bar until you reloaded. Claude Code now
+uses whatever it's signed in with, including your own `ANTHROPIC_API_KEY`. A damaged notes file no longer breaks Today.
+
+**Any coding assistant.** Codex, OpenCode, Pi and Claude Code can write lessons in a folder with nothing to install:
+`mdlearn agents`, or *Get this folder ready for my AI* in Ctrl+K, puts the instructions in the folder. Your own
+`AGENTS.md` or `CLAUDE.md` is never replaced. Optional MCP tools let them quiz you too (Settings → Use MDlearn in other apps).
+
 ## 1.3.0 — 2026-10-31
 
 **Study papers from SciNet.** *Import → From SciNet* finds a paper in your SciNet library, by meaning or by title, and

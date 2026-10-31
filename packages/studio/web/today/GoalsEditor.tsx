@@ -18,7 +18,7 @@ export function GoalsEditor({ ws, goal, paces, docs, suspended }: { ws: string; 
   const refresh = () => qc.invalidateQueries({ queryKey: keys.today(ws) })
   const save = async (fn: () => Promise<unknown>) => { setError(null); try { await fn(); await refresh() } catch (e) { setError((e as Error).message) } }
   const current = paces.map((p) => ({ scope: p.scope, date: p.deadline, ...(p.label && p.label !== 'Everything' ? { label: p.label } : {}) }))
-  const input = 'h-8 rounded-[6px] border border-border-strong bg-bg px-2 text-[13.5px] text-text outline-none focus:border-text [color-scheme:light_dark]'
+  const input = 'h-8 rounded-[6px] border border-border-strong bg-bg px-2 text-[13.5px] text-text outline-none focus:border-accent [color-scheme:light_dark]'
   return (
     <section aria-labelledby="goals">
       <h2 id="goals" className="text-[13px] font-medium text-muted">{t('Goals')}</h2>

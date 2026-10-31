@@ -10,6 +10,28 @@ Tus apuntes siguen siendo archivos Markdown normales. Las **lecciones** (`learn/
 **Estudiar** te vuelve a mostrar cada tarjeta justo antes de que la olvides. De cinco a diez minutos al día en
 **Hoy**: ese es el hábito que da resultado.
 
+## Cómo se crean las lecciones
+
+Empieza en la primera página con **Crear un curso con mis archivos de clase**. Dale tus PDF, PowerPoint, Word e imágenes.
+Los originales se quedan en `sources/`, y lo que se puede leer se convierte en texto e imágenes que cualquier IA puede
+usar. Luego elige quién escribe las lecciones:
+
+| Quién | Cómo |
+|---|---|
+| **Claude, desde aquí** | Empieza enseguida, y puedes seguirlo, detenerlo y deshacerlo. |
+| **Tu asistente de programación** | Claude Code, Codex, OpenCode o Pi: MDlearn prepara la carpeta y te da un solo comando. |
+| **Un chat** | ChatGPT, Claude.ai o Gemini: adjunta tus archivos, pega el prompt de MDlearn y trae la respuesta con **Importar → Desde un chat**. |
+
+Las lecciones aparecen a medida que se escriben. En el editor, pega o suelta una captura para añadir una imagen. Haz clic en una imagen para verla más grande. Una imagen de la web espera hasta que permitas su sitio, porque un documento podría usarla para sacar información.
+
+Para cambiar un curso ya empezado, abre su página de presentación. Puedes mover o pausar una lección, añadir archivos o pedir un cambio. Las tarjetas conservan su calendario, incluso con títulos nuevos.
+
+## El color en tus notas
+
+Aquí el color tiene una función: el tipo de recuadro, un término de una fórmula y su explicación, la palabra clave de una tarjeta. Selecciona un
+pasaje para resaltarlo como **Importante**, **Confuso** o **Para el examen**, sin escribir nada. Los pasajes confusos te esperan en **Hoy**, y los
+del examen ofrecen **Crear una tarjeta**. **Ajustes → Apariencia → Color en las notas** lo desactiva.
+
 ## Las páginas
 
 | Página | Para qué sirve |
@@ -24,7 +46,7 @@ Tus apuntes siguen siendo archivos Markdown normales. Las **lecciones** (`learn/
 | **IA local** | *Ajustes → IA local*: instala Ollama si falta, descarga un modelo recomendado (cada uno dice si este ordenador lo mueve bien) y elige con cuál responde Studio. |
 | **Importar** | *Importar…* en la barra lateral: una página web, un PDF, una baraja de Anki, un notebook, lecciones de un chat, o un artículo de **SciNet** si se está ejecutando en este ordenador. |
 | **Bandeja de entrada** | Ctrl+Mayús+K guarda una idea desde cualquier página, y *Bandeja de entrada* en la barra de una selección guarda un pasaje. Ordénalos en Hoy: **Tarjeta**, **Mover** a un documento, o **Hecho**. Son Markdown sencillo en `Inbox/`. |
-| **AI Studio** | Claude Code escribe o mejora lecciones a partir de un apunte (usa tu suscripción de Claude). |
+| **AI Studio** | Claude Code escribe o mejora lecciones a partir de un apunte (se ejecuta en este ordenador, con tu propia cuenta). |
 | **Fórmulas** · **Glosario** · **Mapa** | Cada fórmula, cada término definido y qué apuntes se basan en cuáles: un grafo en 2D o 3D, coloreado según lo bien que recuerdas cada apunte. |
 
 ## Mientras lees

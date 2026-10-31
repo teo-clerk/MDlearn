@@ -4,6 +4,7 @@ import { Link, useLocation } from 'wouter'
 import { BookA, BookOpenCheck, ClipboardCheck, LifeBuoy, FilePlus, FileInput, ChartNoAxesColumn, ChevronsUpDown, FolderOpen, House, MessageSquareText, Monitor, Moon, Network, PanelLeftClose, Search, Settings, Sigma, Sparkles, Sun, Loader2 } from 'lucide-react'
 import { useJobs, useSession, useTree, useWorkspaces } from '../api/queries'
 import { useUi, type Theme } from '../state/ui'
+import { Companion } from '../companion/Companion'
 import { FileTree } from './FileTree'
 import { IconButton, Kbd } from '../ui/primitives'
 import { NewNote } from '../editor/NewNote'
@@ -34,7 +35,7 @@ export function Sidebar({ ws }: { ws: string }) {
         </button>
         <NavItem href={`/w/${ws}`} icon={House} tour="today" active={location === `/w/${ws}` || location === `/w/${ws}/`}>{t('Today')}</NavItem>
         <NavItem href={`/w/${ws}/study`} icon={BookOpenCheck} tour="study" active={location.startsWith(`/w/${ws}/study`)}
-          badge={due ? <span className="tabular rounded-full bg-active px-1.5 text-[11.5px] font-medium text-text" title={tp(due, '{n} card due', '{n} cards due')}>{due}</span> : null}>{t('Study')}</NavItem>
+          badge={due ? <span className="tabular rounded-full bg-accent-soft px-1.5 text-[11.5px] font-medium text-accent-ink" title={tp(due, '{n} card due', '{n} cards due')}>{due}</span> : null}>{t('Study')}</NavItem>
         <NavItem href={`/w/${ws}/exam`} icon={ClipboardCheck} active={location.startsWith(`/w/${ws}/exam`)}>{t('Mock exam')}</NavItem>
         <NavItem href={`/w/${ws}/ask`} icon={MessageSquareText} active={location.startsWith(`/w/${ws}/ask`)}>{t('Ask')}</NavItem>
         <NavItem href={`/w/${ws}/progress`} icon={ChartNoAxesColumn} active={location.startsWith(`/w/${ws}/progress`)}>{t('Progress')}</NavItem>
@@ -60,6 +61,7 @@ export function Sidebar({ ws }: { ws: string }) {
         <FileTree ws={ws} tree={tree.data} loading={tree.isLoading} error={tree.error} />
       </div>
       {newNote && <NewNote ws={ws} folder="" onClose={() => setNewNote(false)} />}
+      <Companion ws={ws} />
       <div className="flex items-center gap-1 border-t border-border px-2 py-1.5">
         <ThemeSwitch />
         <Link href={`/w/${ws}/settings`} aria-label={t('Settings')} title={t('Settings')} className={`ml-auto inline-flex size-7 items-center justify-center rounded-[6px] text-muted hover:bg-hover hover:text-text ${location.startsWith(`/w/${ws}/settings`) ? 'bg-active text-text' : ''}`}>
@@ -74,7 +76,7 @@ function NavItem({ href, icon: Icon, active, badge, tour, children }: { href: st
   return (
     <Link href={href} aria-current={active ? 'page' : undefined} data-tour={tour}
       className={`flex h-8 items-center gap-2 rounded-[6px] px-2 text-[13.5px] ${active ? 'bg-active font-medium text-text' : 'text-text/85 hover:bg-hover'}`}>
-      <Icon className="size-4 text-muted" strokeWidth={1.8} aria-hidden /><span className="flex-1">{children}</span>{badge}
+      <Icon className={`size-4 ${active ? 'text-accent-ink' : 'text-muted'}`} strokeWidth={1.8} aria-hidden /><span className="flex-1">{children}</span>{badge}
     </Link>
   )
 }

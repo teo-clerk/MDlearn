@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { mkdtempSync, readFileSync, existsSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { tmpdir } from 'node:os'
+import { spawnSync } from 'node:child_process'
 import { createServer, type Server } from 'node:http'
 import { DatabaseSync } from 'node:sqlite'
 import { zipSync, strToU8 } from 'fflate'
@@ -41,6 +42,8 @@ function setup() {
   return { root, json, upload, app, h }
 }
 
+const poppler = !spawnSync('pdftohtml', ['-v']).error
+
 describe('import routes', () => {
   it('imports a web page', async () => {
     const { json, root } = setup()
@@ -50,12 +53,15 @@ describe('import routes', () => {
     expect((await json('/import/web', { url: 'file:///etc/passwd' })).status).toBe(400)
     expect((await json('/import/web', { url: 'x' })).status).toBe(400)
   })
-  it('imports a notebook, a PDF read locally and an Anki deck from uploaded files', async () => {
+  it.skipIf(!poppler)('imports a PDF read locally', async () => {
+    const { upload } = setup()
+    const pdf = await upload('pdf-fast', 'sample.pdf', readFileSync(resolve(__dirname, 'fixtures/sample.pdf')))
+    expect(pdf.status).toBe(200); expect(((await pdf.json()) as ImportResult).summary).toMatch(/2 pages/)
+  })
+  it('imports a notebook and an Anki deck from uploaded files', async () => {
     const { upload, root } = setup()
     const nb = await upload('notebook', 'a.ipynb', JSON.stringify({ cells: [{ cell_type: 'markdown', source: '# Hello\n\nWorld.' }] }))
     expect(nb.status).toBe(200); expect(((await nb.json()) as ImportResult).files[0].path).toBe('imports/a.md')
-    const pdf = await upload('pdf-fast', 'sample.pdf', readFileSync(resolve(__dirname, 'fixtures/sample.pdf')))
-    expect(pdf.status).toBe(200); expect(((await pdf.json()) as ImportResult).summary).toMatch(/2 pages/)
     const db = new DatabaseSync(':memory:')
     db.exec("CREATE TABLE col (id integer, crt integer, mod integer, scm integer, ver integer, dty integer, usn integer, ls integer, conf text, models text, decks text, dconf text, tags text); CREATE TABLE notes (id integer, guid text, mid integer, mod integer, usn integer, tags text, flds text, sfld integer, csum integer, flags integer, data text); CREATE TABLE cards (id integer, nid integer, did integer, ord integer, mod integer, usn integer, type integer, queue integer, due integer, ivl integer, factor integer, reps integer, lapses integer, left integer, odue integer, odid integer, flags integer, data text); CREATE TABLE revlog (id integer, cid integer, usn integer, ease integer, ivl integer, lastIvl integer, factor integer, time integer, type integer);")
     db.prepare("INSERT INTO col VALUES (1,0,0,0,11,0,0,0,'{}',?,?,'{}','{}')").run('{}', JSON.stringify({ 1: { name: 'Radar' } }))
@@ -84,7 +90,7 @@ describe('import routes', () => {
     expect(res.jobId).toMatch(/^[0-9a-f-]{36}$/)
     let job: JobSummary & { prompt: string } = { status: 'queued', prompt: '' } as never
     for (let i = 0; i < 100 && ['queued', 'running'].includes(job.status); i++) { job = await (await app.request(`/api/w/${h.id}/ai/jobs/${res.jobId}`, { headers: { host: 'localhost:1' } })).json() as never; await new Promise((x) => setTimeout(x, 20)) }
-    expect(job.prompt).toMatch(/imports\/source\/my-paper\.pdf[\s\S]*imports\/my-paper\.md/); expect(job.prompt).toMatch(/2 pages/)
+    expect(job.prompt).toMatch(/imports\/source\/my-paper\.pdf[\s\S]*imports\/my-paper\.md/); if (poppler) expect(job.prompt).toMatch(/2 pages/)
     expect(job.status).toBe('done')
     expect(existsSync(join(root, 'imports/my-paper.md'))).toBe(true)
   })
@@ -104,7 +110,7 @@ describe('import from a chat', () => {
     expect(r.files).toEqual([{ path: 'tides/course.md', kind: 'document' }, { path: 'tides/01-why.learn.md', kind: 'lesson' }])
     expect(r.warnings.join(' ')).toMatch(/02-bad\.learn\.md was not saved/)
     expect(r.fix).toMatch(/E202/)
-    expect(readFileSync(join(root, 'tides/01-why.learn.md'), 'utf8')).toBe(lesson('Why'))
+    expect(readFileSync(join(root, 'tides/01-why.learn.md'), 'utf8')).toBe(lesson('Why').replace('---\n', '---\nid: tides-why\n'))
     // a second import goes to a new folder instead of touching the first
     expect((await (await json('/import/chat/check', { text: answer })).json() as { folder: string }).folder).toBe('tides-2')
   })

@@ -20,7 +20,7 @@ export interface TreeDoc {
   /** Mean predicted recall of seen cards (FSRS), null when nothing has been studied. */
   memory: number | null
 }
-export interface Tree { root: string; name: string; docs: TreeDoc[]; orphanLessons: TreeDoc['lessons']; latex: TexDoc[]; totals: { docs: number; lessons: number; cards: number; due: number; seen: number } }
+export interface Tree { root: string; name: string; docs: TreeDoc[]; orphanLessons: TreeDoc['lessons']; duplicateLessons: { id: string; paths: string[] }[]; latex: TexDoc[]; totals: { docs: number; lessons: number; cards: number; due: number; seen: number } }
 /** A LaTeX document in the folder (opens in the LaTeX editor). */
 export interface TexDoc { path: string; title: string }
 
@@ -101,7 +101,8 @@ export interface ApiError { error: { code: string; message: string } }
 /** `t`: a note on a moment of a video (seconds); the quote is then the video's label. */
 export interface NoteAnchor { section: string | null; quote: { exact: string; prefix: string; suffix: string }; t?: number }
 export interface NoteMessage { id: string; role: 'user' | 'ai'; text: string; engine?: string; at: number; error?: string; done: boolean }
-export interface Note { id: string; doc: string; anchor: NoteAnchor; body: string; thread: NoteMessage[]; created: number; updated: number }
+export type NoteColor = 'important' | 'confusing' | 'exam'
+export interface Note { id: string; doc: string; anchor: NoteAnchor; body: string; thread: NoteMessage[]; created: number; updated: number; color?: NoteColor }
 export interface EnginesInfo { local: { available: boolean; model: string; models: string[]; error?: string; busy: number }; claude: { available: boolean; version?: string; error?: string } }
 
 // ---- local AI models (Ollama)
@@ -136,18 +137,29 @@ export type JobEvent =
   | { kind: 'usage'; turns: number; costUsd?: number; durationMs: number }
   | { kind: 'session'; sessionId: string }
   | { kind: 'limit'; message: string }
+import type { CourseChanges, LostCard } from '@mdlearn/core'
 export interface JobSummary {
   id: string; ws: string; recipe: string; title: string; status: JobStatus; engine: string
   created: number; finished?: number; summary?: string; error?: string
   files: { path: string; change: 'created' | 'modified' }[]
   lint: { path: string; errors: number; warnings: number }[]
   sessionId?: string; undone?: boolean; parent?: string
+  /** What a change to a started course did to its cards. */
+  changes?: CourseChanges
 }
+
+// ---- a course you have started
+export interface CourseLesson { path: string; title: string; cards: number; seen: number; memory: number | null; paused: boolean; numbered: boolean }
+export type LostCardInfo = LostCard
+export interface CourseInfo { doc: string; lessons: CourseLesson[]; lost: LostCard[] }
 
 // ---- Today, goals, leeches
 export interface PaceInfo { scope: string; label: string; status: 'on-track' | 'behind' | 'overdue' | 'done'; deadline: string; daysLeft: number; remaining: number; perDay: number; daysBehind: number | null; text: string }
 export interface LeechInfo { key: string; title: string; lessonTitle: string; lessonPath: string; lapses: number; wrongAnswers: string[]; sourceDoc?: string; sourceSection?: string }
+export interface ConfusingPassage { id: string; doc: string; anchor: NoteAnchor; explained: boolean }
 export interface TodayResponse {
+  /** Passages you marked as confusing, to look at again. */
+  confusing: ConfusingPassage[]
   plan: StudyPlan
   goal: { daily: number; doneToday: number; percent: number }
   forecast: { date: string; count: number }[]
@@ -218,6 +230,17 @@ export interface ScinetPaper { id: number; title: string; year: number | null; s
 export interface ScinetDetail extends ScinetPaper { authors: string[]; venue: string | null; abstract: string | null; doi: string | null; arxivId: string | null; pages: number | null; parsedBy: string | null; formulas: 'latex' | 'text' }
 /** MDlearn for other assistants: the prompt for chats, where the Claude Code plugin is, what can be downloaded. */
 export interface Integrations { prompt: string; pluginDir?: string; skillZip: boolean; guide: boolean }
+/** One class file brought into a course: where it is, what text came out of it, and anything the person should know. */
+export interface ClassFile {
+  name: string; path: string; kind: 'word' | 'slides' | 'pdf' | 'picture' | 'text' | 'other'
+  /** The Markdown made from it. */ text?: string
+  slides?: number; pictures?: number; skipped?: number; equations?: number
+  problem?: 'old-format' | 'unknown-type' | 'no-reader' | 'no-text' | 'unreadable'
+}
+export interface ClassUpload { id: string; name: string; root: string; files: ClassFile[] }
+/** What getting a folder ready for coding assistants wrote, and which of the person's own files it left alone. */
+export interface PreparedFolder { written: string[]; kept: string[] }
+export interface McpSetup { server: string; commands: { codex: string; pi: string; opencode: string } }
 /** A pasted chat answer, checked before anything is written. */
 export interface ChatCheck {
   folder: string

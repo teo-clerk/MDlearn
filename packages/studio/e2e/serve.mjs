@@ -69,6 +69,23 @@ ${LONG}
 $$S = \\frac{P_t}{4\\pi R^2}$$
 `)
 writeFileSync(join(root, 'demo/editable.md'), '# Editable\n\nFirst paragraph.\n')
+writeFileSync(join(root, 'demo/picture-notes.md'), '# Picture notes\n\nStart here.\n')
+writeFileSync(join(root, 'demo/web-pictures.md'), `# Web pictures
+
+![A tide gauge](https://pictures.example.org/gauge.png)
+
+<img src="https://pictures.example.org/from-html.png" alt="A chart in HTML" width="120">
+
+![A lost picture](https://pictures.example.org/gone.png)
+`)
+writeFileSync(join(root, 'demo/web-tricks.md'), `# Tricks
+
+<table background="https://tricks.example.org/table.png"><tr><td>A cell</td></tr></table>
+
+<svg width="40" height="40"><image href="https://tricks.example.org/svg.png" width="40" height="40"/></svg>
+
+<svg width="40" height="40"><filter id="f"><feImage href="https://tricks.example.org/filter.png"/></filter><rect width="40" height="40" filter="url(#f)"/></svg>
+`)
 // Related passages: a document on two subjects, and one document for each
 const glacierText = 'Glacier ice creeps downhill under its own weight, and basal sliding over meltwater speeds the flow of the ice. '
 const riverText = 'A braided river splits around sediment bars, and every flood moves the gravel and reshapes the channels. '
@@ -173,5 +190,8 @@ const settingsFile = join(cfgDir, 's.json')
 // the welcome tour is tested on its own (onboarding.spec); the library (tutorial, uploads) stays in the temp folder
 writeFileSync(settingsFile, JSON.stringify({ ollama: { url: `http://127.0.0.1:${ollama.address().port}`, model: 'qwen3:8b', embedModel: 'embeddinggemma' },
   scinet: { url: `http://127.0.0.1:${scinet.address().port}` }, libraryDir: join(cfgDir, 'library'), onboarding: { tourDone: true } }))
-const s = await startStudio({ root, port: 4799, fakeAi: true, fakeTex: true, settingsFile })
+// the network behind web pictures: every test address is public, and gone.png is gone
+const PICTURE = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64')
+const pictureFetch = { resolve: async () => ['93.184.216.34'], fetch: async (url) => (String(url).endsWith('/gone.png') ? new Response('gone', { status: 404 }) : new Response(PICTURE)) }
+const s = await startStudio({ root, port: 4799, fakeAi: true, fakeTex: true, settingsFile, pictureFetch })
 console.log(`e2e studio on ${s.url} (folder ${root})`)

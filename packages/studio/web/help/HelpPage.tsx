@@ -35,7 +35,7 @@ export default function HelpPage({ ws }: { ws: string }) {
     <div className="mx-auto max-w-[760px] px-6 pb-24 pt-6 sm:px-10">
       <TopLeft><span className="truncate px-1 text-[13px] text-muted">{t('Help')}</span></TopLeft>
       <h1 className="flex items-center gap-2 font-ui text-[26px] font-bold tracking-[-0.02em]"><LifeBuoy className="size-6 text-muted" strokeWidth={1.8} aria-hidden />{t('Help')}</h1>
-      <p className="mt-1 text-[13.5px] text-muted">New here? Take the one-minute tour, then try the tutorial: a small folder where every feature is live.</p>
+      <p className="mt-1 text-[13.5px] text-muted">{t('New here? Take the one-minute tour, then try the tutorial: a small folder where every feature is live.')}</p>
       <div className="mt-4 grid gap-2 sm:grid-cols-2">
         <section className="rounded-[10px] border border-border p-4 font-ui">
           <h2 className="flex items-center gap-1.5 text-[14px] font-semibold"><Route className="size-4 text-muted" aria-hidden />{t('Welcome tour')}</h2>
@@ -59,6 +59,12 @@ export default function HelpPage({ ws }: { ws: string }) {
         {help.error && <ErrorNote error={help.error} retry={() => help.refetch()} />}
         {help.data && <DocBlocks blocks={help.data.doc.blocks.filter((b) => !(b.type === 'heading' && b.depth === 1))} env={env} />}
       </div>
+      <p className="mt-10 border-t border-border pt-4 font-ui text-[12.5px] text-muted">
+        {t('MDlearn is free software under the MIT License. It is an independent project, not made or endorsed by Anthropic, OpenAI or the makers of the other tools it works with.')}{' '}
+        <a href="https://github.com/teo-clerk/MDlearn" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-text">{t('Source code')}</a>
+        {' · '}
+        <a href="/third-party-notices.txt" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-text">{t('Open-source notices')}</a>
+      </p>
     </div>
   )
 }

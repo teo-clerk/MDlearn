@@ -88,8 +88,8 @@ GIFT and LiaScript are cheaper only because they drop features this spec require
 |---|---|
 | Lesson file | One lesson per file: `NN-slug.learn.md` (UTF-8; CRLF and a BOM are accepted and normalised). The `.learn.md` suffix keeps the file a valid Markdown document. |
 | Lesson id | Frontmatter `id`, else the file name without `.learn.md` and without the numeric prefix (`02-bayes-theorem.learn.md` → `bayes-theorem`), so renumbering lessons keeps progress. |
-| Course | A directory of lesson files plus an optional `course.md` whose frontmatter has `title`, `level` and `lessons: [bayes-theorem, …]` (default order: file name). |
-| Card id | `## Title {#id}` (`[a-z0-9][a-z0-9-]*`) if given, else the GitHub slug of the title (`base-rate-neglect`), de-duplicated (`-1`, `-2`). |
+| Course | A folder of lesson files with a `course.md` overview beside them. Lessons are ordered by file name, and their numeric prefix can change without touching progress. A folder may hold several courses: lesson ids must then be unique, so `<course>-<slug>` is the convention. |
+| Card id | `## Title {#id}` (letters, digits, `-`, `_`) if given, else the GitHub slug of the title (`base-rate-neglect`), de-duplicated (`-1`, `-2`). |
 | Widget id | `<card id>/<kind>-<fingerprint>`, where the fingerprint is FNV-1a of the normalised stem and answer key. Editing an unrelated widget never re-keys another one; editing a question's key re-keys it (reset beats attaching history to a different question). Identical widgets in one card get `-1`, `-2` suffixes. `:::kind{#id}` pins the id to `<card id>/<id>`. |
 
 Authors (and LLMs) never write ids unless they need to pin one.
@@ -433,7 +433,8 @@ Natural frequencies keep the base rate visible.
 ### 8.9 Diagrams, images, annotations
 
 - Images: `![alt](url)`; alt text is required (W604). Image URLs must be `https` or relative; link URLs
-  `http(s)`, `mailto` or relative. Anything else (`javascript:`, `data:`) is removed. An image whose
+  `http(s)`, `mailto` or relative. Anything else (`javascript:`, `data:`) is removed. An `https` picture
+  waits until the reader allows its site, then comes through Studio; one that fails leaves its alt text and a link. An image whose
   address is a video (`![Talk](clips/talk.mp4)`, `![](https://youtu.be/…)`) alone in its paragraph is a
   video (§8.15); inside a sentence a YouTube or Vimeo address becomes a link and a file its title.
 - Diagrams: ` ```mermaid ` fences. Quote node labels that contain punctuation (`A["P(+) = 0.0594"]`).
@@ -970,6 +971,7 @@ Format of the compact report (one line per diagnostic, designed for an agent to 
 | I607 | info | `time-drift` | Declared `time` differs >50% from the compiler estimate (the player shows the estimate). |
 | W608 | warning | `heading-promoted` | No `##` cards; `###` headings promoted to cards. |
 | W609 | warning | `widget-in-intro` | Widgets belong in cards; a widget before the first `##` is locked. |
+| W610 | warning | `too-much-marked` | A card with more than three `<mark>`s, or with over a sixth of its words marked: mark the key term, not the sentence. |
 
 **Math**
 

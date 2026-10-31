@@ -1,10 +1,16 @@
 // `node lint.mjs <file.learn.md>…` — the MDlearn checker as one file, for assistants that can run code but
 // have no mdlearn install (the Claude.ai skill). Prints `file:line:col CODE rule: message`; exit 1 on errors.
-import { readFileSync } from 'node:fs'
-import { compile, formatDiagnostic } from '@mdlearn/core'
+// `--pin` first writes each card's id into the file, before changing a lesson someone has studied.
+import { readFileSync, writeFileSync } from 'node:fs'
+import { compile, formatDiagnostic, pinIds } from '@mdlearn/core'
 
-const files = process.argv.slice(2)
-if (!files.length) { console.log('usage: node lint.mjs <file.learn.md>…'); process.exit(2) }
+const args = process.argv.slice(2), pin = args.includes('--pin')
+const files = args.filter((a) => a !== '--pin')
+if (!files.length) { console.log('usage: node lint.mjs [--pin] <file.learn.md>…'); process.exit(2) }
+if (pin) for (const f of files) {
+  const source = readFileSync(f, 'utf8'), pinned = pinIds(source, f)
+  if (pinned !== source) writeFileSync(f, pinned)
+}
 let errors = 0, warnings = 0
 for (const f of files) {
   const { lesson, diagnostics } = compile(readFileSync(f, 'utf8'), { path: f })

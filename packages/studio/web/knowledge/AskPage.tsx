@@ -49,7 +49,7 @@ export default function AskPage({ ws }: { ws: string }) {
       <SearchModel ws={ws} s={s} canSetup={!!session.data?.caps.includes('ai')} />
       <form onSubmit={(e) => { e.preventDefault(); void submit(q) }} className="mb-6">
         <textarea ref={field} value={q} onChange={(e) => setQ(e.target.value)} rows={2} maxLength={1000} aria-label={t('Your question')} disabled={s ? !s.chatReady : false}
-          placeholder={s && !s.chatReady ? t('The local model is not available.') : t('Ask something, e.g. why does multi-looking reduce speckle?')}
+          placeholder={s && !s.chatReady ? t('The local model is not available.') : t('Ask something, e.g. why can no engine beat the Carnot limit?')}
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void submit(q) } }}
           className="w-full resize-y rounded-[8px] border border-border-strong bg-raised px-3.5 py-2.5 text-[15px] outline-none placeholder:text-subtle focus:border-focus disabled:opacity-60" />
         <div className="mt-2 flex items-center gap-3">
@@ -88,7 +88,7 @@ function SearchModel({ ws, s, canSetup }: { ws: string; s?: AskStatus; canSetup:
       {!s.installed && !s.pulling && (
         <>
           <p className="font-medium">{t('Search by meaning')}</p>
-          <p className="mt-0.5 text-muted">Questions are matched by words now. A small search model ({s.size}, downloaded once through Ollama) also finds passages that use other words.</p>
+          <p className="mt-0.5 text-muted">{t('Questions are matched by words now. A small search model ({model}, downloaded once through Ollama) also finds passages that use other words.', { model: s.size })}</p>
           {!s.ollama && <p className="mt-1.5 text-muted">{t('Ollama is not running; start it to download.')} <Link href={`/w/${ws}/settings#local-ai`} className="underline underline-offset-2 hover:text-text">{t('Local AI settings')}</Link></p>}
           {s.ollama && (canSetup
             ? <Button className="mt-2.5" size="sm" icon={Download} busy={starting} onClick={() => void start()}>{t('Download {model}', { model: s.model })}</Button>
@@ -98,7 +98,7 @@ function SearchModel({ ws, s, canSetup }: { ws: string; s?: AskStatus; canSetup:
       {s.pulling && (
         <div role="status" aria-live="polite">
           <p className="font-medium">{t('Downloading {model}', { model: s.model })}{s.pulling.percent !== undefined ? ` · ${s.pulling.percent}%` : ''}</p>
-          {s.pulling.percent !== undefined && <div className="mt-2 h-[3px] w-full overflow-hidden rounded bg-active"><div className="h-full bg-text transition-[width]" style={{ width: `${s.pulling.percent}%` }} /></div>}
+          {s.pulling.percent !== undefined && <div className="mt-2 h-[3px] w-full overflow-hidden rounded bg-active"><div className="h-full bg-accent transition-[width]" style={{ width: `${s.pulling.percent}%` }} /></div>}
           <p className="mt-1.5 text-muted">{s.pulling.status}</p>
         </div>
       )}

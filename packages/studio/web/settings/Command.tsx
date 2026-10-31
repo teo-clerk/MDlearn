@@ -18,7 +18,7 @@ export function CopyButton({ text, label }: { text: string; label: string }) {
 export function Command({ text }: { text: string }) {
   return (
     <div className="flex items-start gap-2">
-      <code className="min-w-0 flex-1 overflow-x-auto whitespace-pre rounded-[6px] border border-border bg-code px-2.5 py-1.5 font-mono text-[12px] leading-relaxed">{text}</code>
+      <code tabIndex={0} className="min-w-0 flex-1 overflow-x-auto whitespace-pre rounded-[6px] border border-border bg-code px-2.5 py-1.5 font-mono text-[12px] leading-relaxed">{text}</code>
       <CopyButton text={text} label={t('Copy')} />
     </div>
   )

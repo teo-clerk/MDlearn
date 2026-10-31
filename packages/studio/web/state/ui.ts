@@ -2,6 +2,7 @@
 import { create } from 'zustand'
 
 export type Theme = 'system' | 'light' | 'dark'
+export type CompanionKind = 'off' | 'orb' | 'pixel'
 export type PanelTab = 'outline' | 'notes' | 'links' | 'related'
 interface UiState {
   theme: Theme
@@ -10,6 +11,15 @@ interface UiState {
   panelTab: PanelTab
   captureOpen: boolean
   setCaptureOpen(open: boolean): void
+  /** The small sign of what MDlearn is doing (Settings → Appearance). Per device. */
+  companion: CompanionKind
+  setCompanion(kind: CompanionKind): void
+  /** A study session just ended: a few seconds for the companion to be glad. */
+  sessionDone: boolean
+  celebrate(): void
+  /** Class files dropped on the start page, on their way to /start. */
+  classFiles: File[]
+  setClassFiles(files: File[]): void
   notice: string | null
   notify(text: string | null): void
   palette: boolean
@@ -31,11 +41,23 @@ interface UiState {
   tour: boolean
   setTour(open: boolean): void
 }
+const CELEBRATE_MS = 6000
+const savedCompanion = (): CompanionKind => { try { const c = localStorage.getItem('mdl-companion'); return c === 'orb' || c === 'pixel' ? c : 'off' } catch { return 'off' } }
 const saved = (): Theme => { try { const t = localStorage.getItem('mdl-theme'); return t === 'light' || t === 'dark' ? t : 'system' } catch { return 'system' } }
 const wide = () => typeof window === 'undefined' || window.matchMedia('(min-width: 1100px)').matches
 
 export const useUi = create<UiState>((set) => ({
   theme: saved(),
+  companion: savedCompanion(),
+  setCompanion(companion) {
+    try { localStorage.setItem('mdl-companion', companion) } catch { /* it still applies until the page reloads */ }
+    set({ companion })
+  },
+  sessionDone: false,
+  celebrate() {
+    set({ sessionDone: true })
+    window.setTimeout(() => set({ sessionDone: false }), CELEBRATE_MS)
+  },
   sidebar: typeof window === 'undefined' || window.matchMedia('(min-width: 900px)').matches,
   panel: wide(),
   panelTab: 'outline',
@@ -43,6 +65,8 @@ export const useUi = create<UiState>((set) => ({
   setCaptureOpen: (captureOpen) => set({ captureOpen }),
   notice: null,
   notify: (notice) => set({ notice }),
+  classFiles: [],
+  setClassFiles: (classFiles) => set({ classFiles }),
   palette: false,
   tour: false,
   setTour: (tour) => set({ tour }),

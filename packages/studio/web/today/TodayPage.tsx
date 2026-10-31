@@ -1,13 +1,14 @@
 // Today: what to do now, how the week looks, how you are doing, and what needs attention.
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'wouter'
-import { BookOpenCheck } from 'lucide-react'
-import { useToday, useTree } from '../api/queries'
+import { BookOpenCheck, Sparkles } from 'lucide-react'
+import { useSession, useToday, useTree } from '../api/queries'
 import { docRoute } from '../lib/paths'
 import { duration } from '../lib/title'
-import { Button, Empty, ErrorNote, MemoryMark, Spinner } from '../ui/primitives'
+import { Button, Empty, ErrorNote, MemoryMark, Spinner, linkButton } from '../ui/primitives'
 import { TopLeft } from '../layout/Shell'
 import { Forecast, Heatmap } from './Charts'
+import { Confusing } from './Confusing'
 import { Leeches } from './Leeches'
 import { GoalsEditor } from './GoalsEditor'
 import { FileText } from 'lucide-react'
@@ -33,6 +34,7 @@ function calibrationText(c: TodayResponse['calibration']): string | null {
 export default function TodayPage({ ws }: { ws: string }) {
   const today = useToday(ws)
   const tree = useTree(ws)
+  const canWrite = useSession().data?.caps.includes('write')
   const [, navigate] = useLocation()
   const [last, setLast] = useState<string | null>(null)
   useEffect(() => { try { setLast(localStorage.getItem(lastDocKey(ws))) } catch { /* ignore */ } }, [ws])
@@ -73,6 +75,7 @@ export default function TodayPage({ ws }: { ws: string }) {
         <section className="mt-6 rounded-[10px] border border-border p-5">
           <h2 className="text-[13px] font-medium text-muted">{t('Study')}</h2>
           <p className="mt-1 text-[14.5px] leading-relaxed">{t('No lessons in this folder yet. Every document can still be read here. Select a passage and choose')} <strong className="font-semibold">{t('Card')}</strong> {t('to make your own cards, or ask the AI Studio to build a course.')}</p>
+          {canWrite && <Link href={`/start?ws=${ws}`} className={`${linkButton} mt-3`}><Sparkles className="size-[15px]" strokeWidth={1.8} aria-hidden />{t('Make lessons with an AI')}</Link>}
         </section>
       )}
 
@@ -92,6 +95,7 @@ export default function TodayPage({ ws }: { ws: string }) {
           </dl>
           {cal && <p className="mt-3 text-[13.5px] text-muted">{cal}</p>}
           <div className="mt-8 flex flex-col gap-8">
+            <Confusing ws={ws} passages={d.confusing} />
             <Leeches ws={ws} leeches={d.leeches} />
             <GoalsEditor ws={ws} goal={d.goal} paces={d.paces} docs={f.docs} suspended={d.suspended} />
           </div>

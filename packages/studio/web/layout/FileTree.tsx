@@ -45,6 +45,11 @@ export function FileTree({ ws, tree, loading, error }: { ws: string; tree?: Tree
           {tree.orphanLessons.map((l) => <LessonRow key={l.path} ws={ws} lesson={l} depth={0} />)}
         </>
       )}
+      {!!tree?.duplicateLessons.length && (
+        <p role="status" className="px-2 pt-3 text-[12px] text-warn" title={tree.duplicateLessons[0].paths.join('\n')}>
+          {t('Two lessons have the id {id}, so they share their progress. Give one a different id in its frontmatter.', { id: tree.duplicateLessons[0].id })}
+        </p>
+      )}
       {!!tree?.latex.length && (
         <>
           <p className="px-2 pb-1 pt-4 text-[11.5px] font-medium text-muted">{t('LaTeX')}</p>

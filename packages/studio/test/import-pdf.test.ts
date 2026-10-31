@@ -2,10 +2,12 @@ import { describe, it, expect } from 'vitest'
 import { mkdtempSync, readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { tmpdir } from 'node:os'
+import { spawnSync } from 'node:child_process'
 import { settingsStore } from '../server/settings'
 import { Workspaces } from '../server/workspaces'
 import { importPdfFast, pagesToMarkdown, parseXml, type Page } from '../server/import/pdf-fast'
 
+const poppler = !spawnSync('pdftohtml', ['-v']).error
 const open = () => new Workspaces(settingsStore(join(mkdtempSync(join(tmpdir(), 'mdl-cfg-')), 's.json'))).open(mkdtempSync(join(tmpdir(), 'mdl-pdf-')))
 const line = (page: number, top: number, text: string, o: Partial<{ left: number; size: number; bold: boolean; width: number }> = {}) => ({ page, top, left: o.left ?? 90, width: o.width ?? 600, height: 18, size: o.size ?? 16, bold: o.bold ?? false, italic: false, text })
 
@@ -52,7 +54,7 @@ describe('PDF layout to Markdown', () => {
   })
 })
 
-describe('PDF import (poppler)', () => {
+describe.skipIf(!poppler)('PDF import (poppler)', () => {
   it('imports a real PDF: title, sections, lists, no running header or page numbers', async () => {
     const h = open()
     const bytes = readFileSync(resolve(__dirname, 'fixtures/sample.pdf'))

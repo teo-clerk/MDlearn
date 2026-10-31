@@ -31,7 +31,7 @@ export function ExplainedFormula({ b }: { b: FormulaBlock }) {
           <li key={t.i}>
             <button type="button" onMouseEnter={() => setActive(t.i)} onMouseLeave={() => setActive(null)} onFocus={() => setActive(t.i)} onBlur={() => setActive(null)}
               className={`flex w-full items-baseline gap-3 rounded-[6px] px-2 py-1 text-left ${active === t.i ? 'bg-hover' : ''}`}>
-              <span className="w-24 shrink-0"><Tex tex={t.tex} eager /></span>
+              <span className={`w-24 shrink-0 term-${t.i}`}><Tex tex={t.tex} eager /></span>
               <span className="text-text/85"><Inline nodes={t.label} /></span>
             </button>
           </li>

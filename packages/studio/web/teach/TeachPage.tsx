@@ -71,7 +71,7 @@ export default function TeachPage({ ws }: { ws: string }) {
           <div className="mt-5">
             <label htmlFor="teach-section" className="text-[12.5px] text-muted">{t('Section')}</label>
             <span className="relative mt-1.5 block max-w-[30rem]">
-              <select id="teach-section" value={chosen!.anchor} onChange={(e) => setSection(e.target.value)} className="h-9 w-full cursor-pointer appearance-none truncate rounded-[6px] border border-border-strong bg-bg pl-2.5 pr-8 text-[14px] outline-none focus:border-text">
+              <select id="teach-section" value={chosen!.anchor} onChange={(e) => setSection(e.target.value)} className="h-9 w-full cursor-pointer appearance-none truncate rounded-[6px] border border-border-strong bg-bg pl-2.5 pr-8 text-[14px] outline-none focus:border-accent">
                 {sections.map((s) => <option key={s.anchor} value={s.anchor}>{`${' '.repeat(Math.max(0, s.depth - 2))}${s.num ? `${s.num} ` : ''}${s.title}`}</option>)}
               </select>
               <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-muted" aria-hidden />
@@ -85,14 +85,14 @@ export default function TeachPage({ ws }: { ws: string }) {
         </ul>
         <label htmlFor="teach-text" className="sr-only">{t('Your explanation')}</label>
         <textarea id="teach-text" ref={box} value={text} onChange={(e) => save(e.target.value.slice(0, MAX_CHARS))} rows={10} placeholder={t('Start with what it is for, then how it works…')}
-          className="read mt-4 block w-full resize-y rounded-[8px] border border-border-strong bg-bg px-3.5 py-3 text-[16px] leading-relaxed outline-none focus:border-text" />
+          className="read mt-4 block w-full resize-y rounded-[8px] border border-border-strong bg-bg px-3.5 py-3 text-[16px] leading-relaxed outline-none focus:border-accent" />
         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
           <Button variant="primary" icon={Presentation} busy={busy} disabled={!using || text.trim().length < MIN_CHARS} onClick={() => void send()}>{result ? t('Get feedback again') : t('Get feedback')}</Button>
           {local && claude && (
             <span role="radiogroup" aria-label={t('Feedback from')} className="inline-flex gap-1 text-[12.5px]">
               {(['local', 'claude'] as const).map((e) => (
                 <button key={e} type="button" role="radio" aria-checked={using === e} onClick={() => setEngine(e)}
-                  className={`h-7 rounded-[6px] border px-2 cursor-pointer ${using === e ? 'border-text bg-hover font-medium' : 'border-border text-muted hover:bg-hover'}`}>{e === 'local' ? t('Local AI') : 'Claude'}</button>
+                  className={`h-7 rounded-[6px] border px-2 cursor-pointer ${using === e ? 'border-accent bg-accent-soft font-medium' : 'border-border text-muted hover:bg-hover'}`}>{e === 'local' ? t('Local AI') : 'Claude'}</button>
               ))}
             </span>
           )}

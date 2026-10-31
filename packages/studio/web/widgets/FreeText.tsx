@@ -24,7 +24,7 @@ export function FreeText({ widget, draft, setDraft, result, autoFocus, onSubmit 
         aria-label={code ? t('Your {language} code', { language: widget.lang }) : t('Your explanation')} spellCheck={!code}
         placeholder={code ? '' : t('Explain it in a sentence or two, as if to a classmate…')}
         rows={code ? Math.max(6, draft.text.split('\n').length + 1) : 4}
-        className={`mt-3 w-full resize-y rounded-[7px] border border-border-strong bg-raised px-3 py-2 outline-none focus:border-text disabled:opacity-80 ${code ? 'font-mono text-[13px] leading-relaxed' : 'font-read text-[16px] leading-relaxed'}`} />
+        className={`mt-3 w-full resize-y rounded-[7px] border border-border-strong bg-raised px-3 py-2 outline-none focus:border-accent disabled:opacity-80 ${code ? 'font-mono text-[13px] leading-relaxed' : 'font-read text-[16px] leading-relaxed'}`} />
       {!result && <p className="mt-1 text-[12px] text-muted">{code ? (runnable ? t('Run tries your code; Check runs it against the exercise’s checks (Ctrl+Enter).') : t('Ctrl+Enter to check.')) : t('Ctrl+Enter to compare with the key ideas.')}</p>}
       {runnable && !result && (
         <div className="mt-2">

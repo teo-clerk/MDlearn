@@ -7,7 +7,7 @@ import {
   studyQueue, locate, pose, check, hint, ratingFor, ratingWords, scheduleAfter, whenText, readsLabel, report, deriveCards,
   type Lesson, type QueueItem, type Outcome, type Located,
 } from '@mdlearn/core'
-import { loadCourse, loadProgress, loadGoals, appendProgress, type Workspace, type Progress } from '@mdlearn/core/node'
+import { loadLessons, loadProgress, loadGoals, appendProgress, type Workspace, type Progress } from '@mdlearn/core/node'
 import { bold, dim, out, wrap, plural } from './ui.js'
 
 const MINUTES: Record<string, number> = { quiz: 0.6, cloze: 0.8, order: 1, steps: 1.5, explain: 2, code: 3, match: 1, sort: 1, speed: 1.5 }
@@ -31,11 +31,11 @@ function lineReader(rl: Interface) {
 interface Result { item: QueueItem; title: string; rating: 1 | 2 | 3; reads: string; docRef?: { doc: string; section: string } }
 
 export async function reviewSession(ws: Workspace, opt: { limit?: string; scope?: string; 'new-cards'?: string; due?: boolean }): Promise<void> {
-  const loaded = loadCourse(ws.learnDir)
+  const loaded = loadLessons(ws)
   const lessons = loaded.map((l) => l.lesson).filter((l): l is Lesson => !!l)
   if (!lessons.length) {
-    out(`No lessons found in ${ws.learnDir}.`)
-    out('Run this inside a curriculum that has a learn/ folder (e.g. ~/CODING/ESA-PROJECTS), or pass --root <folder>.')
+    out(`No lessons found in ${ws.root}.`)
+    out('Run this inside a folder with lessons, or pass --root <folder>.')
     process.exitCode = 1
     return
   }

@@ -3,3 +3,8 @@ dist/
 coverage/
 *.tsbuildinfo
 .mdlearn/
+# machine-specific
+.mcp.json
+.impeccable/
+.env
+.env.*

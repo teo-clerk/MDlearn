@@ -3,11 +3,15 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync, statSync, unlinkSyn
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import { realPath } from '@mdlearn/core/node'
 
-const PROTECTED = new Set(['.git', '.claude', '.mdlearn', 'node_modules', '.venv'])
+const PROTECTED = new Set(['.git', '.claude', '.agents', '.mdlearn', 'node_modules', '.venv'])
 /** Is `abs` a Markdown file inside one of the allowed folders (symlinks resolved, protected folders excluded)? */
-export function writeAllowed(abs: string, scope: string[]): string | null {
+export function writeAllowed(abs: string, scope: string[], keepOut: string[] = []): string | null {
   const target = realPath(resolve(abs))
   if (!/\.md$/i.test(target)) return 'Only Markdown (.md) files can be written by AI jobs.'
+  for (const k of keepOut) {
+    const rel = relative(realPath(k), target)
+    if (!rel || (rel !== '..' && !rel.startsWith(`..${sep}`) && !isAbsolute(rel))) return 'This job may read that file but not change it.'
+  }
   for (const s of scope) {
     const base = realPath(s)
     if (/\.md$/i.test(base)) { if (base === target) return null; continue } // a single file
@@ -26,7 +30,7 @@ export class Snapshots {
   private taken = new Map<string, Snapshot>()
   constructor(private dir: string, private root: string) {}
   take(abs: string): void {
-    const rel = relative(this.root, abs)
+    const rel = relative(this.root, abs).split(sep).join('/')
     if (this.taken.has(rel)) return
     const existed = existsSync(abs) && statSync(abs).isFile()
     const store = join(this.dir, 'before', rel)

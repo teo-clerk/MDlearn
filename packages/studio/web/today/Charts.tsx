@@ -17,7 +17,7 @@ export function Forecast({ days }: { days: TodayResponse['forecast'] }) {
         {days.map((d, i) => (
           <div key={d.date} className="flex h-full flex-1 flex-col items-center justify-end gap-1" title={`${long.format(at(d.date))}: ${tp(d.count, '{n} card', '{n} cards')}${i === 0 ? ` ${t('(including overdue)')}` : ''}`}>
             <span className="tabular text-[12px] text-muted">{d.count || ''}</span>
-            <div className={`w-full rounded-[3px] ${i === 0 ? 'bg-text' : 'bg-text/45'}`} style={{ height: `${Math.max(d.count ? 6 : 2, (d.count / max) * 56)}px`, opacity: d.count ? 1 : 0.2 }} />
+            <div className={`w-full rounded-[3px] ${i === 0 ? 'bg-accent' : 'bg-accent/45'}`} style={{ height: `${Math.max(d.count ? 6 : 2, (d.count / max) * 56)}px`, opacity: d.count ? 1 : 0.2 }} />
           </div>
         ))}
       </div>

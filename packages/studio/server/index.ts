@@ -7,6 +7,7 @@ import { spawn } from 'node:child_process'
 import { getRequestListener } from '@hono/node-server'
 import type { FSWatcher } from 'chokidar'
 import { createApp } from './app.js'
+import type { PictureFetch } from './web-pictures.js'
 import { EventBus } from './bus.js'
 import { settingsStore } from './settings.js'
 import { Workspaces } from './workspaces.js'
@@ -16,6 +17,8 @@ import { JobManager } from './ai/jobs.js'
 import { ClaudeEngine, claudeStatus, claudeOnce } from './ai/claude.js'
 import { Latex, fakeEngines, fakeRunner } from './latex.js'
 import { FakeEngine, fakeOnce } from './ai/fake.js'
+
+export { installMcp, mcpCommands, prepareFolder, READ_THE_SKILL } from './agents.js'
 
 export interface StudioOptions {
   root?: string
@@ -30,6 +33,8 @@ export interface StudioOptions {
   fakeAi?: boolean
   /** Use the stand-in TeX engine instead of one installed on this computer (tests). */
   fakeTex?: boolean
+  /** A stand-in for the network behind web pictures (tests). */
+  pictureFetch?: PictureFetch
 }
 export interface Studio { url: string; lanUrl?: string; qr?: string; port: number; close(): Promise<void> }
 
@@ -43,7 +48,7 @@ const PKG = ((): string => {
 })()
 const VERSION = (JSON.parse(readFileSync(join(PKG, 'package.json'), 'utf8')) as { version: string }).version
 const WEB_DIST = join(PKG, 'dist', 'web')
-const STATIC_TYPES: Record<string, string> = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.png': 'image/png', '.json': 'application/json', '.wasm': 'application/wasm', '.webmanifest': 'application/manifest+json' }
+const STATIC_TYPES: Record<string, string> = { '.txt': 'text/plain; charset=utf-8', '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.png': 'image/png', '.json': 'application/json', '.wasm': 'application/wasm', '.webmanifest': 'application/manifest+json' }
 
 export async function startStudio(opts: StudioOptions = {}): Promise<Studio> {
   const bus = new EventBus()
@@ -58,7 +63,7 @@ export async function startStudio(opts: StudioOptions = {}): Promise<Studio> {
   const deps = { version: VERSION, security, settings, workspaces, bus, serverId: randomUUID(), jobs, engine,
     claudeStatus: () => (opts.fakeAi ? Promise.resolve({ available: true, version: 'demo' }) : claudeStatus(settings.get().claude)),
     claudeOnce: opts.fakeAi ? fakeOnce : (req: { system: string; prompt: string; signal?: AbortSignal }) => claudeOnce(settings.get().claude, req),
-    latex: new Latex(opts.fakeTex ? { runner: fakeRunner, engines: fakeEngines } : {}) }
+    latex: new Latex(opts.fakeTex ? { runner: fakeRunner, engines: fakeEngines } : {}), pictureFetch: opts.pictureFetch }
   const app = createApp(deps)
   const api = getRequestListener(app.fetch)
 

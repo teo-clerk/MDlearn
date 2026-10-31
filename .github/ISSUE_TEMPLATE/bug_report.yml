@@ -1,0 +1,35 @@
+name: Bug report
+description: Something doesn't work as it should
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what you saw instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: How to reproduce it
+      description: The smallest steps that show the problem. A small lesson or file helps a lot, but please leave out anything private.
+  - type: input
+    id: version
+    attributes:
+      label: MDlearn version
+      placeholder: "1.4.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: how
+    attributes:
+      label: How do you run it?
+      options:
+        - Desktop app on Windows
+        - Desktop app on macOS
+        - Desktop app on Linux
+        - From source (mdlearn studio)
+        - Command line or MCP server only
+    validations:
+      required: true

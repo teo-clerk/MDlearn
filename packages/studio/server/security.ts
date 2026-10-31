@@ -85,6 +85,7 @@ export function security(o: SecurityOptions): MiddlewareHandler {
 }
 export function pageCsp(dev: boolean): string {
   return [
+    // nothing from outside loads by itself: a web picture comes through the server once its site is allowed (web-pictures.ts)
     "default-src 'self'", `script-src 'self'${dev ? " 'unsafe-inline'" : ''}`, "style-src 'self' 'unsafe-inline'", "img-src 'self' data: blob:",
     "font-src 'self' data:", `connect-src 'self'${dev ? ' ws: wss:' : ''}`, "media-src 'self'",
     // the only outside pages a document can open in place: YouTube (privacy-enhanced domain) and Vimeo players,

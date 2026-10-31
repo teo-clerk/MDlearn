@@ -11,6 +11,8 @@ import type { Lesson } from './ast.js'
 import { mergeLogs, type ReviewEvent } from './learn/srs.js'
 
 /** Folders never treated as curriculum content (shared with file watchers). */
+/** Instructions for coding assistants at the top of a folder: not notes. */
+const ASSISTANT_FILES: ReadonlySet<string> = new Set(['AGENTS.md', 'CLAUDE.md', 'GEMINI.md'])
 export const IGNORED_DIRS: ReadonlySet<string> = new Set(['node_modules', '.git', '.venv', 'venv', '.claude', '.pytest_cache', '.ruff_cache', '__pycache__', 'dist', '.mdlearn', 'learn'])
 
 /** Outline cache keyed by absolute path + mtime, so long sessions re-read only changed documents. */
@@ -101,27 +103,37 @@ export function loadCourse(learnDir: string): LoadedLesson[] {
   if (!existsSync(learnDir)) return []
   return walk(learnDir, (f) => f.endsWith('.learn.md'), false).map(loadLesson)
 }
+/** Every lesson file of a folder: companions in learn/, and courses an assistant wrote anywhere else in it. */
+export const lessonPaths = (ws: Workspace): string[] => walk(ws.root, (f) => f.endsWith('.learn.md'), false)
+export const loadLessons = (ws: Workspace): LoadedLesson[] => lessonPaths(ws).map(loadLesson)
 
 // ---------------------------------------------------------------- curriculum layout
 export interface Workspace { root: string; learnDir: string }
+/** A path inside a folder, written the same on every system. */
+export const relativePosix = (base: string, abs: string) => relative(base, abs).split(sep).join('/')
 export function workspace(root: string, learnDirName = 'learn'): Workspace {
-  const abs = resolve(root)
+  const abs = realPath(resolve(root))
   return { root: abs, learnDir: join(abs, learnDirName) }
 }
 /** Source documents of a curriculum (Markdown outside learn/, tooling and hidden dirs). */
 export function sourceDocs(ws: Workspace): string[] {
-  return walk(ws.root, (f) => f.endsWith('.md') && !f.endsWith('.learn.md'))
+  return walk(ws.root, (f) => f.endsWith('.md') && !f.endsWith('.learn.md')).filter((p) => !(dirname(p) === ws.root && ASSISTANT_FILES.has(basename(p))))
 }
 /** `00_FOUNDATIONS/04_sar….md` → `<learn>/00_FOUNDATIONS/04_sar…/` */
 export function lessonDirFor(ws: Workspace, docAbs: string): string {
   return join(ws.learnDir, relative(ws.root, docAbs).replace(/\.md$/, ''))
+}
+/** A lesson belongs to a document as a companion in learn/<doc>/, or by sitting beside a course.md overview. */
+export function lessonOfDoc(ws: Workspace, docAbs: string, lessonAbs: string): boolean {
+  if (lessonAbs.startsWith(lessonDirFor(ws, docAbs) + sep)) return true
+  return basename(docAbs).toLowerCase() === 'course.md' && dirname(lessonAbs) === dirname(docAbs)
 }
 /** Resolve a document reference: a path relative to the root, or a unique file-name fragment. */
 export function findDoc(ws: Workspace, ref: string): string | null {
   const direct = resolve(ws.root, ref)
   if (existsSync(direct) && direct.endsWith('.md')) return direct
   const q = ref.toLowerCase().replace(/\.md$/, '')
-  const hits = sourceDocs(ws).filter((p) => relative(ws.root, p).toLowerCase().includes(q))
+  const hits = sourceDocs(ws).filter((p) => relativePosix(ws.root, p).toLowerCase().includes(q))
   return hits.length === 1 ? hits[0] : (hits.find((p) => p.toLowerCase().endsWith(`/${q}.md`)) ?? null)
 }
 
@@ -130,13 +142,12 @@ export interface DocStatus {
   planned: number; existing: number; errors: number; warnings: number; cards: number; widgets: number
 }
 export function curriculumStatus(ws: Workspace, filter?: string): DocStatus[] {
-  const lessons = loadCourse(ws.learnDir)
+  const lessons = loadLessons(ws)
   return sourceDocs(ws)
-    .filter((p) => !filter || relative(ws.root, p).toLowerCase().includes(filter.toLowerCase()))
+    .filter((p) => !filter || relativePosix(ws.root, p).toLowerCase().includes(filter.toLowerCase()))
     .map((abs) => {
       const { outline } = loadDoc(abs, ws.root)
-      const dir = lessonDirFor(ws, abs)
-      const mine = lessons.filter((l) => l.path.startsWith(dir + sep))
+      const mine = lessons.filter((l) => lessonOfDoc(ws, abs, l.path))
       const ok = mine.map((l) => l.lesson).filter((l): l is Lesson => !!l)
       return {
         doc: relative(ws.root, abs).split(sep).join('/'), title: outline.title, kind: outline.kind, words: outline.words,
@@ -316,9 +327,11 @@ const GoalsSchema = z.object({
   deadlines: z.array(z.object({ scope: z.string().max(1024), date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), label: z.string().max(80).optional() })).max(50),
   /** Cards (`lessonId/cardId`) you set aside; they never appear in a session. */
   suspended: z.array(z.string().max(300)).max(5000),
+  /** Studied cards with no card left, dealt with: reconnected to another card, or let go. Their history stays. */
+  settled: z.array(z.string().max(300)).max(5000).default([]),
 })
 export type Goals = z.infer<typeof GoalsSchema>
-export const DEFAULT_GOALS: Goals = { version: 1, dailyGoal: 20, deadlines: [], suspended: [] }
+export const DEFAULT_GOALS: Goals = { version: 1, dailyGoal: 20, deadlines: [], suspended: [], settled: [] }
 export const goalsPath = (ws: Workspace) => join(ws.learnDir, '.mdlearn', 'goals.json')
 export function loadGoals(ws: Workspace): Goals {
   const p = goalsPath(ws)

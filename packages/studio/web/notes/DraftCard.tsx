@@ -27,7 +27,7 @@ export function DraftCard({ ws, doc, canAsk, onDone }: { ws: string; doc: string
       <textarea value={text} onChange={(e) => setText(e.target.value)} autoFocus rows={3} aria-label={ask ? t('Your question') : t('Your note')}
         placeholder={ask ? t('What would you like to know about this passage?') : t('Write a note…')}
         onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) e.currentTarget.form?.requestSubmit(); if (e.key === 'Escape') setDraft(null) }}
-        className="mt-2 w-full resize-y rounded-[6px] border border-border-strong bg-bg px-2 py-1.5 outline-none focus:border-text" />
+        className="mt-2 w-full resize-y rounded-[6px] border border-border-strong bg-bg px-2 py-1.5 outline-none focus:border-accent" />
       {error && <p className="mt-1 text-[12px] text-bad" role="alert">{error}</p>}
       <div className="mt-2 flex items-center gap-1.5">
         <Button type="submit" size="sm" variant="primary" disabled={!text.trim() || !!busy}>

@@ -1,33 +1,90 @@
 # MDlearn
 
-Turn Markdown notes and course documents into interactive, spaced-repetition lessons. Lessons are
-plain `.learn.md` files, written by you or by an LLM, checked by a strict compiler, and studied in
-**MDlearn Studio** (a local web app), in the terminal (`mdlearn review`) or with Claude Code as a
-tutor. All three share one progress file, so you can switch between them freely.
+**Turn your class files into short lessons, and study them a few minutes a day.**
 
-```
-your notes (.md)  ──►  lessons (learn/*.learn.md)  ──►  study: Studio · terminal · Claude tutor
-   never edited          written by AI or by hand          FSRS schedule in learn/.mdlearn/progress.json
-                         checked by `mdlearn lint`
-```
+Give MDlearn your PDFs, slides and Word files. An AI you already use writes the lessons, a strict compiler checks
+them, and spaced repetition brings each idea back just before you would forget it. It runs on your computer, needs
+no account, and your lessons are plain files you keep.
 
-## Install
+[![CI](https://github.com/teo-clerk/MDlearn/actions/workflows/ci.yml/badge.svg)](https://github.com/teo-clerk/MDlearn/actions/workflows/ci.yml)
+[![Latest release](https://img.shields.io/github/v/release/teo-clerk/MDlearn)](https://github.com/teo-clerk/MDlearn/releases/latest)
+[![MIT License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-Two ways to run Studio, with the same features and the same settings:
+![A lesson in MDlearn Studio, with a formula explained in colour beside the text](docs/images/reading.png)
 
-- **The desktop app.** Download it from the [releases](https://github.com/teo-clerk/MDlearn/releases): the
-  installer (`.exe`) or `.zip` for Windows, the `.dmg` or `.zip` for macOS, the AppImage, `.deb` or `.zip` for
-  Linux. Nothing else is needed (no Node.js, no terminal); Claude Code and Ollama stay optional, as below. The
-  builds are not signed yet, so Windows and macOS ask once before opening them — see [DESKTOP.md](docs/DESKTOP.md).
-- **The web app from source**, in your browser (`mdlearn studio`), together with the CLI and the MCP server:
+## Download
 
-| Needed | For |
+| System | File |
 |---|---|
-| **Node.js** (developed on Node 26; needs `node:sqlite` and zstd, so 22.15 or newer) and git | everything |
-| Claude Code, logged in once (`claude`) | AI course creation in Studio, the Claude tutor *(optional)* |
-| [Ollama](https://ollama.com), then a model from *Settings → Local AI* (or `ollama pull qwen3:8b`) | ask / explain / visualise a passage, Ask your folder *(optional)* |
-| poppler (`pdftohtml`) | quick PDF import *(optional)* |
-| [SciNet](https://github.com/teo-clerk/SciNet) running on this computer | importing papers from your library *(optional)* |
+| **Windows** | `.exe` installer, or `.zip` |
+| **macOS** (Apple silicon) | `.dmg`, or `.zip` |
+| **Linux** | AppImage, `.deb`, or `.zip` |
+
+Get them from the [latest release](https://github.com/teo-clerk/MDlearn/releases/latest). Nothing else is needed:
+no Node.js, no terminal.
+
+The builds are not code-signed yet, so Windows and macOS warn you the first time. [DESKTOP.md](docs/DESKTOP.md) shows
+how to open them, and each release has a `SHA256SUMS.txt` to check your download against.
+
+## Your first course
+
+1. **Add your files.** Open MDlearn, choose *Make a course from my class files*, and drop in your PDFs, PowerPoint
+   or Word files and pictures. MDlearn tells you what it could read from each one.
+2. **Choose who writes the lessons.**
+   - *Claude, from here:* runs Claude Code on your computer, and you watch it work.
+   - *Your coding assistant:* Claude Code, Codex, OpenCode or Pi, with one command to paste in a terminal.
+   - *A chat:* ChatGPT, Claude or Gemini. MDlearn gives you the prompt, and you paste the answer back.
+3. **Study.** *Today* gives you a short daily session: the cards that are due, then a few new ones.
+
+Your course can change with you. After a week you can move or pause lessons, add class files, or ask for changes,
+and cards you have already studied keep their schedule.
+
+New here? *Open the tutorial* on the first page gives you a small sample course with every kind of question and game
+to try.
+
+![The first page of MDlearn Studio, with three steps and one main button](docs/images/first-run.png)
+
+## What you get
+
+- **Lessons that check you.** Quizzes, fill-in-the-gaps, ordering, written answers, worked steps, code, and games.
+  You say whether you were sure before you see the answer, and what you miss comes back sooner.
+- **A schedule that fits your memory**, using the [FSRS](https://github.com/open-spaced-repetition) algorithm.
+- **Reading that keeps up with technical notes:** math, tables, diagrams, code you can run, and notes beside the text.
+- **Colour with a job.** Callouts, formula terms and highlights each mean one thing. Mark a passage *confusing* or
+  *for the exam* and MDlearn does something about it.
+- **Mock exams, deadlines and progress**, with an honest look at how well you know what you think you know.
+- **Your language:** the app comes in English, Italian, Spanish, French and Catalan.
+
+![A question in a study session](docs/images/study.png)
+
+## Your files stay yours
+
+MDlearn has no account, no analytics and no server of its own. Lessons, notes and progress are ordinary files on your
+computer, and your notes are never changed unless you ask.
+
+It only goes online when you do something that needs it: importing a web page, allowing a site's pictures, playing
+an embedded video, downloading a local AI model, or running code that needs a Python package.
+
+When an AI writes your lessons, the files you give it go to that AI, under its own terms. To keep everything on
+your computer, use a local model through [Ollama](https://ollama.com) for asking and explaining.
+
+## Optional extras
+
+| You need | For |
+|---|---|
+| [Claude Code](https://claude.com/claude-code), signed in once | writing lessons from inside MDlearn, and the terminal tutor |
+| [Ollama](https://ollama.com), then a model from *Settings → Local AI* | asking about a passage, explaining it, and searching your folder by meaning |
+| poppler (`pdftohtml`) | quick PDF import |
+| [SciNet](https://github.com/teo-clerk/SciNet) running on this computer | importing papers from your library |
+
+MDlearn runs the Claude Code you installed, under your own login, and never sees or stores that login. Your use of it
+is covered by [Anthropic's terms](https://code.claude.com/docs/en/legal-and-compliance), and it's up to you to check
+they fit how you use it.
+
+## Install from source
+
+This gives you the web app in your browser (`mdlearn studio`), the command line and the MCP server. You need
+Node.js 22.15 or newer and git.
 
 ```bash
 git clone https://github.com/teo-clerk/MDlearn.git
@@ -43,7 +100,7 @@ mdlearn --help
 
 After pulling changes, run `npm run build` again; the links keep working.
 
-## Quick start
+## Using your own Markdown notes
 
 ### 1. Open your notes
 
@@ -63,8 +120,7 @@ Pick whichever fits:
 - **Let Claude write them in Studio.** *AI Studio* → *Create a course* (one document), *Whole folder*
   (every document without lessons, one after another), *Improve a lesson*, or *Something else*. Each
   job streams live, can only write Markdown inside its allowed folder (`learn/` by default), is
-  linted, and can be undone. It uses your Claude
-  Code login and counts against your subscription limits.
+  linted, and can be undone. It runs Claude Code on your computer, under your own login.
 - **Ask Claude Code in a terminal.** Set up the skills once (see [Claude Code](#use-with-claude-code)),
   then say e.g. *"turn bayes.md into a lesson with mdlearn-course"* or *"convert 00_FOUNDATIONS with
   mdlearn-curriculum"*.
@@ -139,7 +195,7 @@ accuracy, what's due and your streak.
 **A good habit:** one short session a day (`mdlearn review`, 5–10 minutes). Add new lessons for the
 document you're reading this week, rather than converting everything up front.
 
-## Use with any AI: Claude Code, Claude.ai, ChatGPT
+## Use with any AI: Claude Code, Codex, OpenCode, Pi, Claude.ai, ChatGPT
 
 Ask any assistant for a course on a topic, with or without your notes; it writes MDlearn lessons with
 the same method Studio uses (retrieval every few cards, misconception feedback, worked examples that
@@ -149,8 +205,12 @@ real paths; Studio shows them under **Settings → Use MDlearn in other apps**.
 | Where | How |
 |---|---|
 | **Claude Code**, any folder | Install the plugin once: `claude plugin marketplace add "/path/to/MDlearn/packages/studio/dist/integrations/claude-plugin"`, then `claude plugin install mdlearn@mdlearn`. In any project, `/mdlearn:course how vaccines work, beginner` writes a lint-checked course into that folder; `/mdlearn:study` quizzes you. The plugin brings the MCP server (one file, no setup), the four skills and the ready-made prompts `create_course`, `companion_lessons` and `study`. |
+| **Codex, OpenCode, Pi**, one folder | Nothing to install: `mdlearn agents "<folder>"` (or Ctrl+K in Studio → *Get this folder ready for my AI*) writes `AGENTS.md` and `.agents/skills/`. Start the assistant there and ask for a course. `mdlearn agents --mcp` prints how to add the tools that quiz you. |
 | **Claude.ai** | Upload `packages/studio/dist/integrations/mdlearn-skill.zip` under Settings → Capabilities → Skills; ask "Make an MDlearn course on …". |
 | **ChatGPT, Gemini, any chat** | Paste the output of `mdlearn prompt` into the chat (or a Custom GPT's or Project's instructions; `mdlearn prompt --full` is the whole guide, to attach as a file). Then paste the chat's answer into Studio → *Import* → **From a chat**, or run `mdlearn import-chat answer.md`: every file is checked, the good ones are saved in a new course folder, and errors become a message to paste back into the chat. |
+
+A whole course has been tested from start to finish with Claude Code. Codex, OpenCode and Pi use the same folder
+instructions, but no finished course has been confirmed with them yet.
 
 The prompt lives in [docs/CHAT_PROMPT.md](docs/CHAT_PROMPT.md); `npm run build` regenerates the plugin,
 the skill and the prompt files from the docs.
@@ -269,7 +329,7 @@ If your notes are in git, add `.mdlearn/` to their `.gitignore`.
 | `mdlearn plan` prints nothing | the document has no `##` sections: write the lesson with Claude or by hand |
 | AI Studio says Claude Code is not installed | install Claude Code and run `claude` once to log in |
 | Ask / Explain / Visualise are unavailable | start Ollama and `ollama pull qwen3:8b` (the model is set in `studio.json`) |
-| Quick PDF import fails | install poppler (`pdftohtml`) |
+| Quick PDF import fails | install poppler: `brew install poppler`, `sudo apt install poppler-utils` or `sudo pacman -S poppler` |
 
 ## Documentation
 
@@ -305,3 +365,15 @@ npm run check-docs                     # every example in docs/ compiles as docu
 npm run test:e2e -w @mdlearn/studio    # Playwright, desktop + phone, on a temporary demo folder
 npm run dev                            # Studio with hot reload
 ```
+
+## Contributing
+
+Bug reports, ideas and pull requests are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md). To report a security
+problem, see [SECURITY.md](SECURITY.md).
+
+## License
+
+[MIT](LICENSE) © Teo Clerk.
+
+MDlearn is an independent project. It is not made, endorsed or sponsored by Anthropic, OpenAI or the makers of the
+other tools it works with. Claude and Claude Code are trademarks of Anthropic.

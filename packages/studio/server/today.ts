@@ -1,18 +1,19 @@
 // The Today dashboard and deadline pacing: everything derived from your own logs and goals.
 import { dirname, relative, resolve, sep } from 'node:path'
 import {
-  askable, deriveCards, forecast, heatmap, studyTime, calibration, leeches, pacing, dayKey, localTz, reviewStreakFromLog, report, whenText,
+  askable, deriveCards, isOriginalReview, forecast, heatmap, studyTime, calibration, leeches, pacing, dayKey, localTz, reviewStreakFromLog, report, whenText,
   type Lesson, type Pace,
 } from '@mdlearn/core'
 import { loadGoals, type Progress } from '@mdlearn/core/node'
 import type { Handle } from './workspaces.js'
 import type { TodayResponse, LeechInfo, PaceInfo } from '../shared/types.js'
 import { course, progressOf, lessonsOfDoc, plan } from './study.js'
+import { notesStore } from './notes.js'
 
-const DAY = 864e5
+const DAY = 864e5, MAX_CONFUSING = 5
 const keysOf = (lessons: Lesson[]) => lessons.flatMap((l) => l.cards.filter((c) => c.blocks.some(askable)).map((c) => `${l.id}/${c.id}`))
 /** Cards that have been reviewed at least once, with the time of their first review. */
-const firstReviews = (p: Progress) => { const m = new Map<string, number>(); for (const r of p.reviews) if (!m.has(r.key)) m.set(r.key, r.t); return m }
+const firstReviews = (p: Progress) => { const m = new Map<string, number>(); for (const r of p.reviews.filter(isOriginalReview)) if (!m.has(r.key)) m.set(r.key, r.t); return m }
 
 export function pacesOf(h: Handle, lessons: Lesson[], p: Progress, now = Date.now()): PaceInfo[] {
   const goals = loadGoals(h.ws)
@@ -55,7 +56,7 @@ export function today(h: Handle, now = Date.now()): TodayResponse {
   const cards = deriveCards(p.reviews)
   const rep = report(lessons, p.reviews, now, p.attempts)
   const todayKey = dayKey(now, tz)
-  const doneToday = p.reviews.filter((r) => dayKey(r.t, tz) === todayKey).length
+  const done = p.reviews.filter(isOriginalReview), doneToday = done.filter((r) => dayKey(r.t, tz) === todayKey).length
   const cardInfo = new Map<string, { lesson: Lesson; title: string; source?: { doc: string; section: string } }>()
   for (const l of lessons) for (const c of l.cards) {
     const read = c.blocks.find((b) => b.type === 'read')
@@ -76,7 +77,8 @@ export function today(h: Handle, now = Date.now()): TodayResponse {
     plan: next,
     goal: { daily: goals.dailyGoal, doneToday, percent: Math.min(100, Math.round((doneToday / goals.dailyGoal) * 100)) },
     forecast: forecast(cards, now, 7, tz),
-    heatmap: heatmap(p.reviews, now, 26, tz),
+    heatmap: heatmap(done, now, 26, tz),
+    confusing: notesStore.marked(h, 'confusing', MAX_CONFUSING).map((n) => ({ id: n.id, doc: n.doc, anchor: n.anchor, explained: n.thread.some((m) => m.role === 'ai') })),
     time: studyTime(times, now, tz),
     calibration: calibration(p.attempts, now, 30),
     leeches: leechList,

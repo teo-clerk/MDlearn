@@ -2,6 +2,17 @@
   "name": "@mdlearn/mcp",
   "version": "1.3.0",
   "description": "MCP server: curriculum outlines, exact source sections, lesson linting and FSRS tutoring for Claude.",
+  "license": "MIT",
+  "author": "Teo Clerk",
+  "homepage": "https://github.com/teo-clerk/MDlearn#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/teo-clerk/MDlearn.git",
+    "directory": "packages/mcp"
+  },
+  "bugs": {
+    "url": "https://github.com/teo-clerk/MDlearn/issues"
+  },
   "type": "module",
   "bin": {
     "mdlearn-mcp": "./dist/index.js"

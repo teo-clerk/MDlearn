@@ -9,6 +9,7 @@ import { CommandPalette } from './CommandPalette'
 import { ImportDialog } from '../import/ImportDialog'
 import { CaptureDialog } from '../inbox/CaptureDialog'
 import { Notice } from '../ui/Notice'
+import { PictureZoom } from '../prose/Picture'
 import { Tour } from '../help/Tour'
 import { IconButton } from '../ui/primitives'
 import { useUi } from '../state/ui'
@@ -52,6 +53,7 @@ export function Shell({ ws, children }: { ws: string; children: ReactNode }) {
       <CommandPalette ws={ws} />
       <CaptureDialog ws={ws} />
       <Notice />
+      <PictureZoom />
       <Tour />
       {importOpen && <ImportDialog ws={ws} onClose={() => setImportOpen(false)} />}
     </div>

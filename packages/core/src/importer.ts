@@ -1,4 +1,4 @@
-// Importer — deterministic reading of curriculum documents (ESA-PROJECTS house style and plain Markdown).
+// Importer — deterministic reading of curriculum documents (a numbered house style and plain Markdown).
 // No LLM involved: metadata, the section tree and exact section text come straight from the source,
 // so the agent only writes the learning layer and never re-types structure.
 import { unified } from 'unified'
@@ -57,7 +57,7 @@ function roleOf(title: string): SectionRole {
   return 'content'
 }
 function kindOf(path: string, title: string): DocKind {
-  const base = path.split('/').pop() ?? path
+  const base = path.split(/[\\/]/).pop() ?? path
   if (/^readme\.md$/i.test(base)) return 'readme'
   if (/milestones\.md$/i.test(base)) return 'milestones'
   if (/exercises|assessment|interview/i.test(base) || /exercises|interview/i.test(title)) return 'assessment'
@@ -126,7 +126,7 @@ export function outlineDoc(md: string, path = 'doc.md'): DocOutline {
   const slugger = new GithubSlugger()
   const headings = scanHeadings(lines)
   const h1 = headings.find((h) => h.depth === 1)
-  const rawTitle = h1 ? h1.text : (path.split('/').pop() ?? path).replace(/\.md$/, '')
+  const rawTitle = h1 ? h1.text : (path.split(/[\\/]/).pop() ?? path).replace(/\.md$/, '')
   const no = /^(\d+(?:\.\d+)*)\.?\s*(?:—|-|–)?\s*/.exec(rawTitle)
   const title = no ? rawTitle.slice(no[0].length).trim() || rawTitle : rawTitle
   const sections: SectionInfo[] = []

@@ -88,9 +88,20 @@ Match each page with what it is for.
 - Ask :: a question about the whole folder
 :::
 
-## 5. AI Studio
+## 5. Making your own lessons
 
-**AI Studio** uses Claude Code (your own subscription) to write lessons from a note: *Create a course*
+Most courses start from a class: a few PDFs, slides and handouts. On the first page, choose **Make a course
+from my class files**, give it the files, and pick who writes the lessons:
+
+- **Claude, from here**, which starts at once.
+- **Your coding assistant** (Claude Code, Codex, OpenCode or Pi): MDlearn gets the folder ready and gives you
+  one command to run.
+- **A chat** such as ChatGPT or Gemini: attach your files, paste the MDlearn prompt, and bring the answer back
+  with **Import**.
+
+Lessons appear as they are written, and then you study them like any other.
+
+**AI Studio** runs Claude Code on your computer, under your own login, to write lessons from a note: *Create a course*
 for one document, *Whole folder* for many, *Improve a lesson* to fix one. Every change is checked by
 the compiler and can be undone. A course for a long note uses a fair share of your Claude usage, so
 start with the note you are studying this week.

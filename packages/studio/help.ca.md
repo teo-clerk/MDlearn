@@ -10,6 +10,28 @@ Els teus apunts continuen sent fitxers Markdown normals. Les **lliçons** (`lear
 **Estudia** et torna a mostrar cada targeta just abans que l'oblidis. De cinc a deu minuts al dia a
 **Avui**: aquest és l'hàbit que dona fruits.
 
+## Com es fan les lliçons
+
+Comença a la primera pàgina amb **Crea un curs amb els meus fitxers de classe**. Dona-li els teus PDF, PowerPoint, Word i
+imatges. Els originals es queden a `sources/`, i el que es pot llegir es converteix en text i imatges que qualsevol IA pot
+fer servir. Després tria qui escriu les lliçons:
+
+| Qui | Com |
+|---|---|
+| **Claude, des d'aquí** | Comença de seguida, i el pots seguir, aturar i desfer. |
+| **El teu assistent de programació** | Claude Code, Codex, OpenCode o Pi: MDlearn prepara la carpeta i et dona una sola ordre. |
+| **Un xat** | ChatGPT, Claude.ai o Gemini: adjunta els fitxers, enganxa el prompt d'MDlearn i porta la resposta amb **Importa → Des d'un xat**. |
+
+Les lliçons apareixen a mesura que s'escriuen. A l'editor, enganxa o deixa anar una captura per afegir una imatge. Fes clic en una imatge per veure-la més gran. Una imatge del web espera fins que permetis el seu lloc, perquè un document la podria fer servir per treure informació.
+
+Per canviar un curs ja començat, obre la seva pàgina de presentació. Pots moure o posar en pausa una lliçó, afegir fitxers o demanar un canvi. Les targetes conserven el calendari, fins i tot amb títols nous.
+
+## El color a les notes
+
+Aquí el color té una funció: el tipus de requadre, un terme d'una fórmula i la seva explicació, la paraula clau d'una targeta. Selecciona un
+passatge per ressaltar-lo com a **Important**, **Confús** o **Per a l'examen**, sense escriure res. Els passatges confusos t'esperen a **Avui**, i
+els de l'examen ofereixen **Crea una targeta**. **Configuració → Aparença → Color a les notes** el desactiva.
+
 ## Les pàgines
 
 | Pàgina | Per a què serveix |
@@ -24,7 +46,7 @@ Els teus apunts continuen sent fitxers Markdown normals. Les **lliçons** (`lear
 | **IA local** | *Configuració → IA local*: instal·la Ollama si falta, baixa un model recomanat (cadascun diu si aquest ordinador el fa anar bé) i tria amb quin respon Studio. |
 | **Importa** | *Importa…* a la barra lateral: una pàgina web, un PDF, una baralla d’Anki, un quadern, lliçons d’un xat, o un article de **SciNet** si s’està executant en aquest ordinador. |
 | **Safata d’entrada** | Ctrl+Maj+K desa una idea des de qualsevol pàgina, i *Safata d’entrada* a la barra d'una selecció desa un passatge. Endreça’ls a Avui: **Targeta**, **Mou** a un document, o **Fet**. Són Markdown senzill a `Inbox/`. |
-| **AI Studio** | Claude Code escriu o millora lliçons a partir d'un apunt (fa servir la teva subscripció de Claude). |
+| **AI Studio** | Claude Code escriu o millora lliçons a partir d'un apunt (s'executa en aquest ordinador, amb el teu compte). |
 | **Fórmules** · **Glossari** · **Mapa** | Cada fórmula, cada terme definit i quins apunts es basen en quins: un graf en 2D o 3D, acolorit segons com recordes cada apunt. |
 
 ## Mentre llegeixes

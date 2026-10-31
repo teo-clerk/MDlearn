@@ -55,7 +55,28 @@ async function moduleLevelCalls(): Promise<string[]> {
   return out
 }
 
+// A sentence typed straight into JSX can't reach a dictionary, so it stays English in every language.
+const NAMES = new Set(['Claude Code', 'Ctrl K', '/mdlearn:course how vaccines work, beginner', 'claude plugin marketplace update mdlearn'])
+async function plainSentences(): Promise<string[]> {
+  const { parse } = await import('@babel/parser')
+  const out: string[] = []
+  type N = { type?: string; value?: string; loc?: { start: { line: number } } } & Record<string, unknown>
+  const visit = (f: string, n: N | null): void => {
+    if (!n || typeof n !== 'object') return
+    if (n.type === 'JSXText' && /\p{L}{2,}\s+\p{L}{2,}/u.test(n.value ?? '') && !NAMES.has(n.value!.trim())) out.push(`${f}:${n.loc?.start.line}: ${n.value!.trim()}`)
+    for (const [k, v] of Object.entries(n)) {
+      if (k === 'loc' || k.endsWith('Comments')) continue
+      if (Array.isArray(v)) v.forEach((c) => visit(f, c as N)); else if (v && typeof v === 'object') visit(f, v as N)
+    }
+  }
+  for (const f of files.filter((x) => x.endsWith('.tsx'))) visit(f, parse(readFileSync(f, 'utf8'), { sourceType: 'module', plugins: ['typescript', 'jsx'] }).program as unknown as N)
+  return out
+}
+
 describe('interface translations', () => {
+  it('has no sentence outside t()', async () => {
+    expect(await plainSentences()).toEqual([])
+  })
   it('translates when text renders, never at module load', async () => {
     expect(await moduleLevelCalls(), 'wrap the constant in a function').toEqual([])
   })

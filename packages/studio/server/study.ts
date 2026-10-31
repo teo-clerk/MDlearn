@@ -7,7 +7,7 @@ import {
   type QueueItem,
   type Lesson, type Outcome, type MdNode, type Block, type WebAnswer,
 } from '@mdlearn/core'
-import { loadCourse, loadProgress, loadGoals, appendProgress, findDoc, loadDoc, lessonDirFor } from '@mdlearn/core/node'
+import { loadLessons, loadProgress, loadGoals, appendProgress, findDoc, loadDoc, lessonOfDoc } from '@mdlearn/core/node'
 import { defaultNewCards } from './today.js'
 import type { Handle } from './workspaces.js'
 import { UserError } from './workspaces.js'
@@ -17,7 +17,7 @@ const MINUTES: Record<string, number> = { quiz: 0.6, cloze: 0.8, order: 1, steps
 const posix = (p: string) => p.split(sep).join('/')
 
 export function course(h: Handle): { lessons: Lesson[]; pathOf: Map<string, string> } {
-  const loaded = loadCourse(h.ws.learnDir)
+  const loaded = loadLessons(h.ws)
   const lessons = loaded.map((l) => l.lesson).filter((l): l is Lesson => !!l)
   return { lessons, pathOf: new Map(loaded.filter((l) => l.lesson).map((l) => [l.lesson!.id, posix(relative(h.root, l.path))])) }
 }
@@ -56,8 +56,7 @@ function chosen(lessons: Lesson[], p: ReturnType<typeof progressOf>, widgets: st
 export function lessonsOfDoc(h: Handle, docRel: string): Set<string> {
   const abs = findDoc(h.ws, docRel)
   if (!abs) throw new UserError('not-found', `No document ${docRel}.`)
-  const dir = lessonDirFor(h.ws, abs) + sep
-  return new Set(loadCourse(h.ws.learnDir).filter((l) => l.path.startsWith(dir) && l.lesson).map((l) => l.lesson!.id))
+  return new Set(loadLessons(h.ws).filter((l) => lessonOfDoc(h.ws, abs, l.path) && l.lesson).map((l) => l.lesson!.id))
 }
 
 export function item(h: Handle, widgetId: string): StudyItem {

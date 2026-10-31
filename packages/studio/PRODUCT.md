@@ -13,13 +13,10 @@ scheduler; `mdlearn` CLI; `mdlearn` MCP server). Runs offline on the learner's o
 libraries are self-hosted.
 
 ## Users
-Primary: the author of the project, a student preparing for ESA-style Earth-observation and ML work, who
-keeps long, math-heavy Markdown study notes (SAR radar physics, optics, statistics, ML) in folders such as
-`~/CODING/ESA-PROJECTS`. Jobs: read those notes comfortably, turn them into interactive lessons with AI
-help, and review them daily with spaced repetition, at the desk (laptop) and occasionally on a phone on the
-home network.
-Later: other self-learners running it on their own folders (the project is meant to be open-sourced), so the
-app must not assume the author's folders, accounts or habits.
+Primary: university students and self-learners with class files or long, math-heavy notes. Jobs: turn those
+into interactive lessons with AI help, read them comfortably, and review them daily with spaced repetition, at
+the desk (laptop) and occasionally on a phone on the home network. The app must not assume anyone's folders,
+accounts or habits.
 
 ## Product Purpose
 Make a folder of Markdown notes into a place to read, study and build courses:
@@ -42,12 +39,12 @@ already has (their own Claude Code login, a local Ollama model) and is held to t
 rules as a human author. Progress is shared with the terminal and the Claude tutor through one local file.
 
 ## Operating Context
-- Long reading sessions in documents of 5k–20k words with hundreds of formulas (one ESA document has 841),
+- Long reading sessions in documents of 5k–20k words with hundreds of formulas (one real document has 841),
   wide tables, Mermaid diagrams, Python code and `<details>` blocks.
 - Short daily review sessions (5–15 minutes); the terminal `mdlearn review` and the Claude Code tutor are
   alternative ways in to the same progress.
 - AI jobs take from seconds (local model) to a few minutes (Claude course creation) and must stream
-  progress, be cancellable and undoable; Claude usage counts against the learner's subscription limits.
+  progress, be cancellable and undoable; Claude usage belongs to the learner's own Claude Code login.
 - Phone access over the LAN is for studying and reading; authoring and AI file changes stay on the
   laptop.
 
@@ -76,9 +73,8 @@ rules as a human author. Progress is shared with the terminal and the Claude tut
   app chrome stays sans-serif). No per-folder accent colours.
 
 ## Evidence on Hand
-- Real corpus for every design and test decision: `~/CODING/ESA-PROJECTS` (103 Markdown documents, 3,083
-  display-math lines, 6,065 table rows, 21 Mermaid diagrams, 84 Python blocks, 69 `<details>`) with 39
-  companion lessons (459 cards) in `learn/`.
+- Tested on a real curriculum (103 Markdown documents, 3,083 display-math lines, 6,065 table rows, 21 Mermaid
+  diagrams, 84 Python blocks, 69 `<details>`) with 247 companion lessons.
 - Toolchain docs: `docs/PEDAGOGICAL_SPEC.md` (research basis, rating table, streak definition),
   `docs/DSL_SPECIFICATION.md`, `docs/ENGINE_ARCHITECTURE.md`, `docs/TOOLING.md`.
 - No users, testimonials, metrics or logos exist; none may be invented.

@@ -67,3 +67,17 @@ test('Ctrl+K: no clipped focus ring, the shortcut sits on the right, the selecti
   })
   expect(inView).toBe(true)
 })
+
+test('jumping to a section never moves the app itself', async ({ page }) => {
+  await page.setViewportSize({ width: 1360, height: 860 })
+  const tutorial = await page.request.post('/api/workspaces/tutorial', { headers: { 'x-mdl': '1' }, data: {} }).then((r) => r.json() as Promise<{ id: string }>)
+  await page.goto(`/w/${tutorial.id}/doc?path=feature-tour.md`)
+  await page.locator('#main h2', { hasText: 'Visuals that move' }).evaluate((e) => e.scrollIntoView())
+  const formula = page.locator('.formula-explained').first() // drawn once it comes near
+  await expect(formula).toBeAttached()
+  for (const block of ['center', 'start', 'end'] as const) {
+    await formula.evaluate((e, b) => e.scrollIntoView({ block: b }), block)
+    await page.waitForTimeout(250) // what comes into view renders, and could push the page
+    expect(await page.evaluate(() => document.documentElement.scrollTop + document.body.scrollTop + document.getElementById('root')!.scrollTop), block).toBe(0)
+  }
+})
