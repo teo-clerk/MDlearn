@@ -491,8 +491,9 @@ choices; they live in `localStorage` and `public/theme.js` applies them before t
 - **Accent colour**: graphite (the default), blue, green, violet, amber, rose, or any colour from the picker.
   `web/lib/accent.ts` turns one hue into `--accent`, `--accent-ink`, `--accent-soft`, `--on-accent` and `--focus`
   for each theme (OKLCH, gamut-clamped), each checked for 4.5:1 contrast (3:1 for focus rings); they are set as
-  `--accent-l` / `--accent-d` … on `<html>`, and `app.css` falls back to graphite without them. Buttons, focus
-  rings, the text cursor, selections and the progress bars use it.
+  `--accent-l` / `--accent-d` … on `<html>`, and `app.css` falls back to graphite without them. Selected rows and
+  options, buttons, links, focus rings, the text cursor, text selections, charts and progress bars use it
+  (`e2e/accent.spec.ts` reads the painted colours, so a new control can't quietly fall back to ink).
 - **Language**: English, Italiano, Español, Français, Català. `web/i18n/`: the English text is the key
   (`t('Study now')`, `tp(n, '{n} card', '{n} cards')` with CLDR plurals); the dictionary loads before the app
   module, and changing the language reloads the page. Dates and numbers follow it (`Intl` with `locale()`), the

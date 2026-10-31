@@ -102,6 +102,9 @@ reserved for meaning a reader must not miss: right, nearly right, wrong, and how
 
 ## Colors
 
+- **The accent is the reader's.** Graphite is the default, so everything below reads as ink, but anything selected,
+  filled or focused uses the accent tokens (`bg-accent`, `bg-accent-soft`, `border-accent`, `--active`), never `text`,
+  so a colour picked in Settings reaches the whole interface. Text stays `ink`.
 - **Ink on paper.** `ink` on `page` for everything; `muted` for secondary text and labels; `subtle` (≥ 4.5:1)
   for section numbers, counts and timestamps. Primary buttons are ink-filled; links are ink with a hairline
   underline that darkens on hover. There is no brand hue.
