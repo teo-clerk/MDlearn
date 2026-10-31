@@ -23,6 +23,7 @@ Tus apuntes siguen siendo archivos Markdown normales. Las **lecciones** (`learn/
 | **LaTeX** | *Nueva nota → Documento LaTeX*, o cualquier archivo `.tex` bajo *LaTeX* en la barra lateral: escribe a la izquierda, **Compilar** (Ctrl+S) para ver el PDF a la derecha; los errores llevan a su línea. Necesita Tectonic o TeX Live en el ordenador. |
 | **IA local** | *Ajustes → IA local*: instala Ollama si falta, descarga un modelo recomendado (cada uno dice si este ordenador lo mueve bien) y elige con cuál responde Studio. |
 | **Importar** | *Importar…* en la barra lateral: una página web, un PDF, una baraja de Anki, un notebook, lecciones de un chat, o un artículo de **SciNet** si se está ejecutando en este ordenador. |
+| **Bandeja de entrada** | Ctrl+Mayús+K guarda una idea desde cualquier página, y *Bandeja de entrada* en la barra de una selección guarda un pasaje. Ordénalos en Hoy: **Tarjeta**, **Mover** a un documento, o **Hecho**. Son Markdown sencillo en `Inbox/`. |
 | **AI Studio** | Claude Code escribe o mejora lecciones a partir de un apunte (usa tu suscripción de Claude). |
 | **Fórmulas** · **Glosario** · **Mapa** | Cada fórmula, cada término definido y qué apuntes se basan en cuáles: un grafo en 2D o 3D, coloreado según lo bien que recuerdas cada apunte. |
 
@@ -33,6 +34,8 @@ Tus apuntes siguen siendo archivos Markdown normales. Las **lecciones** (`learn/
 - Las palabras subrayadas son términos que definen tus apuntes: pasa el cursor por encima. Los enlaces a otros apuntes muestran una vista previa.
 - **Explícalo tú** (en una lección, o en el menú `…` para una sección): explícalo con tus palabras; el modelo
   local (o Claude) te dice qué ideas clave trataste, qué corregir, y te hace una pregunta.
+- La pestaña **Relacionados** del panel derecho muestra pasajes de otros documentos sobre la sección que estás
+  leyendo, y te sigue mientras te desplazas.
 - El **índice** del panel derecho sigue la sección que estás leyendo; el menú `…` tiene la
   hoja resumen y el código fuente.
 
@@ -63,6 +66,7 @@ tarjetas de repaso. El tutorial muestra cada uno en directo con su código.
 | Teclas | Hace |
 |---|---|
 | <kbd>Ctrl</kbd>+<kbd>K</kbd> | buscar apuntes, lecciones y comandos |
+| <kbd>Ctrl</kbd>+<kbd>Mayús</kbd>+<kbd>K</kbd> | anota una idea en tu bandeja de entrada |
 | <kbd>Ctrl</kbd>+<kbd>\</kbd> | mostrar u ocultar la barra lateral |
 | <kbd>?</kbd> | esta página |
 | <kbd>A</kbd>–<kbd>E</kbd> · <kbd>Intro</kbd> | elegir una opción · comprobar y pasar a la siguiente tarjeta |

@@ -69,6 +69,12 @@ ${LONG}
 $$S = \\frac{P_t}{4\\pi R^2}$$
 `)
 writeFileSync(join(root, 'demo/editable.md'), '# Editable\n\nFirst paragraph.\n')
+// Related passages: a document on two subjects, and one document for each
+const glacierText = 'Glacier ice creeps downhill under its own weight, and basal sliding over meltwater speeds the flow of the ice. '
+const riverText = 'A braided river splits around sediment bars, and every flood moves the gravel and reshapes the channels. '
+writeFileSync(join(root, 'demo/landscapes.md'), `# Landscapes\n\n## How ice moves\n\n${`${glacierText.repeat(6)}\n\n`.repeat(12)}## How rivers braid\n\n${`${riverText.repeat(6)}\n\n`.repeat(12)}`)
+writeFileSync(join(root, 'demo/ice-sheets.md'), `# Ice sheets\n\n## Creep and sliding\n\n${glacierText.repeat(2)}\n`)
+writeFileSync(join(root, 'demo/river-bars.md'), `# River bars\n\n## Gravel in floods\n\n${riverText.repeat(2)}\n`)
 // a 6 s VP8 clip with captions, a question it pauses for at 0:02, and a YouTube video (never contacted in tests)
 mkdirSync(join(root, 'demo/clips'), { recursive: true })
 cpSync(resolve(here, 'fixtures/clip.webm'), join(root, 'demo/clips/clip.webm'))

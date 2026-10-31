@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test'
-import { openFolder, resetProgress } from './helpers'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { openFolder, resetProgress, testRoot } from './helpers'
 
 test.beforeEach(() => resetProgress())
 
@@ -16,4 +18,76 @@ test('Today shows the session, and a deadline turns into new cards per day', asy
   await expect(page.getByRole('region', { name: 'Your session' }).getByText(/for interview: \d+ new cards a day finishes by/)).toBeVisible()
   await page.getByRole('button', { name: 'Remove deadline' }).click()
   await expect(page.getByText(/for interview:/)).toHaveCount(0)
+})
+
+test('capture from the palette, sort it on Today into a card, and study it', async ({ page }) => {
+  const ws = await openFolder(page)
+  await page.goto(`/w/${ws}`)
+  await page.keyboard.press('Control+k')
+  await page.getByRole('combobox', { name: 'Search' }).fill('why does coherence fall')
+  await page.getByRole('option', { name: /^Capture: why does coherence fall/ }).click()
+  await expect(page.getByText('Saved to your inbox')).toBeVisible()
+  const inbox = page.getByRole('region', { name: /^Inbox/ })
+  await expect(inbox.getByRole('heading', { name: /^Inbox/ })).toHaveText('Inbox · 1 to sort')
+  await expect(inbox.getByRole('listitem')).toContainText('why does coherence fall')
+  await inbox.getByRole('button', { name: 'Card' }).click()
+  await inbox.getByRole('tab', { name: 'Question & answer' }).click()
+  await inbox.getByLabel('Question', { exact: true }).fill('Why does coherence fall with the baseline?')
+  await inbox.getByLabel('Answer').fill('The look angles differ')
+  await inbox.getByRole('button', { name: 'Save card' }).click()
+  await expect(inbox.getByRole('heading', { name: /^Inbox/ })).toHaveText('Inbox')
+  const plan = await page.request.get(`/api/w/${ws}/study/queue?limit=50&newCards=20`).then((r) => r.json() as Promise<{ items: { cardTitle: string }[] }>)
+  expect(plan.items.map((i) => i.cardTitle)).toContain('Why does coherence fall with the')
+})
+
+test('Ctrl+Shift+K saves a thought from anywhere; Move puts it in a section you pick; Done ticks it', async ({ page }) => {
+  const ws = await openFolder(page)
+  await page.goto(`/w/${ws}`)
+  for (const text of ['A thought to move', 'A thought to let go']) {
+    await page.keyboard.press('Control+Shift+K')
+    const box = page.getByRole('dialog', { name: 'Capture' }).getByRole('textbox')
+    await box.fill(text)
+    await box.press('Enter')
+    await expect(page.getByRole('dialog', { name: 'Capture' })).toHaveCount(0)
+  }
+  const inbox = page.getByRole('region', { name: /^Inbox/ })
+  await expect(inbox.getByRole('heading', { name: /^Inbox/ })).toHaveText('Inbox · 2 to sort')
+  await inbox.getByRole('listitem').filter({ hasText: 'A thought to let go' }).getByRole('button', { name: 'Done' }).click()
+  await expect(inbox.getByRole('heading', { name: /^Inbox/ })).toHaveText('Inbox · 1 to sort')
+  await inbox.getByRole('button', { name: 'Move' }).click()
+  const move = page.getByRole('dialog', { name: 'Move to a document' })
+  await move.getByRole('textbox', { name: 'Find a document' }).fill('editable')
+  await move.getByRole('radio', { name: /Editable/ }).click()
+  await move.getByRole('radio', { name: 'End of the document' }).check()
+  await move.getByRole('button', { name: 'Move' }).click()
+  await expect(inbox.getByRole('heading', { name: /^Inbox/ })).toHaveText('Inbox')
+  expect(readFileSync(join(testRoot(), 'demo/editable.md'), 'utf8')).toContain('A thought to move')
+})
+
+test('the selection toolbar saves a passage with where it came from', async ({ page }) => {
+  const ws = await openFolder(page)
+  await page.goto(`/w/${ws}/doc?path=demo%2Flandscapes.md`)
+  const para = page.locator('article p, .prose p, main p').filter({ hasText: 'Glacier ice creeps' }).first()
+  await para.evaluate((el) => { const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s?.removeAllRanges(); s?.addRange(r) })
+  await para.dispatchEvent('mouseup')
+  await page.getByRole('toolbar', { name: 'Selected text' }).getByRole('button', { name: 'Inbox' }).click()
+  await expect(page.getByText('Saved to your inbox')).toBeVisible()
+  await page.goto(`/w/${ws}`)
+  const row = page.getByRole('region', { name: /^Inbox/ }).getByRole('listitem').first()
+  await expect(row.getByRole('link', { name: /Landscapes/ })).toHaveAttribute('href', /landscapes\.md.*#how-ice-moves/)
+  await row.getByRole('button', { name: 'Done' }).click()
+})
+
+test('the capture page saves one thought after another', async ({ page }) => {
+  const ws = await openFolder(page)
+  await page.goto(`/capture?ws=${ws}`)
+  const box = page.getByRole('textbox', { name: 'Capture a thought' })
+  await box.fill('https://example.org/paper')
+  await page.getByRole('button', { name: 'Save to inbox' }).click()
+  await expect(page.getByText('Saved to your inbox')).toBeVisible()
+  await expect(box).toHaveValue('')
+  await page.goto(`/w/${ws}`)
+  const row = page.getByRole('region', { name: /^Inbox/ }).getByRole('listitem').first()
+  await expect(row.getByRole('link', { name: 'https://example.org/paper' })).toHaveAttribute('rel', /noopener/)
+  await row.getByRole('button', { name: 'Done' }).click()
 })

@@ -1,11 +1,11 @@
-// Select text in a document → Note · Ask · Explain, floating above the selection.
+// Select text in a document → Note · Card · Inbox · Ask · Explain, floating above the selection.
 import { useEffect, useState } from 'react'
-import { ChartSpline, Layers, MessageSquarePlus, Sparkles, StickyNote } from 'lucide-react'
+import { ChartSpline, Inbox, Layers, MessageSquarePlus, Sparkles, StickyNote } from 'lucide-react'
 import { anchorFromSelection } from '../lib/anchor'
 import type { NoteAnchor } from '../../shared/types'
 import { t } from '../i18n'
 
-export type SelectionKind = 'note' | 'ask' | 'explain' | 'visual' | 'card'
+export type SelectionKind = 'note' | 'ask' | 'explain' | 'visual' | 'card' | 'inbox'
 export interface SelectionAction { (kind: SelectionKind, anchor: NoteAnchor): void }
 export function SelectionToolbar({ root, onAction, canAsk }: { root: HTMLElement | null; onAction: SelectionAction; canAsk: boolean }) {
   const [at, setAt] = useState<{ x: number; y: number; anchor: NoteAnchor } | null>(null)
@@ -29,15 +29,17 @@ export function SelectionToolbar({ root, onAction, canAsk }: { root: HTMLElement
   if (!at) return null
   const act = (k: SelectionKind) => { onAction(k, at.anchor); window.getSelection()?.removeAllRanges(); setAt(null) }
   const btn = 'flex h-8 items-center gap-1.5 px-2.5 text-[13px] font-medium hover:bg-hover cursor-pointer'
+  const label = (text: string) => <span className="max-[560px]:sr-only">{text}</span> // on a phone the row is icons, or it would not fit
   return (
     <div role="toolbar" aria-label={t('Selected text')} style={{ left: at.x, top: Math.max(8, at.y - 44) }}
       className="fixed z-40 flex -translate-x-1/2 items-center divide-x divide-border overflow-hidden rounded-[8px] border border-border bg-raised shadow-pop"
       onMouseDown={(e) => e.preventDefault()}>
-      <button className={btn} onClick={() => act('note')}><StickyNote className="size-4 text-muted" strokeWidth={1.8} aria-hidden />{t('Note')}</button>
-      <button className={btn} onClick={() => act('card')}><Layers className="size-4 text-muted" strokeWidth={1.8} aria-hidden />{t('Card')}</button>
-      {canAsk && <button className={btn} onClick={() => act('ask')}><MessageSquarePlus className="size-4 text-muted" strokeWidth={1.8} aria-hidden />{t('Ask')}</button>}
-      {canAsk && <button className={btn} onClick={() => act('explain')}><Sparkles className="size-4 text-muted" strokeWidth={1.8} aria-hidden />{t('Explain')}</button>}
-      {canAsk && <button className={btn} onClick={() => act('visual')}><ChartSpline className="size-4 text-muted" strokeWidth={1.8} aria-hidden />{t('Visualise')}</button>}
+      <button className={btn} onClick={() => act('note')}><StickyNote className="size-4 text-muted" strokeWidth={1.8} aria-hidden />{label(t('Note'))}</button>
+      <button className={btn} onClick={() => act('card')}><Layers className="size-4 text-muted" strokeWidth={1.8} aria-hidden />{label(t('Card'))}</button>
+      <button className={btn} onClick={() => act('inbox')}><Inbox className="size-4 text-muted" strokeWidth={1.8} aria-hidden />{label(t('Inbox'))}</button>
+      {canAsk && <button className={btn} onClick={() => act('ask')}><MessageSquarePlus className="size-4 text-muted" strokeWidth={1.8} aria-hidden />{label(t('Ask'))}</button>}
+      {canAsk && <button className={btn} onClick={() => act('explain')}><Sparkles className="size-4 text-muted" strokeWidth={1.8} aria-hidden />{label(t('Explain'))}</button>}
+      {canAsk && <button className={btn} onClick={() => act('visual')}><ChartSpline className="size-4 text-muted" strokeWidth={1.8} aria-hidden />{label(t('Visualise'))}</button>}
     </div>
   )
 }

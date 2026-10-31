@@ -59,7 +59,7 @@ test('LaTeX files open from the command palette, and a chapter file compiles its
   await page.goto(`/w/${ws}`)
   await page.keyboard.press('ControlOrMeta+k')
   await page.getByRole('combobox').fill('ch1')
-  await page.getByRole('option', { name: /ch1/ }).click()
+  await page.getByRole('option', { name: /thesis\/ch1/ }).click()
   await expect(page).toHaveURL(/latex\?path=thesis%2Fch1\.tex/)
   await page.getByRole('button', { name: 'Compile' }).click()
   await expect(page.getByRole('img', { name: 'Page 1 of 1' })).toBeVisible()

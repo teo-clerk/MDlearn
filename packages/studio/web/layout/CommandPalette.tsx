@@ -1,15 +1,17 @@
 // Ctrl+K: jump to a document or lesson, run an action, or search inside every document.
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation } from 'wouter'
-import { BookA, BookOpenCheck, ChartNoAxesColumn, ClipboardCheck, CloudOff, Cpu, FileCode, FileText, FolderOpen, GraduationCap, MessageSquareText, Network, Search, Settings, Sigma, TextSearch, LifeBuoy } from 'lucide-react'
-import { search, useTree } from '../api/queries'
+import { useQueryClient } from '@tanstack/react-query'
+import { BookA, BookOpenCheck, ChartNoAxesColumn, ClipboardCheck, CloudOff, Cpu, FileCode, FileText, FolderOpen, GraduationCap, Inbox, MessageSquareText, Network, Search, Settings, Sigma, TextSearch, LifeBuoy } from 'lucide-react'
+import { inboxApi, keys, search, useTree } from '../api/queries'
+import { MAX_CAPTURE } from '../inbox/CaptureForm'
 import { Kbd } from '../ui/primitives'
 import { useUi } from '../state/ui'
 import { docRoute, latexRoute, lessonRoute } from '../lib/paths'
 import type { SearchHit } from '../../shared/types'
 import { t, tp } from '../i18n'
 
-interface Item { id: string; icon: typeof FileText; title: string; detail?: string; kbd?: string; href: string; group: string }
+interface Item { id: string; icon: typeof FileText; title: string; detail?: string; kbd?: string; href?: string; run?: () => void; group: string }
 const norm = (s: string) => s.toLowerCase().normalize('NFKD').replace(/\p{M}/gu, '')
 /** Subsequence match with a bonus for word starts: "sar phys" finds "04_sar_physics". */
 function score(q: string, text: string): number {
@@ -24,14 +26,16 @@ function score(q: string, text: string): number {
 }
 
 export function CommandPalette({ ws }: { ws: string }) {
-  const { palette, setPalette } = useUi()
+  const { palette, setPalette, setCaptureOpen, notify } = useUi()
+  const qc = useQueryClient()
+  const [captureError, setCaptureError] = useState<string | null>(null)
   const [q, setQ] = useState('')
   const [sel, setSel] = useState(0)
   const [hits, setHits] = useState<SearchHit[]>([])
   const [, navigate] = useLocation()
   const tree = useTree(ws)
   const input = useRef<HTMLInputElement>(null)
-  useEffect(() => { if (palette) { setQ(''); setSel(0); setHits([]); setTimeout(() => input.current?.focus(), 0) } }, [palette])
+  useEffect(() => { if (palette) { setQ(''); setSel(0); setHits([]); setCaptureError(null); setTimeout(() => input.current?.focus(), 0) } }, [palette])
   useEffect(() => {
     if (q.trim().length < 2) { setHits([]); return }
     const t = setTimeout(() => { search(ws, q.trim()).then(setHits).catch(() => setHits([])) }, 180)
@@ -40,6 +44,7 @@ export function CommandPalette({ ws }: { ws: string }) {
   const items = useMemo<Item[]>(() => {
     const actions: Item[] = [
       { id: 'a-study', icon: BookOpenCheck, title: t('Study now'), detail: tree.data?.totals.due ? tp(tree.data.totals.due, '{n} due', '{n} due') : undefined, href: `/w/${ws}/study`, group: t('Actions') },
+      { id: 'a-capture', icon: Inbox, title: t('Capture…'), detail: t('Save a thought to your inbox'), kbd: 'Ctrl+Shift+K', run: () => { setPalette(false); setCaptureOpen(true) }, group: t('Actions') },
       { id: 'a-offline', icon: CloudOff, title: t('Study offline'), detail: t('Take the next days’ cards to a phone'), href: `/offline/${ws}`, group: t('Actions') },
       { id: 'a-exam', icon: ClipboardCheck, title: t('Mock exam'), href: `/w/${ws}/exam`, group: t('Actions') },
       { id: 'a-progress', icon: ChartNoAxesColumn, title: t('Progress'), href: `/w/${ws}/progress`, group: t('Actions') },
@@ -60,13 +65,16 @@ export function CommandPalette({ ws }: { ws: string }) {
     const ranked = [...actions, ...docs, ...texs, ...lessons].map((it) => ({ it, s: score(q, `${it.title} ${it.detail ?? ''}`) })).filter((x) => x.s > 0).sort((a, b) => b.s - a.s).slice(0, 12).map((x) => x.it)
     const text: Item[] = hits.slice(0, 10).map((h) => ({ id: `s-${h.doc}-${h.section}`, icon: TextSearch, title: `§${h.section} ${h.title}`, detail: h.snippet, href: `${docRoute(ws, h.doc)}&section=${encodeURIComponent(h.section)}`, group: t('In documents') }))
     const askItem: Item = { id: 'ask-q', icon: MessageSquareText, title: t('Ask: {question}', { question: q.trim() }), detail: t('Answer from your documents, with sources'), href: `/w/${ws}/ask?q=${encodeURIComponent(q.trim())}`, group: t('Ask') }
-    return [...ranked, ...text, ...(q.trim().split(/\s+/).length >= 3 ? [askItem] : [])]
+    const captureItem: Item = { id: 'capture-q', icon: Inbox, title: t('Capture: {text}', { text: q.trim() }), detail: t('Save a thought to your inbox'), group: t('Actions'), run: () => {
+      inboxApi.capture(ws, { text: q.trim().slice(0, MAX_CAPTURE) }).then(() => { void qc.invalidateQueries({ queryKey: keys.inbox(ws) }); setPalette(false); notify(t('Saved to your inbox')) }, (e: Error) => setCaptureError(e.message))
+    } }
+    return [...ranked, ...text, ...(q.trim().split(/\s+/).length >= 3 ? [askItem] : []), captureItem]
   }, [q, hits, tree.data, ws])
   useEffect(() => { setSel((s) => Math.min(s, Math.max(0, items.length - 1))) }, [items.length])
   // keep the chosen row in view while moving with the arrow keys
   useEffect(() => { if (palette) document.getElementById(`pi-${sel}`)?.scrollIntoView({ block: 'nearest' }) }, [sel, palette])
   if (!palette) return null
-  const go = (it: Item) => { setPalette(false); navigate(it.href) }
+  const go = (it: Item) => { if (it.run) { it.run(); return } setPalette(false); navigate(it.href ?? '/') }
   const onKey = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') setPalette(false)
     else if (e.key === 'ArrowDown') { e.preventDefault(); setSel((s) => Math.min(s + 1, items.length - 1)) }
@@ -84,6 +92,7 @@ export function CommandPalette({ ws }: { ws: string }) {
             placeholder={t('Search documents, lessons and text…')} aria-label={t('Search')} role="combobox" aria-expanded="true" aria-controls="palette-list" aria-activedescendant={items[sel] ? `pi-${sel}` : undefined}
             className="h-12 flex-1 bg-transparent text-[15px] outline-none" />
         </div>
+        {captureError && <p role="alert" className="border-b border-border px-3.5 py-2 text-[13px] text-bad">{captureError}</p>}
         <ul id="palette-list" role="listbox" className="max-h-[52vh] overflow-y-auto overscroll-contain p-1.5 pb-2">
           {items.length === 0 && <li className="px-3 py-6 text-center text-[13.5px] text-muted">{q.trim().length < 2 ? t('Type to search.') : t('Nothing found.')}</li>}
           {items.map((it, i) => {

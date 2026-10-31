@@ -65,6 +65,8 @@ atomically, so the CLI, the MCP tutor and the Studio can study at the same time 
 | Reading | `GET /api/w/:ws/tree` · `doc?path=` (ETag) · `doc/section` · `raw` · `asset` · `lesson` · `search?q=` · `POST compile` · `POST doc/check` (practice) |
 | Today & goals | `GET today` · `GET/POST goals` (daily goal, deadlines, restore suspended cards) · `POST cards/suspend` |
 | Quick cards | `GET doc/passage?path&quote` (the passage's source) · `POST cards` (adds a card to the document's my-cards lesson) |
+| Related passages | `GET related?path=&section=` |
+| Inbox | `GET inbox` · `POST inbox` · `POST inbox/done`, `inbox/card`, `inbox/move` |
 | Ask the folder | `GET ask/status` · `POST ask/setup` (download the search model, index) · `POST ask` · `GET ask/history` · `POST ask/delete` · `POST ask/note` · answers stream as `ai.delta` / `ai.done` events (`noteId: "ask"`) |
 | Editor | `GET file?path` · `POST files/save` (409 if the file changed) · `files/create` · `preview` · `GET history` · `history/version` |
 | LaTeX | `GET /api/latex/status` (engines found, how to install one) · `POST latex/compile` · `GET latex/pdf?path[&download=1]` · `POST latex/save-pdf` |
@@ -314,6 +316,34 @@ so editing a document re-embeds only what changed; a different model invalidates
 turns with chat requests on the single-GPU queue. Setup needs the `ai` capability (the computer running
 MDlearn); asking works from the phone.
 
+### The capture inbox
+
+An inbox for what comes up while you do something else, sorted later. It is plain Markdown you own: one file a day in `Inbox/`, one task line per item, so it reads well in any editor and tasks typed by hand count too:
+
+```markdown
+- [ ] 14:32 Why does coherence fall with the baseline?
+  > the passage you selected
+  — [Radar § 2.1 Coherence](../radar.md#coherence)
+```
+
+**Capturing.** Ctrl+Shift+K from any page; *Capture…* in the palette (or type, then pick *Capture: …*); *Inbox* in the toolbar of a selection, which keeps the passage and where it came from; the box on Today; or `/capture`, a page with nothing else on it, for a phone's home screen. In the desktop app, Ctrl+Alt+Space opens a small window from anywhere, where the desktop allows a global key (on Wayland often not: the File menu still has it). A pasted address is kept as a link.
+
+**Sorting.** Today lists what is open, newest first:
+
+| Action | What happens |
+|---|---|
+| Card | Makes a card with the usual form, on the document the item came from, or on the inbox file for a plain thought. The line becomes `- [x] … → card` |
+| Move | Adds the text at the end of a section you pick, with its link rewritten to work from there. The line becomes `- [x] … → moved to x.md`. Nothing else in MDlearn writes into your documents like this: it happens only here, when you ask |
+| Done | Ticks the box |
+
+An item is known by a hash of its text, so one edited since the page loaded is refused rather than guessed at. Inbox files are ordinary documents for search and Related, but *Whole folder* leaves them out of a batch course.
+
+### Related passages
+
+The reader's *Related* tab lists up to five passages from other documents about the section in view, one per document, and follows you as you scroll. It only reads what Ask has already stored, so no model is asked: the answer is immediate, costs nothing and works from a phone.
+
+With vectors, it takes the mean of the section's vectors and looks for the nearest passages. Without them (or for a passage not indexed yet) it searches by the section's words, and the panel says so and links to Ask's setup. Passages that are too far away are dropped, so a section with nothing nearby says that, rather than showing noise. A heading with no text of its own uses the whole document.
+
 ## 10. Cheat sheets and exports
 
 **Cheat sheet** (`/w/:ws/sheet?path=`, the list icon in a document's top bar): the document's formulas and
@@ -369,10 +399,24 @@ how to install one for this system (`sudo pacman -S tectonic`, `brew install tec
 | PDF, quick | `pdftohtml -xml` (poppler): headings by font size, paragraphs by spacing, lists by indentation, running headers/footers and page numbers dropped, hyphenated words joined; formulas come out as plain text and the dialog says so |
 | PDF, high quality | The PDF is kept in `imports/source/` and a Claude job reads it in 20-page ranges and writes Markdown with LaTeX into one new file (it may write nothing else) |
 | From SciNet | With [SciNet](https://github.com/teo-clerk/SciNet) (your private map of papers) running on this computer: search it by meaning or by title and pick a paper. *As SciNet read it* writes its Markdown to `imports/scinet/` with the paper's details in the front matter (and the abstract, if the text lacks one); pictures are left out, and when SciNet read the text inside the PDF (most papers), formulas are plain text and the result says so. *Read the PDF again* fetches the PDF and starts the high-quality import. The finished import offers *Make a course*. The address is in *Settings → SciNet* (`http://127.0.0.1:8000` by default) |
+| PDF, on this computer | Not built. See *Reading PDFs with a local model* below |
 | Anki deck | `.apkg` (legacy and newer zstd collections): one lesson per deck (100 cards each), Basic → explain card, Cloze → gap card, pictures copied, each card compiled on its own and skipped (and counted) if invalid; the **review history can be kept** so schedules carry over |
 | Notebook | Markdown cells as written, code cells fenced, text output quoted, figures saved; nothing is executed |
 
 Imports never replace a file (a second import gets `-2`). They need `write`; the high-quality PDF also needs `ai`. Everything about SciNet needs `write`, so only this computer can search the library.
+
+### Reading PDFs with a local model
+
+MDlearn does not read PDFs with a local vision model, because no model that runs on an 8 GB GPU is accurate enough for study material yet. Measured on 2026-10-31 on an RTX 4060 (8 GB), with Ollama and 15 pages at 150 dpi: an equation-heavy two-column paper, a scan and a textbook. Formulas were compared by hand with the page images. The bar was 90% of display formulas right at 15 s a page or less.
+
+| Model | Memory | Median s/page (dense paper) | Formulas fully right | |
+|---|---|---|---|---|
+| `glm-ocr` | 2.1 GiB, all on GPU | 6.7 (14) | 27 of 36 (75%) | fast enough, not accurate enough; needs a newer Ollama than 0.17 |
+| `deepseek-ocr:3b` | 10.1 GiB, 68% on GPU | 24 (41) | 10 of 15 (67%) | too slow, and 1 of 6 on the paper |
+| `granite3.2-vision:2b` | 2.5 GiB, all on GPU | 5.9 (3) | 0 | writes no LaTeX at all |
+| `qwen2.5vl:7b` | 13.6 GiB, 0% on GPU | over 240 | not measured | does not fit |
+
+The trouble is how the errors look. A wrong formula still renders (51 of 52 passed KaTeX with `glm-ocr`), so nothing flags a lost subscript, a moved bracket, `max` read as `0`, or the one equation it invented. Worth measuring again as models improve.
 
 ## 13. A course for the whole folder, or on any topic
 
@@ -426,6 +470,7 @@ choices; they live in `localStorage` and `public/theme.js` applies them before t
 | Local AI models | downloading, choosing and removing need the `ai` capability (this computer, or LAN devices under `--lan-full`); model names are checked against Ollama's name form before they reach it; the model in use and the search model (`embed` in the name, or a BERT family) are never removed, nor a search model chosen to answer; other devices see the models but not this computer's memory, graphics card, system or where Claude Code is |
 | AI jobs | scoped writes (folder or single file, `.md` only, `.git/.claude/.mdlearn` protected), folder-only reads, no shell, no network tools, snapshots + undo |
 | SciNet | only `http://` on `127.0.0.1`, `localhost` or `[::1]` is accepted as its address, without credentials; no redirects are followed; answers are limited in time and size (5 MB of JSON, 20 MB of text, 100 MB of PDF, which must start with `%PDF-`) and checked against a schema; paper ids are integers; the routes need `write`, so a phone on the network cannot read the library; imported text is rendered like any other document |
+| Inbox | a phone (`notes`) can add to today's file, tick items and make cards, but moving into a document needs `write`; capture only ever appends, with limits (4,000 characters a field, 2 MB a file) and line breaks kept inside the item, so text cannot forge another item or a source line; links out of the folder are not followed, for the inbox or a card; sorting names a file by a strict pattern (`Inbox/YYYY-MM-DD.md`) and an item by a hash of its text, so a stale page is refused; a link is `http(s)` or a path in the folder; items show as text, not HTML |
 | Imports | the web importer accepts only http/https without credentials, caps size and time, never follows into other schemes; files are written with `wx` (never replacing) inside `inRoot`; PDFs are parsed by poppler in a temp folder; uploads ≤ 100 MB, `write` capability; the editor only saves existing `.md` files inside the folder (hidden folders refused) with a stale-file check |
 | Videos | page CSP `media-src 'self'`; `frame-src` only `'self'`, `https://www.youtube-nocookie.com` and `https://player.vimeo.com`; the compiler accepts only relative video files and YouTube/Vimeo ids (validated by pattern) and builds the embed address itself; embeds load on Play, in `sandbox` frames without top navigation, `referrerpolicy="strict-origin-when-cross-origin"` (the page itself sends no referrer); video files go through the same `inRoot` asset route |
 | Simulations, Python and `:::html` | opaque-origin sandboxes, own CSP without network; simulations and Python in a Worker + watchdog, `:::html` started on demand + heartbeat watchdog; the server only serves allow-listed Pyodide files and caches them atomically |

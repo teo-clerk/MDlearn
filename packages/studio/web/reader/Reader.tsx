@@ -6,9 +6,10 @@ import { Link, useLocation, useSearch } from 'wouter'
 import { BookOpenCheck, Code2, Ellipsis, FileText, Pencil, Sparkles, X } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { api, qs } from '../api/client'
-import { keys, notesApi, useDoc, useEngines, useLinks, useNotes, useSectionMap, useSession, useTermHovers, useTree } from '../api/queries'
+import { inboxApi, keys, notesApi, useDoc, useEngines, useLinks, useNotes, useSectionMap, useSession, useTermHovers, useTree } from '../api/queries'
 import { NotesPanel, useNoteHighlights } from '../notes/NotesPanel'
-import { SelectionToolbar } from '../notes/SelectionToolbar'
+import { SelectionToolbar, type SelectionKind } from '../notes/SelectionToolbar'
+import { MAX_CAPTURE } from '../inbox/CaptureForm'
 import { useNotesUi } from '../notes/store'
 import { useUi } from '../state/ui'
 import type { NoteAnchor } from '../../shared/types'
@@ -16,6 +17,7 @@ import { assetUrl, linkTarget } from '../lib/paths'
 import { anchorForMoment } from '../lib/anchor'
 import { DocBlocks, type BlockEnv } from './DocBlocks'
 import { Outline } from './Outline'
+import { RelatedPanel } from './RelatedPanel'
 import { LinksPanel } from '../knowledge/LinksPanel'
 import { PreviewLink } from '../knowledge/PreviewLink'
 import { decorate } from '../knowledge/TermHint'
@@ -37,7 +39,7 @@ export default function Reader({ ws }: { ws: string }) {
   const [, navigate] = useLocation()
   const [source, setSource] = useState(false)
   const [article, setArticle] = useState<HTMLElement | null>(null)
-  const { panelTab, setPanelTab, termHints, setTermHints } = useUi()
+  const { panelTab, setPanelTab, termHints, setTermHints, notify } = useUi()
   const session = useSession()
   const canAi = !!session.data?.caps.includes('ai')
   const canWrite = !!session.data?.caps.includes('write')
@@ -48,8 +50,16 @@ export default function Reader({ ws }: { ws: string }) {
   const [askError, setAskError] = useState<string | null>(null)
   useEffect(() => { setDraft(null) }, [path, setDraft])
   useNoteHighlights(ws, path, source ? null : article)
-  const onSelection = async (kind: 'note' | 'ask' | 'explain' | 'visual' | 'card', anchor: NoteAnchor) => {
+  const onSelection = async (kind: SelectionKind, anchor: NoteAnchor) => {
     if (!path) return
+    if (kind === 'inbox') {
+      try {
+        await inboxApi.capture(ws, { quote: anchor.quote.exact.slice(0, MAX_CAPTURE), doc: path, section: anchor.section })
+        void qc.invalidateQueries({ queryKey: keys.inbox(ws) })
+        notify(t('Saved to your inbox'))
+      } catch (e) { notify((e as Error).message) }
+      return
+    }
     setPanelTab('notes'); setAskError(null)
     if (kind !== 'explain') { setDraft({ anchor, mode: kind }); return } // note, ask and visual open a card beside the passage
     try {
@@ -116,10 +126,10 @@ export default function Reader({ ws }: { ws: string }) {
       {doc.data && (
         <PanelSlot>
           <div role="tablist" aria-label={t('Side panel')} className="flex h-11 shrink-0 items-center gap-1 px-2.5">
-            {(['outline', 'notes', 'links'] as const).map((tab) => (
+            {(['outline', 'notes', 'links', 'related'] as const).map((tab) => (
               <button key={tab} role="tab" aria-selected={panelTab === tab} onClick={() => setPanelTab(tab)}
                 className={`h-7 rounded-[6px] px-2.5 text-[12.5px] font-medium cursor-pointer ${panelTab === tab ? 'bg-active text-text' : 'text-muted hover:bg-hover'}`}>
-                {tab === 'outline' ? t('Outline') : tab === 'links' ? <>{t('Links')}{links.data && links.data.backlinks.length ? <span className="ml-1 tabular text-subtle">{links.data.backlinks.length}</span> : null}</> : <>{t('Notes')}{notes.data?.length ? <span className="ml-1 tabular text-subtle">{notes.data.length}</span> : null}</>}
+                {tab === 'outline' ? t('Outline') : tab === 'related' ? t('Related') : tab === 'links' ? <>{t('Links')}{links.data && links.data.backlinks.length ? <span className="ml-1 tabular text-subtle">{links.data.backlinks.length}</span> : null}</> : <>{t('Notes')}{notes.data?.length ? <span className="ml-1 tabular text-subtle">{notes.data.length}</span> : null}</>}
               </button>
             ))}
           </div>
@@ -127,6 +137,7 @@ export default function Reader({ ws }: { ws: string }) {
           {panelTab === 'outline'
             ? <div className="min-h-0 flex-1 overflow-y-auto"><Outline outline={doc.data.outline} memory={map.data} /></div>
             : panelTab === 'links' ? <LinksPanel ws={ws} path={path} />
+            : panelTab === 'related' ? <RelatedPanel ws={ws} path={path} outline={doc.data.outline} />
             : <NotesPanel ws={ws} doc={path} article={source ? null : article} mtime={doc.data.mtime} />}
         </PanelSlot>
       )}

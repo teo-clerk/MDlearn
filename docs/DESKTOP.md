@@ -45,6 +45,9 @@ There is no automatic update yet: the repository is private, so the app could no
   whole process group (on Windows, the process). SIGTERM to the app does the same.
 - **One app at a time.** A second start hands over to the running app, which comes to the front.
 - **The window** (`src/main.ts`) remembers its size and place (`window.json`, ignored when that screen is gone).
+- **Capture.** *File → Capture a thought*, or Ctrl+Alt+Space from anywhere, opens a small window on Studio's
+  `/capture` page. It saves into the folder opened last and closes. The global key is taken where the desktop allows
+  it, which Wayland often does not; the menu always works.
 
 The packaged server is prepared by `scripts/stage-desktop.ts`: it copies, from this checkout's `node_modules`, the
 packages the server needs at run time and nothing else — the exact versions in `package-lock.json`, with no

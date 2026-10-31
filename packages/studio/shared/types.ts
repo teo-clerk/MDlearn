@@ -188,7 +188,14 @@ export interface AskStatus {
   reading: boolean; error?: string
 }
 export interface AskSource { n: number; doc: string; docTitle: string; section: SectionRefInfo | null; line: number; snippet: string }
+export type RelatedPassage = Omit<AskSource, 'n'>
+export interface RelatedResponse { mode: 'meaning' | 'words'; passages: RelatedPassage[] }
 export interface AskEntry { id: string; question: string; answer: string; at: number; mode: 'meaning' | 'words'; notice?: string; error?: string; done: boolean; sources: AskSource[] }
+
+// ---- capture inbox
+export interface InboxSource { label: string; url: string | null; doc: string | null; section: string | null }
+export interface InboxItem { id: string; file: string; line: number; date: string; time: string | null; text: string; quote: string | null; source: InboxSource | null }
+export interface InboxList { total: number; items: InboxItem[] }
 
 // ---- cheat sheet
 export interface SheetSection { num: string | null; anchor: string; title: string; depth: number; formulas: { tex: string; lead: string }[]; terms: { term: string; definition: string }[]; ideas?: string[] }

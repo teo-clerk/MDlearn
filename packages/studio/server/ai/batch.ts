@@ -11,6 +11,7 @@ import type { AiEngine } from './engine.js'
 import type { JobManager } from './jobs.js'
 import { createCourse } from './recipes.js'
 import type { Batch, BatchCandidate, BatchDoc } from '../../shared/types.js'
+import { INBOX_DIR } from '../inbox.js'
 
 const posix = (p: string) => p.split(sep).join('/')
 const MODELS = new Set(['haiku', 'sonnet', 'opus'])
@@ -26,7 +27,7 @@ export class BatchRunner {
     const out: BatchCandidate[] = []
     for (const rel of docPaths) {
       const abs = findDoc(h.ws, rel)
-      if (!abs) continue
+      if (!abs || rel.startsWith(`${INBOX_DIR}/`)) continue // captures are not a subject to study
       const plan = scaffoldLessons(h.ws, abs)
       const fresh = plan.filter((p) => p.content !== null).length
       if (!fresh) continue

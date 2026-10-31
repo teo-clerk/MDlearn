@@ -2,7 +2,7 @@
 // everything works as in the browser. The window is locked down: no Node in the page, a sandbox, no new
 // permissions; Studio's own pages stay in the app and other links open in the browser. File → Open in your
 // browser shows the same Studio there at any time.
-import { app, BrowserWindow, dialog, Menu, nativeTheme, screen, session, shell, type MenuItemConstructorOptions, type WebContents } from 'electron'
+import { app, BrowserWindow, dialog, globalShortcut, Menu, nativeTheme, screen, session, shell, type MenuItemConstructorOptions, type WebContents } from 'electron'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { boundsFrom, onScreen, openingFor, type Bounds } from './rules'
@@ -13,6 +13,8 @@ app.setName('MDlearn')
 
 let sidecar: Sidecar | null = null
 let main: BrowserWindow | null = null
+let capture: BrowserWindow | null = null
+const CAPTURE_KEY = 'CmdOrCtrl+Alt+Space'
 let quitting = false
 const stateFile = () => join(app.getPath('userData'), 'window.json')
 const resource = (name: string) => (app.isPackaged ? join(process.resourcesPath, name) : join(__dirname, '..', name === 'icon.png' ? 'build-res' : '', name))
@@ -58,6 +60,20 @@ function createWindow(url: string) {
   main = win
 }
 
+/** A small window for one thought, from anywhere. Studio's own page, so the window guard applies to it as to any other. */
+function openCapture(origin: string) {
+  if (capture) { capture.focus(); return }
+  const win = new BrowserWindow({
+    width: 520, height: 250, resizable: false, minimizable: false, maximizable: false, alwaysOnTop: true, show: false, autoHideMenuBar: true,
+    title: 'Capture', icon: resource('icon.png'), backgroundColor: nativeTheme.shouldUseDarkColors ? '#1e1e1e' : '#ffffff',
+    webPreferences: { contextIsolation: true, sandbox: true, nodeIntegration: false, webviewTag: false, spellcheck: process.platform !== 'linux' },
+  })
+  win.once('ready-to-show', () => win.show())
+  win.on('closed', () => { capture = null })
+  void win.loadURL(`${origin}/capture?once=1`)
+  capture = win
+}
+
 function menu(origin: string): Menu {
   const openInBrowser = () => {
     const here = main ? openingFor(main.webContents.getURL(), origin) : null
@@ -67,6 +83,7 @@ function menu(origin: string): Menu {
   const template: MenuItemConstructorOptions[] = [
     ...(mac ? [{ role: 'appMenu' as const }] : []),
     { label: 'File', submenu: [
+      { label: 'Capture a thought', accelerator: CAPTURE_KEY, click: () => openCapture(origin) },
       { label: 'Open in your browser', accelerator: 'CmdOrCtrl+Shift+O', click: openInBrowser },
       { type: 'separator' },
       mac ? { role: 'close' } : { role: 'quit' },
@@ -98,6 +115,8 @@ async function start() {
   app.on('web-contents-created', (_e, contents) => guard(contents, origin))
   Menu.setApplicationMenu(menu(origin))
   createWindow(sidecar.url)
+  // not every desktop lets an app take a global key (Wayland, a key already in use): the File menu still has it
+  globalShortcut.register(CAPTURE_KEY, () => openCapture(origin))
   app.on('activate', () => { if (!main && sidecar) createWindow(sidecar.url) })
 }
 
@@ -105,6 +124,7 @@ if (!app.requestSingleInstanceLock()) app.quit()
 else {
   app.on('second-instance', () => { if (main) { if (main.isMinimized()) main.restore(); main.focus() } })
   app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit() })
+  app.on('will-quit', () => globalShortcut.unregisterAll())
   app.on('before-quit', (e) => {
     if (quitting || !sidecar) return
     e.preventDefault()

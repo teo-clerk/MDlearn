@@ -2,12 +2,16 @@
 import { create } from 'zustand'
 
 export type Theme = 'system' | 'light' | 'dark'
-export type PanelTab = 'outline' | 'notes' | 'links'
+export type PanelTab = 'outline' | 'notes' | 'links' | 'related'
 interface UiState {
   theme: Theme
   sidebar: boolean
   panel: boolean
   panelTab: PanelTab
+  captureOpen: boolean
+  setCaptureOpen(open: boolean): void
+  notice: string | null
+  notify(text: string | null): void
   palette: boolean
   /** The import dialog (web page, PDF, Anki deck, notebook). */
   importOpen: boolean
@@ -35,6 +39,10 @@ export const useUi = create<UiState>((set) => ({
   sidebar: typeof window === 'undefined' || window.matchMedia('(min-width: 900px)').matches,
   panel: wide(),
   panelTab: 'outline',
+  captureOpen: false,
+  setCaptureOpen: (captureOpen) => set({ captureOpen }),
+  notice: null,
+  notify: (notice) => set({ notice }),
   palette: false,
   tour: false,
   setTour: (tour) => set({ tour }),

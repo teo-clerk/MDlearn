@@ -7,6 +7,14 @@ brings it into the folder with its details, ready for *Make a course*. Most pape
 text, and the import says so; *Read the PDF again* gets them as LaTeX. *Make a course* now follows every import
 that gives one document.
 
+**A capture inbox.** Save a thought, a link or a passage in a moment (Ctrl+Shift+K, the palette, the selection toolbar,
+Today, a `/capture` page for your phone, or Ctrl+Alt+Space in the desktop app) and sort it later on Today: make a
+card, move it into a document, or tick it off. It is plain Markdown in `Inbox/`, one file a day.
+
+**Related passages.** A new *Related* tab in the reader shows what else in the folder is about the section you are
+reading, and follows you as you scroll. It uses what Ask has already stored, so it needs no model and works on a
+phone.
+
 ## 1.2.0 — 2026-10-29
 
 **Desktop app.** MDlearn Studio in its own window for Windows (installer or `.zip`), macOS (`.dmg` or `.zip`, Apple

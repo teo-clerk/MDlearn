@@ -7,6 +7,8 @@ import { PanelLeft, PanelRight } from 'lucide-react'
 import { Sidebar } from './Sidebar'
 import { CommandPalette } from './CommandPalette'
 import { ImportDialog } from '../import/ImportDialog'
+import { CaptureDialog } from '../inbox/CaptureDialog'
+import { Notice } from '../ui/Notice'
 import { Tour } from '../help/Tour'
 import { IconButton } from '../ui/primitives'
 import { useUi } from '../state/ui'
@@ -14,12 +16,12 @@ import { useLiveEvents } from '../api/events'
 import { t } from '../i18n'
 
 export function Shell({ ws, children }: { ws: string; children: ReactNode }) {
-  const { sidebar, panel, panelSlots, toggleSidebar, togglePanel, setPalette, importOpen, setImportOpen } = useUi()
+  const { sidebar, panel, panelSlots, toggleSidebar, togglePanel, setPalette, setCaptureOpen, importOpen, setImportOpen } = useUi()
   useLiveEvents(ws)
   const [, navigate] = useLocation()
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setPalette(true) }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); if (e.shiftKey) setCaptureOpen(true); else setPalette(true) }
       if ((e.metaKey || e.ctrlKey) && e.key === '\\') { e.preventDefault(); toggleSidebar() }
       // "?" opens Help, unless you are typing
       const typing = e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || (e.target as HTMLElement | null)?.isContentEditable
@@ -48,6 +50,8 @@ export function Shell({ ws, children }: { ws: string; children: ReactNode }) {
         </div>
       </div>
       <CommandPalette ws={ws} />
+      <CaptureDialog ws={ws} />
+      <Notice />
       <Tour />
       {importOpen && <ImportDialog ws={ws} onClose={() => setImportOpen(false)} />}
     </div>

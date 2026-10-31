@@ -2,7 +2,7 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { api, qs } from './client'
 import { currentLang } from '../i18n'
-import type { SessionInfo, WorkspaceSummary, Tree, DocResponse, LessonResponse, BrowseResult, StudyPlan, StudyItem, RecordResponse, SearchHit, Note, NoteAnchor, EnginesInfo, JobSummary, JobEvent, TodayResponse, GoalsInfo, FormulasResponse, GlossaryResponse, LinksResponse, MapResponse, DocSummary, AskStatus, AskEntry, SheetResponse, FileInfo, HistoryEntry, PreviewResponse, ImportResult, ChatCheck, Integrations, Batch, BatchCandidate, ConfidenceInfo, ExamPlan, ExamResult, TexResult, TexStatus, LocalAiInfo, ModelDownload, ScinetDetail, ScinetPaper, ScinetStatus } from '../../shared/types'
+import type { SessionInfo, WorkspaceSummary, Tree, DocResponse, LessonResponse, BrowseResult, StudyPlan, StudyItem, RecordResponse, SearchHit, Note, NoteAnchor, EnginesInfo, JobSummary, JobEvent, TodayResponse, GoalsInfo, FormulasResponse, GlossaryResponse, LinksResponse, MapResponse, DocSummary, AskStatus, AskEntry, SheetResponse, FileInfo, HistoryEntry, PreviewResponse, ImportResult, ChatCheck, Integrations, Batch, BatchCandidate, ConfidenceInfo, ExamPlan, ExamResult, TexResult, TexStatus, LocalAiInfo, ModelDownload, ScinetDetail, ScinetPaper, ScinetStatus, RelatedResponse, InboxItem, InboxList } from '../../shared/types'
 import type { Checked, MdNode, WebAnswer, Outcome } from '@mdlearn/core'
 
 export const keys = {
@@ -18,8 +18,17 @@ export const keys = {
   localAi: ['local-ai'] as const,
   scinet: ['scinet'] as const,
   today: (ws: string) => ['today', ws] as const,
+  inbox: (ws: string) => ['inbox', ws] as const,
   jobs: (ws: string) => ['jobs', ws] as const,
   job: (ws: string, id: string) => ['job', ws, id] as const,
+}
+export type CardInput = { kind: 'cloze'; text: string; title?: string } | { kind: 'qa'; question: string; answer: string; title?: string }
+export const useInbox = (ws: string) => useQuery({ queryKey: keys.inbox(ws), queryFn: () => api.get<InboxList>(`/api/w/${ws}/inbox`) })
+export const inboxApi = {
+  capture: (ws: string, body: { text?: string; quote?: string; url?: string; doc?: string; section?: string | null }) => api.post<InboxItem>(`/api/w/${ws}/inbox`, body),
+  done: (ws: string, { file, id }: InboxItem) => api.post<{ ok: boolean }>(`/api/w/${ws}/inbox/done`, { file, id }),
+  card: (ws: string, { file, id }: InboxItem, card: CardInput) => api.post<{ path: string }>(`/api/w/${ws}/inbox/card`, { file, id, card }),
+  move: (ws: string, { file, id }: InboxItem, doc: string, section: string | null) => api.post<{ ok: boolean }>(`/api/w/${ws}/inbox/move`, { file, id, doc, section }),
 }
 export const useToday = (ws: string) => useQuery({ queryKey: keys.today(ws), queryFn: () => api.get<TodayResponse>(`/api/w/${ws}/today`), staleTime: 15_000 })
 export const goalsApi = {
@@ -42,6 +51,9 @@ export const useTermHovers = (ws: string, enabled = true) => useQuery({
 })
 export const useLinks = (ws: string, path: string | undefined) => useQuery({
   queryKey: ['links', ws, path], enabled: !!path, queryFn: () => api.get<LinksResponse>(`/api/w/${ws}/links?${qs({ path })}`), staleTime: 15_000,
+})
+export const useRelated = (ws: string, path: string, section: string | undefined, enabled: boolean) => useQuery({
+  queryKey: ['related', ws, path, section], enabled, placeholderData: keepPreviousData, queryFn: () => api.get<RelatedResponse>(`/api/w/${ws}/related?${qs({ path, section })}`), staleTime: 15_000,
 })
 export const useDocSummary = (ws: string, path: string | undefined) => useQuery({
   queryKey: ['doc-summary', ws, path], enabled: !!path, staleTime: 60_000, queryFn: () => api.get<DocSummary>(`/api/w/${ws}/doc/summary?${qs({ path })}`),
@@ -152,7 +164,7 @@ export const notesApi = {
   ask: (ws: string, body: { doc: string; anchor: NoteAnchor; question?: string; mode: 'ask' | 'explain'; noteId?: string }) => api.post<{ note: Note; messageId: string }>(`/api/w/${ws}/ai/ask`, body),
   cancel: (ws: string, messageId: string) => api.post<{ stopped: boolean }>(`/api/w/${ws}/ai/cancel`, { messageId }),
   passage: (ws: string, doc: string, quote: string) => api.get<Passage>(`/api/w/${ws}/doc/passage?${qs({ path: doc, quote })}`),
-  addCard: (ws: string, body: { doc: string; section: { num: string | null; anchor: string } | null; card: { kind: 'cloze'; text: string; title?: string } | { kind: 'qa'; question: string; answer: string; title?: string } }) => api.post<{ path: string; cardKey: string; created: boolean }>(`/api/w/${ws}/cards`, body),
+  addCard: (ws: string, body: { doc: string; section: { num: string | null; anchor: string } | null; card: CardInput }) => api.post<{ path: string; cardKey: string; created: boolean }>(`/api/w/${ws}/cards`, body),
   visualise: (ws: string, doc: string, anchor: NoteAnchor, kind: 'auto' | 'plot' | 'formula' | 'animate') => api.post<VisualDraft>(`/api/w/${ws}/ai/visualise`, { doc, anchor, kind }),
   insert: (ws: string, path: string, quote: string, text: string, baseMtime: number) => api.post<{ line: number }>(`/api/w/${ws}/files/insert`, { path, quote, text, baseMtime }),
 }

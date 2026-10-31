@@ -51,6 +51,22 @@ test('links tab shows what a document points to and what points to it, and links
   await expect(page.getByRole('tooltip')).toContainText('Visuals', { timeout: 5000 })
 })
 
+test('the Related tab follows the section you are reading', async ({ page }) => {
+  const ws = await openFolder(page)
+  await page.goto(`/w/${ws}/doc?path=demo%2Flandscapes.md`)
+  await page.getByRole('tab', { name: 'Related' }).click()
+  await expect(page.getByText('Close to How ice moves')).toBeVisible({ timeout: 20_000 })
+  const iceSheets = page.getByRole('link', { name: /^Ice sheets/ })
+  await expect(iceSheets).toBeVisible()
+  await expect(page.getByText('Found by shared words.')).toBeVisible()
+  await page.locator('#how-rivers-braid').evaluate((el) => el.scrollIntoView())
+  await expect(page.getByText('Close to How rivers braid')).toBeVisible()
+  await expect(iceSheets).toHaveCount(0)
+  await page.getByRole('link', { name: /^River bars/ }).click()
+  await expect(page.getByRole('heading', { name: 'River bars', level: 1 })).toBeVisible()
+  await expect(page).toHaveURL(/doc\?path=demo%2Friver-bars\.md#gravel-in-floods/)
+})
+
 test('the map shows what a document builds on and what surrounds it', async ({ page }) => {
   const ws = await openFolder(page)
   await page.goto(`/w/${ws}/doc?path=demo%2Fradar-terms.md`)

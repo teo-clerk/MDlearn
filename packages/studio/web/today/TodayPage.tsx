@@ -15,6 +15,7 @@ import type { TodayResponse } from '../../shared/types'
 import { t, tp, locale } from '../i18n'
 import { whenText } from '../lib/when'
 import { paceText } from './pace'
+import { InboxSection } from '../inbox/InboxSection'
 
 export const lastDocKey = (ws: string) => `mdl-last-doc:${ws}`
 const fmt = new Intl.NumberFormat(locale())
@@ -74,6 +75,8 @@ export default function TodayPage({ ws }: { ws: string }) {
           <p className="mt-1 text-[14.5px] leading-relaxed">{t('No lessons in this folder yet. Every document can still be read here. Select a passage and choose')} <strong className="font-semibold">{t('Card')}</strong> {t('to make your own cards, or ask the AI Studio to build a course.')}</p>
         </section>
       )}
+
+      <InboxSection ws={ws} />
 
       {hasLessons && (
         <>

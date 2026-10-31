@@ -70,13 +70,13 @@ test('around one document: its neighbours a step away, more with the slider; fil
   await expect(page.getByRole('heading', { name: 'Radar terms', level: 2 })).toBeVisible()
   await page.getByLabel('Links').check()
 
-  await page.getByRole('button', { name: '3D' }).click()
+  await page.getByRole('button', { name: '3D', exact: true }).click()
   await expect(canvas(page, '3d').or(page.getByText(/3D view could not start/))).toBeVisible({ timeout: 30_000 })
   expect(requested.some((u) => /graphEngine3d/.test(u))).toBe(true)
   // the choice is remembered on this device
   await page.reload()
-  await expect(page.getByRole('button', { name: '3D' })).toHaveAttribute('aria-pressed', 'true')
-  await page.getByRole('button', { name: '2D' }).click()
+  await expect(page.getByRole('button', { name: '3D', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  await page.getByRole('button', { name: '2D', exact: true }).click()
   await expect(canvas(page)).toBeVisible()
 
   await page.getByRole('link', { name: 'Layers' }).click()

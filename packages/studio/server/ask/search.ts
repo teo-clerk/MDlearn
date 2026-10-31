@@ -72,6 +72,13 @@ export function fuse(lists: Scored[][], limit: number, k = 60): Scored[] {
   return [...score].map(([index, score]) => ({ index, score })).sort((a, b) => b.score - a.score).slice(0, limit)
 }
 
+/** The direction a group of rows points in together: their mean, at unit length. */
+export function centroid(matrix: Float32Array, dim: number): Float32Array {
+  const sum = new Float32Array(dim)
+  for (let i = 0; i < matrix.length; i++) sum[i % dim] += matrix[i]
+  return normalise(sum)
+}
+
 export function normalise(v: number[] | Float32Array): Float32Array {
   const out = new Float32Array(v.length)
   let sum = 0

@@ -41,6 +41,7 @@ import { importAnki } from './import/anki.js'
 import { IMPORT_DIR, MAX_IMPORT_BYTES, freePath, slugify, writeNew } from './import/common.js'
 import { visualise } from './ai/visualise.js'
 import { insertAfterQuote } from './insert.js'
+import { capture, cardFromItem, listInbox, moveItem, settle } from './inbox.js'
 import type { JobManager } from './ai/jobs.js'
 import type { AiEngine } from './ai/engine.js'
 import { createCourse, improveLesson, customJob, importPdf, topicCourse } from './ai/recipes.js'
@@ -82,6 +83,7 @@ export interface Deps {
   latex?: Latex
 }
 const IMAGE_TYPES: Record<string, string> = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.webp': 'image/webp' }
+const MAX_CAPTURE = 4000
 const MAX_UPLOAD_FILES = 2000, MAX_UPLOAD_FILE = 2 * 1024 * 1024
 const UPLOAD_TYPES = /\.(md|markdown|txt|png|jpe?g|gif|webp)$/i
 
@@ -104,6 +106,10 @@ export function createApp(deps: Deps): Hono {
     return h
   }
   const pathParam = (c: Context) => z.string().min(1).max(1024).parse(c.req.query('path'))
+  const CardBody = z.discriminatedUnion('kind', [
+    z.object({ kind: z.literal('cloze'), text: z.string().min(3).max(6000), title: z.string().max(80).optional() }),
+    z.object({ kind: z.literal('qa'), question: z.string().min(3).max(1000), answer: z.string().min(1).max(3000), title: z.string().max(80).optional() }),
+  ])
 
   // ---- session & workspaces
   app.get('/api/session', (c) => c.json<SessionInfo>({ version: deps.version, client: clientOf(c), caps: capsOf(c, o), lan: { enabled: o.lan, ...(deps.lanUrl && clientOf(c) === 'local' ? { url: deps.lanUrl } : {}) } }))
@@ -217,16 +223,36 @@ export function createApp(deps: Deps): Hono {
   })
   app.post('/api/w/:ws/cards', need('notes', o), async (c) => {
     const h = ws(c)
-    const body = z.object({
-      doc: z.string().min(1).max(1024), section: z.object({ num: z.string().nullable(), anchor: z.string() }).nullable().default(null),
-      card: z.discriminatedUnion('kind', [
-        z.object({ kind: z.literal('cloze'), text: z.string().min(3).max(6000), title: z.string().max(80).optional() }),
-        z.object({ kind: z.literal('qa'), question: z.string().min(3).max(1000), answer: z.string().min(1).max(3000), title: z.string().max(80).optional() }),
-      ]),
-    }).parse(await c.req.json())
+    const body = z.object({ doc: z.string().min(1).max(1024), section: z.object({ num: z.string().nullable(), anchor: z.string() }).nullable().default(null), card: CardBody }).parse(await c.req.json())
     const r = await addCard(h, body.doc, deps.workspaces.resolve(h, body.doc), body.section, body.card)
     deps.bus.publish({ type: 'tree.changed', ws: h.id })
     return c.json(r)
+  })
+  // capture inbox: a phone may save and sort into cards; only this computer may write into a document
+  app.get('/api/w/:ws/inbox', need('read', o), (c) => c.json(listInbox(ws(c))))
+  app.post('/api/w/:ws/inbox', need('notes', o), async (c) => {
+    const h = ws(c)
+    const body = z.object({ text: z.string().max(MAX_CAPTURE).optional(), quote: z.string().max(MAX_CAPTURE).optional(), url: z.string().max(2000).regex(/^https?:\/\//i).optional(), doc: z.string().min(1).max(1024).optional(), section: z.string().max(300).nullable().optional() }).parse(await c.req.json())
+    const item = await capture(h, { ...body, ...(body.doc ? { source: { doc: body.doc, abs: deps.workspaces.resolve(h, body.doc), section: body.section } } : {}) })
+    deps.bus.publish({ type: 'tree.changed', ws: h.id })
+    return c.json(item)
+  })
+  const InboxRef = z.object({ file: z.string().min(1).max(100), id: z.string().regex(/^[0-9a-f]{12}$/) })
+  app.post('/api/w/:ws/inbox/done', need('notes', o), async (c) => {
+    const h = ws(c), { file, id } = InboxRef.parse(await c.req.json())
+    await settle(h, file, id)
+    return c.json({ ok: true })
+  })
+  app.post('/api/w/:ws/inbox/card', need('notes', o), async (c) => {
+    const h = ws(c), { file, id, card } = InboxRef.extend({ card: CardBody }).parse(await c.req.json())
+    const r = await cardFromItem(h, file, id, card, (rel) => deps.workspaces.resolve(h, rel))
+    deps.bus.publish({ type: 'tree.changed', ws: h.id })
+    return c.json(r)
+  })
+  app.post('/api/w/:ws/inbox/move', need('write', o), async (c) => {
+    const h = ws(c), { file, id, doc, section } = InboxRef.extend({ doc: z.string().min(1).max(1024), section: z.string().max(300).nullable().optional() }).parse(await c.req.json())
+    await moveItem(h, file, id, { doc, abs: deps.workspaces.resolve(h, doc), section })
+    return c.json({ ok: true })
   })
   app.get('/api/w/:ws/raw', need('read', o), (c) => {
     const h = ws(c), abs = deps.workspaces.resolve(h, pathParam(c))
@@ -495,6 +521,7 @@ export function createApp(deps: Deps): Hono {
   const downloads = deps.downloads ?? new ModelDownloads(() => deps.settings.get().ollama)
   const askSvc = deps.ask ?? new AskService(knowledge, deps.bus, deps.settings, downloads)
   app.get('/api/w/:ws/ask/status', need('askLocal', o), async (c) => c.json(await askSvc.status(ws(c))))
+  app.get('/api/w/:ws/related', need('read', o), async (c) => c.json(await askSvc.related(ws(c), pathParam(c), z.string().max(300).optional().parse(c.req.query('section')))))
   app.post('/api/w/:ws/ask/setup', need('ai', o), async (c) => { await askSvc.setup(ws(c)); return c.json(await askSvc.status(ws(c))) })
   app.get('/api/w/:ws/ask/history', need('askLocal', o), (c) => c.json(askSvc.history(ws(c))))
   app.post('/api/w/:ws/ask', need('askLocal', o), async (c) => {

@@ -35,6 +35,7 @@ describe.skipIf(!ip)('sharing on the network (--lan)', () => {
     expect(s.caps).toEqual(['read', 'study', 'notes', 'askLocal'])
     const ws = studio.url.split('/w/')[1]
     expect((await fetch(`${base()}/api/w/${ws}/tree`, { headers })).status).toBe(200)
+    expect((await fetch(`${base()}/api/w/${ws}/related?path=x.md`, { headers })).status).toBe(200)
     expect((await fetch(`${base()}/api/fs/browse`, { headers })).status).toBe(403)
     const job = await fetch(`${base()}/api/w/${ws}/ai/jobs`, { method: 'POST', headers: { ...headers, 'content-type': 'application/json', 'x-mdl': '1', origin: base() }, body: JSON.stringify({ recipe: 'custom', request: 'hello there' }) })
     expect(job.status).toBe(403)
@@ -50,6 +51,13 @@ describe.skipIf(!ip)('sharing on the network (--lan)', () => {
     // downloading, choosing and removing AI models change this computer
     const postApi = (path: string, body: unknown) => fetch(`${base()}/api${path}`, { method: 'POST', headers: { ...headers, 'content-type': 'application/json', 'x-mdl': '1', origin: base() }, body: JSON.stringify(body) })
     for (const action of ['pull', 'choose', 'delete', 'cancel']) expect((await postApi(`/ai/local/${action}`, { model: 'qwen3:4b' })).status).toBe(403)
+    // a phone can capture and sort into cards, but only this computer writes into a document
+    const captured = await post('/inbox', { text: 'From the phone' })
+    expect(captured.status).toBe(200)
+    const item = await captured.json() as { file: string; id: string }
+    expect((await fetch(`${base()}/api/w/${ws}/inbox`, { headers })).status).toBe(200)
+    expect((await post('/inbox/move', { file: item.file, id: item.id, doc: 'x.md' })).status).toBe(403)
+    expect((await post('/inbox/done', { file: item.file, id: item.id })).status).toBe(200)
     // the paper library stays on this computer, as SciNet keeps it
     for (const path of ['/api/scinet/status', '/api/scinet/papers?q=x', '/api/scinet/papers/1']) expect((await fetch(`${base()}${path}`, { headers })).status).toBe(403)
     expect((await postApi('/scinet/url', { url: 'http://127.0.0.1:8000' })).status).toBe(403)

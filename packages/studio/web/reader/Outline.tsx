@@ -1,30 +1,11 @@
 // Side-panel outline: sections with their numbers, the one you are reading highlighted, and — when the
 // document has lessons — how well you remember each section.
-import { useEffect, useState } from 'react'
 import type { DocOutline } from '@mdlearn/core'
 import type { SectionMemory } from '../api/queries'
 import { MemoryMark } from '../ui/primitives'
 import { prettyTitle } from '../lib/title'
+import { useActiveSection } from './useActiveSection'
 import { t } from '../i18n'
-
-export function useActiveSection(ids: string[]): string | null {
-  const [active, setActive] = useState<string | null>(null)
-  useEffect(() => {
-    const root = document.getElementById('main')
-    if (!root || !ids.length) return
-    const els = ids.map((id) => document.getElementById(id)).filter((e): e is HTMLElement => !!e)
-    const onScroll = () => {
-      const top = root.getBoundingClientRect().top + 90
-      let current: string | null = els[0]?.id ?? null
-      for (const el of els) { if (el.getBoundingClientRect().top <= top) current = el.id; else break }
-      setActive(current)
-    }
-    onScroll()
-    root.addEventListener('scroll', onScroll, { passive: true })
-    return () => root.removeEventListener('scroll', onScroll)
-  }, [ids])
-  return active
-}
 
 export function Outline({ outline, memory }: { outline: DocOutline; memory?: SectionMemory[] }) {
   const sections = outline.sections.filter((s) => s.depth <= 3)

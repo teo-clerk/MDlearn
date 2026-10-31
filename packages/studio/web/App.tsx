@@ -23,6 +23,7 @@ const SheetPage = lazy(() => import('./knowledge/SheetPage'))
 const EditPage = lazy(() => import('./editor/EditPage'))
 const HelpPage = lazy(() => import('./help/HelpPage'))
 const SettingsPage = lazy(() => import('./settings/SettingsPage'))
+const CapturePage = lazy(() => import('./inbox/CapturePage'))
 
 function Workspace() {
   const { ws } = useParams<{ ws: string }>()
@@ -57,6 +58,7 @@ export function App() {
     <Switch>
       <Route path="/offline/:ws"><Suspense fallback={<div className="p-10"><Spinner /></div>}><OfflinePage /></Suspense></Route>
       <Route path="/offline"><Suspense fallback={<div className="p-10"><Spinner /></div>}><OfflineHome /></Suspense></Route>
+      <Route path="/capture"><Suspense fallback={<div className="p-10"><Spinner /></div>}><CapturePage /></Suspense></Route>
       <Route path="/w/:ws" nest={false}><Workspace /></Route>
       <Route path="/w/:ws/*"><Workspace /></Route>
       <Route><Home /></Route>

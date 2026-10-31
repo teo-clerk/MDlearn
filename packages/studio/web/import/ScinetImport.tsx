@@ -53,7 +53,7 @@ export function ScinetImport({ paperId, onPaper, reread, onReread, canAi }: { pa
             <button key={p.id} type="button" role="radio" aria-checked={paperId === p.id} onClick={() => onPaper(p.id)}
               className={`block w-full border-b border-border px-3 py-2 text-left last:border-b-0 cursor-pointer ${paperId === p.id ? 'bg-hover' : 'hover:bg-hover'}`}>
               <span className="block text-[13.5px] font-medium [overflow-wrap:anywhere]">{p.title}{p.year ? <span className="ml-1.5 font-normal text-muted tabular">{p.year}</span> : null}</span>
-              {p.snippet && <span className="mt-0.5 line-clamp-2 block text-[12px] leading-snug text-muted">{p.snippet}</span>}
+              {p.snippet && <span className="mt-0.5 line-clamp-2 text-[12px] leading-snug text-muted">{p.snippet}</span>}
             </button>
           ))}
         </div>

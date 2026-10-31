@@ -8,7 +8,7 @@ import { EventBus } from '../server/bus'
 import { settingsStore } from '../server/settings'
 import { Workspaces } from '../server/workspaces'
 import { buildPrompt, citedNumbers } from '../server/ask/service'
-import type { AskEntry, AskStatus, Note } from '../shared/types'
+import type { AskEntry, AskStatus, Note, RelatedResponse } from '../shared/types'
 
 const fixture = resolve(__dirname, '../../core/test/fixtures/curriculum')
 const tmp = (p: string) => mkdtempSync(join(tmpdir(), p))
@@ -129,5 +129,61 @@ describe('asking the whole folder', () => {
     const { post } = setup()
     expect((await post('/ask', { question: ' ' })).status).toBe(400)
     expect((await post('/ask', { question: 'x'.repeat(1001) })).status).toBe(400)
+  })
+})
+
+describe('related passages', () => {
+  // two sections on different subjects, one document for each, and one on neither
+  const library = () => {
+    const s = setup()
+    writeFileSync(join(s.root, 'imaging.md'), '# Imaging\n\n## Speckle in images\n\nSpeckle noise makes coherent radar images grainy until multilooking averages independent samples together.\n\n## Orbits for imaging\n\nA sunsynchronous orbit crosses the equator at the same local time, keeping the lighting steady between passes.\n\n## Overview\n\n### Empty\n\n### Filled\n\nThis subsection has enough words to count as a passage of its own in the index of the folder.\n')
+    writeFileSync(join(s.root, 'filters.md'), '# Filters\n\n## Lee filter\n\nThe Lee filter removes speckle noise from coherent radar images while it keeps the edges sharp and clear.\n\n## Boxcar\n\nA boxcar filter averages independent samples of speckle noise over a window in coherent radar images.\n')
+    writeFileSync(join(s.root, 'orbits.md'), '# Orbits\n\n## Sunsynchronous\n\nThe sunsynchronous orbit keeps the same local time at the equator, so lighting stays steady for every pass.\n')
+    writeFileSync(join(s.root, 'bread.md'), '# Bread\n\n## Dough\n\nFlour, water, salt and yeast rest overnight before the loaf goes into a very hot oven with some steam.\n')
+    return s
+  }
+  const related = (s: ReturnType<typeof setup>, path: string, section?: string) => s.get<RelatedResponse>(`/related?path=${encodeURIComponent(path)}${section ? `&section=${section}` : ''}`)
+  const vectors = async (s: ReturnType<typeof setup>) => {
+    await s.post('/ask/setup', {})
+    await s.until(() => s.get<AskStatus>('/ask/status'), (a) => a.total > 0 && !a.building && a.indexed === a.total)
+    embedCalls = 0
+  }
+
+  it('finds other documents by words while there are no vectors, without asking a model', async () => {
+    const s = library()
+    const r = await related(s, 'imaging.md', 'speckle-in-images')
+    expect(r.mode).toBe('words')
+    expect(r.passages[0].doc).toBe('filters.md')
+    expect(r.passages.map((p) => p.doc)).not.toContain('bread.md')
+    expect(embedCalls).toBe(0)
+  })
+  it('follows the section: another section of the same document finds another document', async () => {
+    const s = library()
+    expect((await related(s, 'imaging.md', 'orbits-for-imaging')).passages[0].doc).toBe('orbits.md')
+  })
+  it('by meaning once vectors exist: closest first, one passage per document, never the same document, no model call', async () => {
+    const s = library()
+    await vectors(s)
+    const r = await related(s, 'imaging.md', 'speckle-in-images')
+    expect(r.mode).toBe('meaning')
+    expect(r.passages[0].doc).toBe('filters.md')
+    expect(r.passages[0].section?.anchor).toMatch(/lee-filter|boxcar/)
+    expect(r.passages[0].snippet.length).toBeGreaterThan(20)
+    const docs = r.passages.map((p) => p.doc)
+    expect(docs).not.toContain('imaging.md')
+    expect(new Set(docs).size).toBe(docs.length)
+    expect(docs).not.toContain('bread.md') // too far away to show
+    expect(embedCalls).toBe(0)
+    expect((await related(s, 'imaging.md', 'orbits-for-imaging')).passages[0].doc).toBe('orbits.md')
+  })
+  it('uses the whole document for a heading with no text of its own, or with no section', async () => {
+    const s = library()
+    expect((await related(s, 'imaging.md', 'empty')).passages.map((p) => p.doc)).toContain('filters.md')
+    expect((await related(s, 'imaging.md')).passages.map((p) => p.doc)).toContain('orbits.md')
+  })
+  it('has nothing to say about a document it does not know, and refuses a bad request', async () => {
+    const s = library()
+    expect((await related(s, 'nowhere.md')).passages).toEqual([])
+    expect((await s.get<{ error: unknown }>('/related')).error).toBeTruthy()
   })
 })

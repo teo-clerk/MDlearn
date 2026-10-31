@@ -23,6 +23,7 @@ Vos notes restent de simples fichiers Markdown. Les **leçons** (`learn/*.learn.
 | **LaTeX** | *Nouvelle note → Document LaTeX*, ou tout fichier `.tex` sous *LaTeX* dans la barre latérale : écrivez à gauche, **Compiler** (Ctrl+S) pour voir le PDF à droite ; les erreurs mènent à leur ligne. Il faut Tectonic ou TeX Live sur l’ordinateur. |
 | **IA locale** | *Réglages → IA locale* : installez Ollama s’il manque, téléchargez un modèle recommandé (chacun indique si cet ordinateur le fait bien tourner) et choisissez celui avec lequel Studio répond. |
 | **Importer** | *Importer…* dans la barre latérale : une page web, un PDF, un paquet Anki, un notebook, des leçons d’un chat, ou un article de **SciNet** s’il tourne sur cet ordinateur. |
+| **Boîte de réception** | Ctrl+Maj+K enregistre une idée depuis n'importe quelle page, et *Boîte de réception* dans la barre d'une sélection enregistre un passage. Triez-les dans Aujourd'hui : **Fiche**, **Déplacer** vers un document, ou **Terminé**. C'est du Markdown simple dans `Inbox/`. |
 | **AI Studio** | Claude Code écrit ou améliore des leçons à partir d'une note (utilise votre abonnement Claude). |
 | **Formules** · **Glossaire** · **Carte** | Chaque formule, chaque terme défini, et quelles notes s'appuient sur lesquelles : un graphe en 2D ou en 3D, coloré selon ce que vous retenez de chaque note. |
 
@@ -33,6 +34,8 @@ Vos notes restent de simples fichiers Markdown. Les **leçons** (`learn/*.learn.
 - Les mots soulignés sont des termes définis dans vos notes : survolez-les. Les liens vers d'autres notes s'affichent en aperçu au survol.
 - **Expliquez-le** (dans une leçon, ou dans le menu `…` pour une section) : expliquez-le avec vos mots ; le
   modèle local (ou Claude) vous dit quelles idées clés vous avez abordées, quoi corriger, et vous pose une question.
+- L'onglet **Liés** du panneau de droite montre des passages d'autres documents sur la section que vous
+  lisez, et vous suit quand vous faites défiler.
 - Le **plan** du panneau de droite suit la section que vous lisez ; le menu `…` contient
   l'aide-mémoire et la source.
 
@@ -63,6 +66,7 @@ des fiches de révision. Le tutoriel montre chacun en direct avec sa source.
 | Touches | Effet |
 |---|---|
 | <kbd>Ctrl</kbd>+<kbd>K</kbd> | rechercher des notes, des leçons et des commandes |
+| <kbd>Ctrl</kbd>+<kbd>Maj</kbd>+<kbd>K</kbd> | noter une idée dans votre boîte de réception |
 | <kbd>Ctrl</kbd>+<kbd>\</kbd> | afficher ou masquer la barre latérale |
 | <kbd>?</kbd> | cette page |
 | <kbd>A</kbd>–<kbd>E</kbd> · <kbd>Entrée</kbd> | choisir une option · vérifier, puis fiche suivante |

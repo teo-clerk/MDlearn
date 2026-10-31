@@ -34,6 +34,26 @@ test('opens Studio in a locked-down window, and the tutorial works in it', async
   await expect(win.getByRole('link', { name: 'Today' })).toBeVisible()
 })
 
+test('the capture window saves one thought into the folder and closes', async () => {
+  app = await launch()
+  const win = await app.firstWindow()
+  await expect(win.getByRole('heading', { name: 'MDlearn Studio' })).toBeVisible({ timeout: 30_000 })
+  await win.getByText('New here? Open the tutorial').click()
+  await expect(win).toHaveURL(/\/w\/[^/]+/)
+  const today = new URL(win.url()).pathname.split('/').slice(0, 3).join('/')
+  const opening = app.waitForEvent('window')
+  await app.evaluate(({ Menu }) => { Menu.getApplicationMenu()?.items.find((i) => i.label === 'File')?.submenu?.items.find((i) => i.label === 'Capture a thought')?.click() })
+  const capture = await opening
+  await expect(capture).toHaveURL(/\/capture\?once=1$/)
+  const closed = capture.waitForEvent('close')
+  const box = capture.getByRole('textbox', { name: 'Capture a thought' })
+  await box.fill('A thought from anywhere')
+  await box.press('Enter')
+  await closed
+  await win.goto(new URL(today, win.url()).href)
+  await expect(win.getByText('A thought from anywhere')).toBeVisible()
+})
+
 test('web links open in the browser, Studio\'s own pages in an app window, other schemes nowhere', async () => {
   app = await launch()
   const win = await app.firstWindow()

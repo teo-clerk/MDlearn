@@ -22,7 +22,7 @@ export function useLiveEvents(ws: string | undefined): void {
             if (p.kind === 'lesson') qc.invalidateQueries({ queryKey: keys.lesson(e.ws, p.path) })
           }
           break
-        case 'tree.changed': qc.invalidateQueries({ queryKey: keys.tree(e.ws) }); break
+        case 'tree.changed': qc.invalidateQueries({ queryKey: keys.tree(e.ws) }); qc.invalidateQueries({ queryKey: keys.inbox(e.ws) }); break
         case 'progress.changed': qc.invalidateQueries({ queryKey: keys.today(e.ws) }); qc.invalidateQueries({ queryKey: keys.report(e.ws) }); qc.invalidateQueries({ queryKey: ['map', e.ws] }); qc.invalidateQueries({ queryKey: keys.tree(e.ws) }); break
         case 'notes.changed': qc.invalidateQueries({ queryKey: keys.notes(e.ws, e.doc) }); break
         case 'ai.delta': useStream.getState().append(e.messageId, e.text); break

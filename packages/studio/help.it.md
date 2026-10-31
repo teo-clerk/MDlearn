@@ -23,6 +23,7 @@ I tuoi appunti restano semplici file Markdown. Le **lezioni** (`learn/*.learn.md
 | **LaTeX** | *Nuova nota → Documento LaTeX*, o qualsiasi file `.tex` sotto *LaTeX* nella barra laterale: scrivi a sinistra, **Compila** (Ctrl+S) per vedere il PDF a destra; gli errori portano alla loro riga. Serve Tectonic o TeX Live sul computer. |
 | **AI locale** | *Impostazioni → AI locale*: installa Ollama se manca, scarica un modello consigliato (ognuno dice se questo computer lo fa girare bene) e scegli quello con cui risponde Studio. |
 | **Importa** | *Importa…* nella barra laterale: una pagina web, un PDF, un mazzo Anki, un notebook, lezioni da una chat, o un articolo da **SciNet** se è in esecuzione su questo computer. |
+| **Inbox** | Ctrl+Maiusc+K salva un pensiero da qualsiasi pagina, e *Inbox* nella barra di una selezione salva un passaggio. Sistemali in Oggi: **Carta**, **Sposta** in un documento, o **Fatto**. Sono Markdown semplice in `Inbox/`. |
 | **AI Studio** | Claude Code scrive o migliora lezioni a partire da un appunto (usa il tuo abbonamento Claude). |
 | **Formule** · **Glossario** · **Mappa** | Ogni formula, ogni termine definito e quali appunti si basano su quali: un grafo in 2D o 3D, colorato secondo quanto ricordi ogni appunto. |
 
@@ -33,6 +34,8 @@ I tuoi appunti restano semplici file Markdown. Le **lezioni** (`learn/*.learn.md
 - Le parole sottolineate sono termini definiti nei tuoi appunti: passaci sopra. I link ad altri appunti mostrano un'anteprima al passaggio del mouse.
 - **Spiegalo tu** (in una lezione, o nel menu `…` per una sezione): spiegalo con parole tue; il modello
   locale (o Claude) ti dice quali idee chiave hai trattato, cosa correggere, e ti fa una domanda.
+- La scheda **Correlati** nel pannello di destra elenca passaggi di altri documenti sulla sezione che stai
+  leggendo, e ti segue mentre scorri.
 - L'**indice** nel pannello di destra segue la sezione che stai leggendo; il menu `…` contiene la
   scheda riassuntiva e il sorgente.
 
@@ -63,6 +66,7 @@ carte di ripasso. Il tutorial mostra ciascuno dal vivo con il suo sorgente.
 | Tasti | Funzione |
 |---|---|
 | <kbd>Ctrl</kbd>+<kbd>K</kbd> | cerca appunti, lezioni e comandi |
+| <kbd>Ctrl</kbd>+<kbd>Maiusc</kbd>+<kbd>K</kbd> | annota un pensiero nell’inbox |
 | <kbd>Ctrl</kbd>+<kbd>\</kbd> | mostra o nasconde la barra laterale |
 | <kbd>?</kbd> | questa pagina |
 | <kbd>A</kbd>–<kbd>E</kbd> · <kbd>Invio</kbd> | scegli un'opzione · verifica, poi carta successiva |

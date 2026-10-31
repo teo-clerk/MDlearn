@@ -207,9 +207,12 @@ Start `claude` in the folder and approve the `mdlearn` server when asked. Then t
 - **Your folder as a knowledge base:** formulas, glossary (defined terms are underlined in the text),
   links and backlinks, a **graph** of your documents in 2D or 3D (coloured by how well you remember each,
   like Obsidian's) and a prerequisite map, **Ask** (the local model answers from your documents, with
-  sources) and printable cheat sheets.
+  sources), **Related** (what else in the folder is about the section you are reading) and printable cheat sheets.
+- **A capture inbox:** save a thought, a link or a passage in a moment (Ctrl+Shift+K, your phone, or
+  Ctrl+Alt+Space in the desktop app) and sort it later on Today into a card or a document. It is plain Markdown in
+  `Inbox/`.
 - **Edit, import, export:** a built-in editor with live preview and history; import web pages, PDFs,
-  Anki decks and Jupyter notebooks; **export to Anki** to study on your phone anywhere.
+  Anki decks, Jupyter notebooks and **papers from SciNet**; **export to Anki** to study on your phone anywhere.
 - **LaTeX:** write `.tex` documents with highlighting and completion, compile them to PDF beside the source
   (Ctrl+S), with errors linked to their line and explained. Uses Tectonic or TeX Live on your computer
   (`sudo pacman -S tectonic` on Arch, `brew install tectonic` on macOS).
@@ -247,7 +250,8 @@ Run them inside your notes folder (or pass `--root <dir>`, or set `MDLEARN_ROOT`
 
 | Path | What |
 |---|---|
-| your `.md` files | untouched (except by the editor or *Insert*) |
+| your `.md` files | untouched (except by the editor, *Insert*, or moving an inbox item there) |
+| `Inbox/YYYY-MM-DD.md` | what you captured, one file a day |
 | `learn/**/*.learn.md` | lessons, mirroring your folder layout |
 | `learn/.mdlearn/progress.json` | your reviews and answers, shared by Studio, terminal and Claude; **personal** |
 | `learn/.mdlearn/goals.json` | daily goal, deadlines, suspended cards |

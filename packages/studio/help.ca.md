@@ -23,6 +23,7 @@ Els teus apunts continuen sent fitxers Markdown normals. Les **lliçons** (`lear
 | **LaTeX** | *Nota nova → Document LaTeX*, o qualsevol fitxer `.tex` a *LaTeX* a la barra lateral: escriu a l’esquerra, **Compila** (Ctrl+S) per veure el PDF a la dreta; els errors porten a la seva línia. Cal Tectonic o TeX Live a l’ordinador. |
 | **IA local** | *Configuració → IA local*: instal·la Ollama si falta, baixa un model recomanat (cadascun diu si aquest ordinador el fa anar bé) i tria amb quin respon Studio. |
 | **Importa** | *Importa…* a la barra lateral: una pàgina web, un PDF, una baralla d’Anki, un quadern, lliçons d’un xat, o un article de **SciNet** si s’està executant en aquest ordinador. |
+| **Safata d’entrada** | Ctrl+Maj+K desa una idea des de qualsevol pàgina, i *Safata d’entrada* a la barra d'una selecció desa un passatge. Endreça’ls a Avui: **Targeta**, **Mou** a un document, o **Fet**. Són Markdown senzill a `Inbox/`. |
 | **AI Studio** | Claude Code escriu o millora lliçons a partir d'un apunt (fa servir la teva subscripció de Claude). |
 | **Fórmules** · **Glossari** · **Mapa** | Cada fórmula, cada terme definit i quins apunts es basen en quins: un graf en 2D o 3D, acolorit segons com recordes cada apunt. |
 
@@ -33,6 +34,8 @@ Els teus apunts continuen sent fitxers Markdown normals. Les **lliçons** (`lear
 - Les paraules subratllades són termes que defineixen els teus apunts: passa-hi el cursor per sobre. Els enllaços a altres apunts en mostren una previsualització.
 - **Explica-ho tu** (en una lliçó, o al menú `…` per a una secció): explica-ho amb les teves paraules; el model
   local (o Claude) et diu quines idees clau has tractat, què has de corregir, i et fa una pregunta.
+- La pestanya **Relacionats** del tauler dret mostra passatges d'altres documents sobre la secció que estàs
+  llegint, i et segueix mentre et desplaces.
 - L'**índex** del tauler dret segueix la secció que llegeixes; el menú `…` té el
   full resum i el codi font.
 
@@ -63,6 +66,7 @@ targetes de repàs. El tutorial mostra cadascun en directe amb el seu codi.
 | Tecles | Fa |
 |---|---|
 | <kbd>Ctrl</kbd>+<kbd>K</kbd> | cerca apunts, lliçons i ordres |
+| <kbd>Ctrl</kbd>+<kbd>Maj</kbd>+<kbd>K</kbd> | anota una idea a la teva safata d’entrada |
 | <kbd>Ctrl</kbd>+<kbd>\</kbd> | mostra o amaga la barra lateral |
 | <kbd>?</kbd> | aquesta pàgina |
 | <kbd>A</kbd>–<kbd>E</kbd> · <kbd>Retorn</kbd> | tria una opció · comprova i passa a la targeta següent |
