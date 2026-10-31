@@ -1339,4 +1339,10 @@ export default {
   'A PDF, a web page, an Anki deck or a notebook.': 'Un PDF, une page web, un paquet Anki ou un notebook.',
   'New here? Take the one-minute tour, then try the tutorial: a small folder where every feature is live.': 'Première fois ? Faites la visite d’une minute, puis essayez le tutoriel : un petit dossier où tout fonctionne pour de vrai.',
   'Questions are matched by words now. A small search model ({model}, downloaded once through Ollama) also finds passages that use other words.': 'Pour l’instant, les questions cherchent les mêmes mots. Un petit modèle de recherche ({model}, téléchargé une fois via Ollama) trouve aussi les passages qui emploient d’autres mots.',
+  'Show pictures from {site}': 'Afficher les images de {site}',
+  'Forget them': 'Les oublier',
+  'Pictures from the web show from {n} site you allowed.|Pictures from the web show from {n} sites you allowed.': { one: 'Les images du web s’affichent depuis {n} site que vous avez autorisé.', other: 'Les images du web s’affichent depuis {n} sites que vous avez autorisés.' },
+  'That picture is not on a public website.': 'Cette image n’est pas sur un site web public.',
+  'That picture could not be loaded.': 'Cette image n’a pas pu être chargée.',
+  'Another file already has that name, so this lesson can\'t move.': 'Un autre fichier porte déjà ce nom : cette leçon ne peut donc pas être déplacée.',
 } satisfies Dict

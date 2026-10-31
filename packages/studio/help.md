@@ -22,7 +22,7 @@ choose who writes the lessons:
 | **Your coding assistant** | Claude Code, Codex, OpenCode or Pi: MDlearn gets the folder ready and gives you one command. |
 | **A chat** | ChatGPT, Claude.ai or Gemini: attach your files, paste the MDlearn prompt, and bring the answer back with **Import → From a chat**. |
 
-Lessons appear as they are written. In the editor, paste or drop a screenshot to add a picture. Click any picture to see it larger.
+Lessons appear as they are written. In the editor, paste or drop a screenshot to add a picture. Click any picture to see it larger. A picture from the web waits until you allow its site, because a document could use one to send information out.
 
 To change a course after you've started, open its overview page. You can move or pause a lesson, add class files, or ask for a change. Cards keep their schedule, even with new titles.
 

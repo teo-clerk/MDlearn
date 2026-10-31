@@ -5,7 +5,8 @@ import { Check, Monitor, Moon, Sun } from 'lucide-react'
 import { useUi, type CompanionKind, type Theme } from '../state/ui'
 import { ACCENTS, applyAccent, parseHex, savedAccent, swatch, type Accent, type AccentId } from '../lib/accent'
 import { applyColour, colourOn } from '../lib/colour'
-import { LANGS, currentLang, setLang, t } from '../i18n'
+import { forgetSites, useAllowedSites } from '../prose/webPictures'
+import { LANGS, currentLang, setLang, t, tp } from '../i18n'
 import { Section } from './Section'
 
 const ACCENT_NAMES: Record<AccentId, () => string> = {
@@ -17,6 +18,7 @@ export function Appearance() {
   const theme = useUi((s) => s.theme), setTheme = useUi((s) => s.setTheme)
   const [accent, setAccent] = useState<Accent>(savedAccent)
   const [colour, setColour] = useState(colourOn)
+  const sites = useAllowedSites()
   const companion = useUi((s) => s.companion), setCompanion = useUi((s) => s.setCompanion)
   const companions: [CompanionKind, string][] = [['off', t('Off')], ['orb', t('Orb')], ['pixel', t('Pixel')]]
   const custom = parseHex(accent) ? accent : null
@@ -38,6 +40,10 @@ export function Appearance() {
         <input type="checkbox" checked={colour} onChange={(e) => { setColour(e.target.checked); applyColour(e.target.checked) }} className="mt-0.5" />
         <span>{t('Colour in notes')}<span className="block text-[12.5px] text-muted">{t('Callouts, formula terms and highlights. Each colour has a job, and icons and text say the same thing.')}</span></span>
       </label>
+      <p className="text-[13.5px]">
+        {tp(sites.length, 'Pictures from the web show from {n} site you allowed.', 'Pictures from the web show from {n} sites you allowed.')}
+        {sites.length > 0 && <> <button type="button" title={sites.join(', ')} onClick={forgetSites} className="text-muted underline underline-offset-2 hover:text-text cursor-pointer">{t('Forget them')}</button></>}
+      </p>
       <div>
         <p className="text-[12.5px] text-muted" id="companion-label">{t('Companion')}</p>
         <div role="radiogroup" aria-labelledby="companion-label" className="mt-1.5 flex flex-wrap gap-1.5">

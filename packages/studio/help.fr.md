@@ -22,7 +22,7 @@ n'importe quelle IA. Choisissez ensuite qui écrit les leçons :
 | **Votre assistant de code** | Claude Code, Codex, OpenCode ou Pi : MDlearn prépare le dossier et vous donne une seule commande. |
 | **Un chat** | ChatGPT, Claude.ai ou Gemini : joignez vos fichiers, collez le prompt MDlearn et rapportez la réponse avec **Importer → Depuis un chat**. |
 
-Les leçons apparaissent au fur et à mesure. Dans l'éditeur, collez ou déposez une capture pour ajouter une image. Cliquez sur une image pour l'agrandir.
+Les leçons apparaissent au fur et à mesure. Dans l'éditeur, collez ou déposez une capture pour ajouter une image. Cliquez sur une image pour l'agrandir. Une image du web attend que vous autorisiez son site, car un document pourrait s’en servir pour faire sortir des informations.
 
 Pour changer un cours déjà commencé, ouvrez sa page de présentation. Vous pouvez déplacer ou mettre en pause une leçon, ajouter des fichiers ou demander un changement. Les cartes gardent leur calendrier, même avec de nouveaux titres.
 

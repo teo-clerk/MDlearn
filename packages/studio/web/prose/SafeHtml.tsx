@@ -4,11 +4,12 @@
 // gradients and markers still work); inline styles limited to the same safe properties as the compiler;
 // relative images served from the folder; links open in a new tab. The page CSP blocks scripts as a second
 // layer. This and KaTeX are the only places that set innerHTML.
-import { useId, useMemo, type SyntheticEvent } from 'react'
+import { useEffect, useId, useMemo, useRef, type SyntheticEvent } from 'react'
 import DOMPurify from 'dompurify'
 import { cleanStyle } from '@mdlearn/core/html'
 import type { ProseContext } from './Prose'
-import { replaceFailedPicture } from './Picture'
+import { heldPicture, replaceFailedPicture } from './Picture'
+import { fromWeb, loadWebPicture, siteOf, useAllowedSites } from './webPictures'
 
 const SVG_NS = 'http://www.w3.org/2000/svg'
 const FORBID_TAGS = ['style', 'script', 'noscript', 'template', 'form', 'input', 'button', 'textarea', 'select', 'option', 'iframe', 'frame', 'frameset', 'object', 'embed', 'link', 'meta', 'base', 'dialog']
@@ -27,7 +28,11 @@ export function sanitizeHtml(html: string, cx: ProseContext, prefix: string): st
         if ((a.name === 'href' || a.name === 'xlink:href') && a.value.startsWith('#')) el.setAttribute(a.name, `#${prefix}${a.value.slice(1)}`)
       }
     }
-    if (el.tagName === 'IMG') { el.setAttribute('referrerpolicy', 'no-referrer'); el.setAttribute('tabindex', '0') }
+    if (el.tagName === 'IMG') {
+      el.setAttribute('tabindex', '0')
+      const src = el.getAttribute('src') ?? ''
+      if (fromWeb(src)) { el.setAttribute('data-web-src', src); el.removeAttribute('src') } // SafeHtml brings it in once its site is allowed
+    }
     if (el.tagName === 'IMG' && el.getAttribute('src') && cx.imageSrc && !/^(https?:|data:|blob:)/i.test(el.getAttribute('src')!)) el.setAttribute('src', cx.imageSrc(el.getAttribute('src')!))
     if (el.tagName === 'A' && el.getAttribute('href')) {
       const url = el.getAttribute('href')!
@@ -42,7 +47,20 @@ export function sanitizeHtml(html: string, cx: ProseContext, prefix: string): st
 export function SafeHtml({ html, cx, inline }: { html: string; cx: ProseContext; inline?: boolean }) {
   const prefix = `h${useId().replace(/[^a-zA-Z0-9]/g, '')}-`
   const clean = useMemo(() => sanitizeHtml(html, cx, prefix), [html, cx, prefix])
+  const box = useRef<HTMLElement>(null)
+  const sites = useAllowedSites()
+  useEffect(() => {
+    let live = true
+    for (const img of box.current?.querySelectorAll<HTMLImageElement>('img[data-web-src]') ?? []) {
+      const src = img.dataset.webSrc!
+      if (img.nextElementSibling?.classList.contains('picture-held')) img.nextElementSibling.remove()
+      img.hidden = !sites.includes(siteOf(src))
+      if (img.hidden) img.after(heldPicture(src, img.alt))
+      else loadWebPicture(src).then((url) => { if (live) img.src = url }, () => { if (live) replaceFailedPicture(img) })
+    }
+    return () => { live = false }
+  }, [clean, sites])
   const Tag = inline ? 'span' : 'div'
   const onError = (e: SyntheticEvent) => { if (e.target instanceof HTMLImageElement) replaceFailedPicture(e.target) }
-  return <Tag className={inline ? 'html-inline' : 'html-block'} onErrorCapture={onError} dangerouslySetInnerHTML={{ __html: clean }} />
+  return <Tag ref={box as never} className={inline ? 'html-inline' : 'html-block'} onErrorCapture={onError} dangerouslySetInnerHTML={{ __html: clean }} />
 }

@@ -7,6 +7,7 @@ import { bodyLimit } from 'hono/body-limit'
 import { readFileSync, statSync, existsSync } from 'node:fs'
 import { MEDIA_TYPES, mediaResponse } from './media.js'
 import { MAX_PICTURE_BYTES, savePicture } from './pictures.js'
+import { realPictureFetch, webPicture, type PictureFetch } from './web-pictures.js'
 import { installMcp, mcpCommands, prepareFolder } from './agents.js'
 import { addClassFile } from './import/class-files.js'
 import { extname, relative, join, dirname, posix } from 'node:path'
@@ -67,6 +68,8 @@ export interface Deps {
   bus: EventBus
   serverId: string
   lanUrl?: string
+  /** The network for web pictures (tests pass a stand-in). */
+  pictureFetch?: PictureFetch
   /** Claude Code availability (set by the server; absent in tests). */
   claudeStatus?: () => Promise<{ available: boolean; version?: string; error?: string }>
   knowledge?: Knowledge
@@ -489,6 +492,13 @@ export function createApp(deps: Deps): Hono {
 
   // ---- editor: read with a version stamp, save without overwriting someone else's change, preview, history
   app.get('/api/w/:ws/file', need('read', o), (c) => c.json(readFileInfo(ws(c), deps.workspaces, pathParam(c))))
+  // an <img> can't send the header, so a document can't reach this route by naming it as a picture
+  app.get('/api/web-picture', need('read', o), async (c) => {
+    if (c.req.header('x-mdl') !== '1') return c.json({ error: { code: 'header', message: 'Missing X-MDL header.' } }, 403)
+    const { bytes, type } = await webPicture(c.req.query('url') ?? '', deps.pictureFetch ?? realPictureFetch)
+    return c.body(bytes as Uint8Array<ArrayBuffer>, 200, { 'Content-Type': type, 'Cache-Control': 'private, max-age=86400' })
+  })
+
   app.post('/api/w/:ws/pictures', need('write', o), bodyLimit({ maxSize: MAX_PICTURE_BYTES, onError: (cx) => cx.json({ error: { code: 'too-large', message: 'That picture is larger than 20 MB.' } }, 413) }), async (c) => {
     const h = ws(c), body = await c.req.parseBody(), file = body['file']
     if (typeof file !== 'object' || !('arrayBuffer' in file)) throw new UserError('empty', 'No file was received.')

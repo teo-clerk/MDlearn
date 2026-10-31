@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs'
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { workspace, sourceDocs } from '@mdlearn/core/node'
@@ -15,6 +15,15 @@ function source() {
 }
 
 describe('getting a folder ready for any assistant', () => {
+  it('does not write through a link left in the skills folder', () => {
+    const root = tmp('mdl-agents-'), outside = tmp('mdl-outside-')
+    writeFileSync(join(outside, 'mine.txt'), 'keep')
+    mkdirSync(join(root, '.agents/skills'), { recursive: true })
+    symlinkSync(outside, join(root, '.agents/skills/mdlearn-course'))
+    prepareFolder(root, source())
+    expect(readdirSync(outside)).toEqual(['mine.txt'])
+    expect(lstatSync(join(root, '.agents/skills/mdlearn-course')).isSymbolicLink()).toBe(false)
+  })
   it('writes the instructions and the skills', () => {
     const root = tmp('mdl-agent-')
     expect(prepareFolder(root, source())).toEqual({ written: ['.agents/skills/', 'AGENTS.md', 'CLAUDE.md'], kept: [] })

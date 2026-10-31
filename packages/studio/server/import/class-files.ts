@@ -16,7 +16,10 @@ const kindOf = (name: string): ClassFile['kind'] => {
   return ext === '.docx' ? 'word' : ext === '.pptx' ? 'slides' : ext === '.pdf' ? 'pdf' : /^\.(png|jpe?g|gif|webp)$/.test(ext) ? 'picture' : /^\.(md|markdown|txt)$/.test(ext) ? 'text' : 'other'
 }
 /** Keep the file's own name, which is what the person knows it by, without anything that could make it a path. */
-const cleanName = (name: string) => name.replace(/[\\/]/g, '_').replace(/[\0-\x1f]/g, '').replace(/^\.+/, '').slice(-120) || 'file'
+const cleanName = (name: string) => {
+  const clean = name.replace(/[\\/]/g, '_').replace(/[\0-\x1f]/g, '').replace(/^\.+/, '').replace(/[. ]+$/, '').slice(-120) || 'file'
+  return /^(con|prn|aux|nul|com\d|lpt\d)(\.|$)/i.test(clean) ? `_${clean}` : clean // Windows reserves these names
+}
 
 async function convert(h: Handle, stem: string, slug: string, kind: ClassFile['kind'], bytes: Uint8Array): Promise<Partial<ClassFile>> {
   const media = posix.join(SOURCES, 'media', slug)

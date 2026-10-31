@@ -1,4 +1,5 @@
 // A course someone has started: its lessons and progress, their order, and the cards an edit left behind.
+import { randomUUID } from 'node:crypto'
 import { existsSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 import { basename, dirname, join, relative, sep } from 'node:path'
 import { askable, carriedOver, courseChanges, deriveCards, lostCards, pinIds, retrievability, type Lesson } from '@mdlearn/core'
@@ -41,7 +42,7 @@ export function courseInfo(h: Handle, doc: string): CourseInfo {
 
 /** Swap two paths; either may be missing. */
 function swap(a: string, b: string, aTo: string, bTo: string) {
-  const parked = `${a}.moving`
+  const parked = `${a}.${randomUUID()}.moving`
   if (existsSync(a)) renameSync(a, parked)
   if (existsSync(b)) renameSync(b, bTo)
   if (existsSync(parked)) renameSync(parked, aTo)
@@ -57,12 +58,13 @@ export function moveLesson(h: Handle, doc: string, lessonPath: string, by: -1 | 
   if (!na || !nb) throw new UserError('no-number', 'This lesson has no number in its file name, so its name sets its place.')
   const aName = nb + basename(a.path).slice(na.length), bName = na + basename(b.path).slice(nb.length)
   const aTo = join(dirname(a.abs), aName), bTo = join(dirname(b.abs), bName)
+  if ((aTo !== b.abs && existsSync(aTo)) || (bTo !== a.abs && existsSync(bTo))) throw new UserError('exists', 'Another file already has that name, so this lesson can\'t move.')
   swap(a.abs, b.abs, aTo, bTo)
   const notes = (p: string) => join(h.root, '.mdlearn', 'notes', `${posix(relative(h.root, p))}.json`)
   swap(notes(a.abs), notes(b.abs), notes(aTo), notes(bTo))
   const overview = courseDoc(h, doc), text = readFileSync(overview, 'utf8')
   const nameA = basename(a.path), nameB = basename(b.path)
-  const linked = text.replace(new RegExp(`${escape(nameA)}|${escape(nameB)}`, 'g'), (m) => (m === nameA ? aName : bName))
+  const linked = text.replace(new RegExp(`(?<![\\w.-])(?:${escape(nameA)}|${escape(nameB)})(?![\\w.-])`, 'g'), (m) => (m === nameA ? aName : bName))
   if (linked !== text) writeFileSync(overview, linked)
 }
 const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')

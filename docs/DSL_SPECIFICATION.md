@@ -434,7 +434,7 @@ Natural frequencies keep the base rate visible.
 
 - Images: `![alt](url)`; alt text is required (W604). Image URLs must be `https` or relative; link URLs
   `http(s)`, `mailto` or relative. Anything else (`javascript:`, `data:`) is removed. An `https` picture
-  loads straight from its site with no referrer; one that fails leaves its alt text and a link. An image whose
+  waits until the reader allows its site, then comes through Studio; one that fails leaves its alt text and a link. An image whose
   address is a video (`![Talk](clips/talk.mp4)`, `![](https://youtu.be/…)`) alone in its paragraph is a
   video (§8.15); inside a sentence a YouTube or Vimeo address becomes a link and a file its title.
 - Diagrams: ` ```mermaid ` fences. Quote node labels that contain punctuation (`A["P(+) = 0.0594"]`).

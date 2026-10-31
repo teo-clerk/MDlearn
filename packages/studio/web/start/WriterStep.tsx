@@ -8,6 +8,7 @@ import { useUi } from '../state/ui'
 import { Button, ErrorNote, Spinner } from '../ui/primitives'
 import { Command, CopyButton } from '../settings/Command'
 import { promptFor } from '../settings/prompt'
+import { shellPath } from '../lib/shell'
 import { LANGS, currentLang, t, tp } from '../i18n'
 import type { PreparedFolder } from '../../shared/types'
 
@@ -80,7 +81,7 @@ function WithAssistant({ ws, root }: { ws: string; root: string }) {
         {TOOLS.map((x) => <button key={x.id} role="tab" aria-selected={x.id === tool.id} onClick={() => setTool(x)} className={`rounded-[6px] px-2.5 py-1 text-[13px] cursor-pointer ${x.id === tool.id ? 'bg-hover font-medium' : 'text-muted hover:text-text'}`}>{x.name}</button>)}
       </div>
       <p className="text-[13.5px]">{t('Run this in a terminal:')}</p>
-      <Command text={`cd "${root}"\n${tool.run(request())}`} />
+      <Command text={`cd ${shellPath(root)}\n${tool.run(request())}`} />
       {!!ready.kept.length && <p className="text-[13px] text-warn">{t('Your own {file} was kept. Add a line to it: follow .agents/skills/mdlearn-course/SKILL.md.', { file: ready.kept[0] })}</p>}
     </div>
   )

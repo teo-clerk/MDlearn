@@ -148,6 +148,24 @@ describe('a course you have started', () => {
   })
 })
 
+describe('moving a lesson safely', () => {
+  it('leaves a longer file name that contains the moved name alone', async () => {
+    const s = setup()
+    writeFileSync(join(s.root, 'course.md'), `${readFileSync(join(s.root, 'course.md'), 'utf8')}\n[Later](101-heat.learn.md)\n`)
+    expect((await s.post('/course/move', { doc: 'course.md', lesson: '01-heat.learn.md', by: 1 })).status).toBe(200)
+    expect(readFileSync(join(s.root, 'course.md'), 'utf8')).toContain('[Later](101-heat.learn.md)')
+  })
+  it('refuses to overwrite a third file that already has the new name', async () => {
+    const s = setup()
+    writeFileSync(join(s.root, '01-heat.learn.md'), lesson('Heat', 'What heat is'))
+    writeFileSync(join(s.root, '01-engines.learn.md'), lesson('Other', 'Something else'))
+    const r = await s.post('/course/move', { doc: 'course.md', lesson: '02-engines.learn.md', by: -1 })
+    expect(r.status).toBeGreaterThanOrEqual(400)
+    expect(readFileSync(join(s.root, '01-engines.learn.md'), 'utf8')).toContain('Something else')
+    expect(existsSync(join(s.root, '02-engines.learn.md'))).toBe(true)
+  })
+})
+
 describe('changing a started course with an AI', () => {
   it('writes the studied ids down first, shows the AI where you stand, and reports what happened', async () => {
     const s = setup()

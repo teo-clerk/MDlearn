@@ -85,8 +85,8 @@ export function security(o: SecurityOptions): MiddlewareHandler {
 }
 export function pageCsp(dev: boolean): string {
   return [
-    // pictures may come from the web (a document can name any https address); nothing else from outside loads by itself
-    "default-src 'self'", `script-src 'self'${dev ? " 'unsafe-inline'" : ''}`, "style-src 'self' 'unsafe-inline'", "img-src 'self' data: blob: https:",
+    // nothing from outside loads by itself: a web picture comes through the server once its site is allowed (web-pictures.ts)
+    "default-src 'self'", `script-src 'self'${dev ? " 'unsafe-inline'" : ''}`, "style-src 'self' 'unsafe-inline'", "img-src 'self' data: blob:",
     "font-src 'self' data:", `connect-src 'self'${dev ? ' ws: wss:' : ''}`, "media-src 'self'",
     // the only outside pages a document can open in place: YouTube (privacy-enhanced domain) and Vimeo players,
     // loaded only when the reader presses play

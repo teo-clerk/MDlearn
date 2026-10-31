@@ -7,6 +7,7 @@ import { spawn } from 'node:child_process'
 import { getRequestListener } from '@hono/node-server'
 import type { FSWatcher } from 'chokidar'
 import { createApp } from './app.js'
+import type { PictureFetch } from './web-pictures.js'
 import { EventBus } from './bus.js'
 import { settingsStore } from './settings.js'
 import { Workspaces } from './workspaces.js'
@@ -32,6 +33,8 @@ export interface StudioOptions {
   fakeAi?: boolean
   /** Use the stand-in TeX engine instead of one installed on this computer (tests). */
   fakeTex?: boolean
+  /** A stand-in for the network behind web pictures (tests). */
+  pictureFetch?: PictureFetch
 }
 export interface Studio { url: string; lanUrl?: string; qr?: string; port: number; close(): Promise<void> }
 
@@ -60,7 +63,7 @@ export async function startStudio(opts: StudioOptions = {}): Promise<Studio> {
   const deps = { version: VERSION, security, settings, workspaces, bus, serverId: randomUUID(), jobs, engine,
     claudeStatus: () => (opts.fakeAi ? Promise.resolve({ available: true, version: 'demo' }) : claudeStatus(settings.get().claude)),
     claudeOnce: opts.fakeAi ? fakeOnce : (req: { system: string; prompt: string; signal?: AbortSignal }) => claudeOnce(settings.get().claude, req),
-    latex: new Latex(opts.fakeTex ? { runner: fakeRunner, engines: fakeEngines } : {}) }
+    latex: new Latex(opts.fakeTex ? { runner: fakeRunner, engines: fakeEngines } : {}), pictureFetch: opts.pictureFetch }
   const app = createApp(deps)
   const api = getRequestListener(app.fetch)
 

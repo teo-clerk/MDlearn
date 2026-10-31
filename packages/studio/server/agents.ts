@@ -2,7 +2,7 @@
 // Codex, OpenCode, Pi and others) and .agents/skills/ (the Agent Skills location they share). Claude Code gets there
 // through CLAUDE.md. Nothing outside the folder changes, and only when someone asks for it. The MCP tools are extra:
 // the server is copied to a fixed place, because an installed app's own path can change, and the person adds it.
-import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { inRoot } from '@mdlearn/core/node'
@@ -23,6 +23,8 @@ export function prepareFolder(root: string, source: string): PreparedFolder {
   if (!existsSync(join(source, 'AGENTS.md'))) throw new UserError('not-found', 'The integrations are missing; run `npm run build -w @mdlearn/studio`.')
   const skills = inside(root, '.agents/skills')
   mkdirSync(dirname(skills), { recursive: true })
+  // cleared first: copying into a link someone left there would write through it, wherever it points
+  for (const skill of readdirSync(join(source, 'skills'))) rmSync(join(skills, skill), { recursive: true, force: true })
   cpSync(join(source, 'skills'), skills, { recursive: true, force: true })
   const written = ['.agents/skills/'], kept: string[] = []
   const agents = inside(root, 'AGENTS.md')

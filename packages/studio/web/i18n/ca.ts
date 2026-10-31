@@ -1339,4 +1339,10 @@ export default {
   'A PDF, a web page, an Anki deck or a notebook.': 'Un PDF, una pàgina web, una baralla d’Anki o un quadern.',
   'New here? Take the one-minute tour, then try the tutorial: a small folder where every feature is live.': 'Primera vegada? Fes la visita d’un minut i després prova el tutorial: una carpeta petita on tot funciona de debò.',
   'Questions are matched by words now. A small search model ({model}, downloaded once through Ollama) also finds passages that use other words.': 'Ara com ara les preguntes busquen les mateixes paraules. Un petit model de cerca ({model}, descarregat una vegada amb Ollama) també troba passatges que fan servir altres paraules.',
+  'Show pictures from {site}': 'Mostra les imatges de {site}',
+  'Forget them': 'Oblida’ls',
+  'Pictures from the web show from {n} site you allowed.|Pictures from the web show from {n} sites you allowed.': { one: 'Les imatges del web es mostren des d’{n} lloc que has permès.', other: 'Les imatges del web es mostren des de {n} llocs que has permès.' },
+  'That picture is not on a public website.': 'Aquesta imatge no és en un lloc web públic.',
+  'That picture could not be loaded.': 'No s’ha pogut carregar aquesta imatge.',
+  'Another file already has that name, so this lesson can\'t move.': 'Un altre fitxer ja té aquest nom, així que aquesta lliçó no es pot moure.',
 } satisfies Dict

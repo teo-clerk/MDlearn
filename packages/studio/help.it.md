@@ -22,7 +22,7 @@ scrive le lezioni:
 | **Il tuo assistente di programmazione** | Claude Code, Codex, OpenCode o Pi: MDlearn prepara la cartella e ti dà un solo comando. |
 | **Una chat** | ChatGPT, Claude.ai o Gemini: allega i file, incolla il prompt di MDlearn e riporta la risposta con **Importa → Da una chat**. |
 
-Le lezioni compaiono man mano che vengono scritte. Nell'editor, incolla o trascina uno screenshot per aggiungere un'immagine. Clicca su un'immagine per vederla più grande.
+Le lezioni compaiono man mano che vengono scritte. Nell'editor, incolla o trascina uno screenshot per aggiungere un'immagine. Clicca su un'immagine per vederla più grande. Un'immagine dal web aspetta finché non autorizzi il suo sito, perché un documento potrebbe usarla per far uscire delle informazioni.
 
 Per cambiare un corso già iniziato, apri la sua pagina di presentazione. Puoi spostare o mettere in pausa una lezione, aggiungere file o chiedere una modifica. Le carte mantengono la loro programmazione, anche con nuovi titoli.
 

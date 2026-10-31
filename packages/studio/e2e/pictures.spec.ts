@@ -4,22 +4,23 @@ import { openFolder } from './helpers'
 // a real 1×1 PNG
 const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
 
-test('a document shows pictures from the web, says when one is gone, and opens them larger', async ({ page }) => {
-  const refused: string[] = []
+test('a web picture waits for a click, comes through the app, opens larger, and the choice can be taken back', async ({ page }) => {
+  const refused: string[] = [], outside: string[] = []
   page.on('console', (m) => { if (/Content Security Policy/.test(m.text())) refused.push(m.text()) })
-  await page.route('https://pictures.example.org/**', (route) => (route.request().url().endsWith('/gone.png')
-    ? route.fulfill({ status: 404, body: 'gone' })
-    : route.fulfill({ status: 200, contentType: 'image/png', body: Buffer.from(PNG, 'base64') })))
+  await page.route((url) => url.hostname.endsWith('example.org'), (route) => { outside.push(route.request().url()); return route.fulfill({ status: 200, body: '' }) })
   const ws = await openFolder(page)
   await page.goto(`/w/${ws}/doc?path=demo%2Fweb-pictures.md`)
+
+  await expect(page.getByText('A tide gauge')).toBeVisible()
+  await expect(page.getByRole('img', { name: 'A tide gauge' })).toHaveCount(0)
+  await expect(page.getByRole('img', { name: 'A chart in HTML' })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Show pictures from pictures.example.org' }).first().click()
 
   const gauge = page.getByRole('img', { name: 'A tide gauge' })
   await expect(gauge).toBeVisible()
   await expect.poll(() => gauge.evaluate((i: HTMLImageElement) => i.naturalWidth)).toBeGreaterThan(0)
-  await expect(gauge).toHaveAttribute('referrerpolicy', 'no-referrer')
   const html = page.getByRole('img', { name: 'A chart in HTML' })
   await expect.poll(() => html.evaluate((i: HTMLImageElement) => i.naturalWidth)).toBeGreaterThan(0)
-  await expect(html).toHaveAttribute('referrerpolicy', 'no-referrer')
 
   await expect(page.getByText('A lost picture')).toBeVisible()
   await expect(page.getByRole('link', { name: 'Open the picture' })).toHaveAttribute('href', 'https://pictures.example.org/gone.png')
@@ -36,7 +37,29 @@ test('a document shows pictures from the web, says when one is gone, and opens t
   await expect(zoom).toBeVisible()
   await zoom.click()
   await expect(zoom).toBeHidden()
+
+  await page.reload()
+  await expect(page.getByRole('img', { name: 'A tide gauge' })).toBeVisible()
+
+  await page.goto(`/w/${ws}/settings`)
+  await page.getByRole('button', { name: 'Forget them' }).click()
+  await page.goto(`/w/${ws}/doc?path=demo%2Fweb-pictures.md`)
+  await expect(page.getByRole('button', { name: 'Show pictures from pictures.example.org' }).first()).toBeVisible()
+  await expect(page.getByRole('img', { name: 'A tide gauge' })).toHaveCount(0)
+
   expect(refused).toEqual([])
+  expect(outside).toEqual([])
+})
+
+test('nothing in a document reaches the web by itself', async ({ page }) => {
+  // a route only sees what really leaves the browser: a request the page policy stops never gets this far
+  const outside: string[] = []
+  await page.route((url) => url.hostname.endsWith('example.org'), (route) => { outside.push(route.request().url()); return route.fulfill({ status: 200, body: '' }) })
+  const ws = await openFolder(page)
+  await page.goto(`/w/${ws}/doc?path=demo%2Fweb-tricks.md`)
+  await expect(page.getByText('A cell')).toBeVisible()
+  await page.waitForLoadState('networkidle')
+  expect(outside).toEqual([])
 })
 
 test('a picture pasted into the editor is saved in the folder and shows in the preview', async ({ page }) => {
