@@ -1,6 +1,6 @@
 {
   "name": "@mdlearn/core",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "MDlearn compiler, importer, answer checkers and learning models (DOM-free).",
   "license": "MIT",
   "author": "Teo Clerk",

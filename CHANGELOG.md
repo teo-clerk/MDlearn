@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.4.0 — 2026-10-31
 
 **MDlearn is now open source,** under the MIT License. The README, contribution guide and security policy are written
 for people who are new to it, and the Help page lists the open-source licences of what's inside.
@@ -42,9 +42,11 @@ a link.
 
 **Fixes.** Jumping to a section could shift the whole app up and hide its top bar until you reloaded. Claude Code now
 uses whatever it's signed in with, including your own `ANTHROPIC_API_KEY`. A damaged notes file no longer breaks Today.
+`mdlearn --version` works, and a mistyped option gets a short message instead of a crash.
 
-**Any coding assistant.** Codex, OpenCode, Pi and Claude Code can write lessons in a folder with nothing to install:
-`mdlearn agents`, or *Get this folder ready for my AI* in Ctrl+K, puts the instructions in the folder. Your own
+**Other coding assistants.** A course folder carries its own instructions for Codex, OpenCode, Pi and Claude Code, with
+nothing to install: `mdlearn agents`, or *Get this folder ready for my AI* in Ctrl+K, puts them there. A whole course has
+been tested from start to finish with Claude Code only. Your own
 `AGENTS.md` or `CLAUDE.md` is never replaced. Optional MCP tools let them quiz you too (Settings → Use MDlearn in other apps).
 
 ## 1.3.0 — 2026-10-31
