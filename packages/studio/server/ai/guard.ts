@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync, statSync, unlinkSyn
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import { realPath } from '@mdlearn/core/node'
 
-const PROTECTED = new Set(['.git', '.claude', '.mdlearn', 'node_modules', '.venv'])
+const PROTECTED = new Set(['.git', '.claude', '.agents', '.mdlearn', 'node_modules', '.venv'])
 /** Is `abs` a Markdown file inside one of the allowed folders (symlinks resolved, protected folders excluded)? */
 export function writeAllowed(abs: string, scope: string[], keepOut: string[] = []): string | null {
   const target = realPath(resolve(abs))

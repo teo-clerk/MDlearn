@@ -10,6 +10,8 @@ import { settingsStore } from '../server/settings'
 import { Workspaces } from '../server/workspaces'
 import { JobManager, type JobSummary } from '../server/ai/jobs'
 import { FakeEngine } from '../server/ai/fake'
+import { writeAllowed } from '../server/ai/guard'
+import { keptOut } from '../server/ai/recipes'
 import { today } from '../server/today'
 import type { CourseInfo } from '../shared/types'
 
@@ -198,6 +200,18 @@ describe('highlights with a purpose', () => {
     expect(first.color).toBe('confusing')
     expect(today(s.h).confusing.map((c) => c.anchor.quote.exact)).toEqual(['work does not', 'heat flows downhill'])
     expect(today(s.h).confusing[0].explained).toBe(false)
+  })
+  it('keeps Today working when one notes file is damaged', async () => {
+    const s = setup()
+    mkdirSync(join(s.root, '.mdlearn/notes'), { recursive: true })
+    writeFileSync(join(s.root, '.mdlearn/notes/broken.md.json'), '{ not json')
+    expect(today(s.h).confusing).toEqual([])
+  })
+  it('keeps AI jobs out of the skills and every instruction file', () => {
+    const s = setup(), scope = [s.root], keepOut = keptOut(s.root, join(s.root, 'unit'))
+    expect(writeAllowed(join(s.root, '.agents/skills/mdlearn-course/SKILL.md'), scope, keepOut)).toMatch(/protected/)
+    expect(writeAllowed(join(s.root, 'AGENTS.md'), scope, keepOut)).toMatch(/not change/)
+    expect(writeAllowed(join(s.root, 'unit/CLAUDE.md'), scope, keepOut)).toMatch(/not change/)
   })
   it('refuses a colour that has no meaning', async () => {
     const s = setup()

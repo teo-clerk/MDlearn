@@ -15,7 +15,7 @@ import type { JobSpec } from './engine.js'
 
 type Recipe = { spec: Omit<JobSpec, 'id' | 'root'>; preWrite?: PreWrite; after?: () => JobSummary['changes'] }
 /** What stays out of an AI's reach in a course folder, even with the folder in its write scope. */
-export const keptOut = (dir: string) => [join(dir, SOURCES), join(dir, 'AGENTS.md'), join(dir, 'CLAUDE.md')]
+export const keptOut = (root: string, dir = root) => [...new Set([join(dir, SOURCES), ...[dir, root].flatMap((d) => [join(d, 'AGENTS.md'), join(d, 'CLAUDE.md')])])]
 const posix = (p: string) => p.split(sep).join('/')
 
 /** A course for one document: the server writes lesson skeletons (one card per subsection, linked to the source), Claude fills them. */
@@ -116,7 +116,7 @@ export function changeCourse(h: Handle, doc: string, request: string): Recipe {
   return {
     spec: {
       recipe: 'course.change', title: `Change: ${request.slice(0, 70)}`, maxTurns: 40 + 15 * rows.length,
-      writeScope: [...new Set([dir, ...rows.map((r) => dirname(r.abs))])], keepOut: keptOut(dir),
+      writeScope: [...new Set([dir, ...rows.map((r) => dirname(r.abs))])], keepOut: keptOut(h.root, dir),
       prompt: `Change the MDlearn course whose overview is ${doc}. The student asks: ${request}
 
 They have been studying this course, and their progress belongs to each card's id, so change it without losing that:

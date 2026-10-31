@@ -13,7 +13,7 @@ import { processor } from './parser.js'
 export { processor, remarkBlockDirectives } from './parser.js'
 
 /** `## Title {#id}`. An id holds what a slug can, so that a card with an Italian or French title can keep the id it was given. */
-export const CARD_ID = /\s*\{#([\p{L}\p{M}\p{N}_-]+)\}\s*$/u
+export const CARD_ID = /\{#([\p{L}\p{M}\p{N}_-]+)\}\s*$/u
 
 export interface CompileResult {
   lesson: Lesson | null; diagnostics: Diagnostic[]; stage0: Stage0Result
@@ -90,12 +90,12 @@ export function compile(source: string, opts: CompileOptions = {}): CompileResul
   for (let i = Math.max(firstCard, 0); firstCard >= 0 && i < children.length; ) {
     const h = children[i]
     let j = i + 1; while (j < children.length && !isCard(children[j])) j++
-    const ctitle = toString(h).replace(CARD_ID, '')
+    const ctitle = toString(h).replace(CARD_ID, '').trimEnd()
     const explicit = CARD_ID.exec(toString(h))?.[1]
     const slugged = slugger.slug(explicit ?? ctitle) // an explicit id is counted too, so a card of the same title can't take it
     const cid = explicit ?? slugged
     const blocks = toBlocks(children.slice(i + 1, j), cid)
-    cards.push({ id: cid, title: headingTitle(h).replace(CARD_ID, ''), blocks })
+    cards.push({ id: cid, title: headingTitle(h).replace(CARD_ID, '').trimEnd(), blocks })
     cardLines.push(lineOf(h))
     cardLint(blocks, children.slice(i + 1, j), h)
     i = j

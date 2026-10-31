@@ -7,6 +7,14 @@ import type { ReviewEvent } from './learn/srs.js'
 
 const LESSON_ID = /^[a-z0-9][a-z0-9-]*$/ // what frontmatter accepts; a file name can be anything
 
+/** A heading line without its closing `##`. By hand, because a regex here is quadratic on a long run of spaces. */
+function headingText(line: string): string {
+  const text = line.trimEnd()
+  let end = text.length
+  while (end > 0 && text[end - 1] === '#') end--
+  return end < text.length && /\s/.test(text[end - 1] ?? '') ? text.slice(0, end).trimEnd() : text
+}
+
 /** The lesson with its ids written out: `## Title {#id}` on each card (or on `only`), and `id:` in the frontmatter. */
 export function pinIds(source: string, path: string, only?: ReadonlySet<string>): string {
   const bom = source.startsWith('\uFEFF') ? '\uFEFF' : ''
@@ -15,8 +23,8 @@ export function pinIds(source: string, path: string, only?: ReadonlySet<string>)
   const lines = source.slice(bom.length).split('\n')
   lesson.cards.forEach((card, i) => {
     const n = cardLines[i] - 1, line = lines[n]
-    if (!card.id || !/^ {0,3}#/.test(line) || CARD_ID.test(line.replace(/\s+#+\s*$/, '')) || (only && !only.has(card.id))) return
-    lines[n] = `${line.trimEnd().replace(/\s+#+$/, '')} {#${card.id}}${line.endsWith('\r') ? '\r' : ''}`
+    if (!card.id || !/^ {0,3}#/.test(line) || CARD_ID.test(headingText(line)) || (only && !only.has(card.id))) return
+    lines[n] = `${headingText(line)} {#${card.id}}${line.endsWith('\r') ? '\r' : ''}`
   })
   const text = lines.join('\n')
   const front = /^---(\r?\n)([\s\S]*?)\r?\n---\s*(\r?\n|$)/.exec(text)

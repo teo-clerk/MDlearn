@@ -1,13 +1,14 @@
 // Notes and AI conversations about a passage, stored beside the files (never inside your Markdown):
 // <folder>/.mdlearn/notes/<document path>.json. Anchored by the quoted text (W3C TextQuoteSelector) and
 // the section, so they survive edits to the document.
-import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, statSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { randomUUID } from 'node:crypto'
 import { z } from 'zod'
 import type { Handle } from './workspaces.js'
 import { UserError } from './workspaces.js'
 
+const MAX_NOTES_FILE = 5 * 1024 * 1024
 export const NoteColorSchema = z.enum(['important', 'confusing', 'exam'])
 export const AnchorSchema = z.object({
   section: z.string().max(200).nullable(),
@@ -41,6 +42,10 @@ function read(path: string): Note[] {
   if (!r.success) throw new UserError('notes', `The notes file ${path} is damaged; it was left untouched.`)
   return r.data.notes
 }
+/** For lists across files: one damaged or huge file can't take the rest down. Its own document still reports it. */
+function readOrSkip(path: string): Note[] {
+  try { return statSync(path).size > MAX_NOTES_FILE ? [] : read(path) } catch { return [] }
+}
 function write(path: string, notes: Note[]) {
   mkdirSync(dirname(path), { recursive: true })
   const tmp = `${path}.${process.pid}.tmp`
@@ -54,8 +59,8 @@ export const notesStore = {
   marked(h: Handle, color: Note['color'], limit: number): Note[] {
     const dir = join(h.root, '.mdlearn', 'notes')
     if (!existsSync(dir)) return []
-    const files = readdirSync(dir, { recursive: true, encoding: 'utf8' }).filter((f) => f.endsWith('.json'))
-    return files.flatMap((f) => read(join(dir, f))).filter((n) => n.color === color).sort((a, b) => b.updated - a.updated).slice(0, limit)
+    const files = readdirSync(dir, { recursive: true, withFileTypes: true }).filter((f) => f.isFile() && f.name.endsWith('.json'))
+    return files.flatMap((f) => readOrSkip(join(f.parentPath, f.name))).filter((n) => n.color === color).sort((a, b) => b.updated - a.updated).slice(0, limit)
   },
   async create(h: Handle, doc: string, anchor: Anchor, body: string, color?: Note['color']): Promise<Note> {
     const path = fileOf(h, doc)

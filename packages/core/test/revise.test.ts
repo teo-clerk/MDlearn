@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { compile } from '../src/compile'
+import { CARD_ID, compile } from '../src/compile'
 import { carriedOver, deriveCards } from '../src/learn/srs'
 import { courseChanges, lostCards, pinIds } from '../src/revise'
 import type { Lesson } from '../src/ast'
@@ -89,6 +89,14 @@ describe('pinIds', () => {
     const after = compiled(pinned.replace('## Base rate', '## The base rate fallacy'), '/c/07-renamed.learn.md')
     expect(deriveCards(reviews).has(`${after.id}/${after.cards[0].id}`)).toBe(true)
     expect(lostCards([after], reviews, new Set())).toEqual([])
+  })
+})
+
+describe('a hostile heading', () => {
+  it('cannot stall the id check', () => {
+    const line = `## T${' '.repeat(400_000)}x`, start = performance.now()
+    CARD_ID.test(line)
+    expect(performance.now() - start).toBeLessThan(200)
   })
 })
 

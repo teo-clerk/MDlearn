@@ -8,7 +8,7 @@ import { Button, ErrorNote } from '../ui/primitives'
 import type { ConfusingPassage } from '../../shared/types'
 import { t } from '../i18n'
 
-const route = (ws: string, p: ConfusingPassage) => `${docRoute(ws, p.doc)}&note=${p.id}`
+const route = (ws: string, p: ConfusingPassage) => `${docRoute(ws, p.doc)}&note=${encodeURIComponent(p.id)}`
 
 export function Confusing({ ws, passages }: { ws: string; passages: ConfusingPassage[] }) {
   const engines = useEngines()
