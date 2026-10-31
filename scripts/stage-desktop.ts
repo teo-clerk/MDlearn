@@ -73,6 +73,7 @@ export function stage(): { packages: number; bytes: number } {
     }
   }
   cpSync(join(ROOT, 'packages/desktop/server/start.mjs'), join(OUT, 'start.mjs'))
+  cpSync(join(ROOT, 'LICENSE'), join(OUT, 'LICENSE'))
   writeFileSync(join(OUT, 'package.json'), JSON.stringify({ name: 'mdlearn-desktop-server', private: true, type: 'module' }, null, 2) + '\n')
   return { packages: seen.size, bytes: size(OUT) }
 }

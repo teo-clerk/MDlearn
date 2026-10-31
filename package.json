@@ -1,5 +1,16 @@
 {
   "name": "mdlearn",
+  "description": "Turn class files and notes into compiler-checked, spaced-repetition lessons.",
+  "license": "MIT",
+  "author": "Teo Clerk",
+  "homepage": "https://github.com/teo-clerk/MDlearn#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/teo-clerk/MDlearn.git"
+  },
+  "bugs": {
+    "url": "https://github.com/teo-clerk/MDlearn/issues"
+  },
   "private": true,
   "type": "module",
   "workspaces": [

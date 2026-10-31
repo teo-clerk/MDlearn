@@ -105,7 +105,7 @@ function findRoot(): string {
 }
 const ws: Workspace = workspace(findRoot())
 const needLearn = () => {
-  if (!lessonPaths(ws).length) fail(`no lessons in ${ws.root}. Run inside a folder with lessons (e.g. ~/CODING/ESA-PROJECTS) or pass --root <dir>.`)
+  if (!lessonPaths(ws).length) fail(`no lessons in ${ws.root}. Run inside a folder with lessons or pass --root <dir>.`)
 }
 const doc = (ref?: string) => (ref && findDoc(ws, ref)) || fail(ref ? `no document matches "${ref}" in ${ws.root}. Try \`mdlearn status\` to list documents.` : 'which document? e.g. mdlearn outline 04_sar')
 

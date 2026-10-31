@@ -1,4 +1,4 @@
-// Importer — deterministic reading of curriculum documents (ESA-PROJECTS house style and plain Markdown).
+// Importer — deterministic reading of curriculum documents (a numbered house style and plain Markdown).
 // No LLM involved: metadata, the section tree and exact section text come straight from the source,
 // so the agent only writes the learning layer and never re-types structure.
 import { unified } from 'unified'

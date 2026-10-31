@@ -2,6 +2,17 @@
   "name": "@mdlearn/cli",
   "version": "1.3.0",
   "description": "mdlearn command line: lint, build, outline, section, plan, status, review.",
+  "license": "MIT",
+  "author": "Teo Clerk",
+  "homepage": "https://github.com/teo-clerk/MDlearn#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/teo-clerk/MDlearn.git",
+    "directory": "packages/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/teo-clerk/MDlearn/issues"
+  },
   "type": "module",
   "bin": {
     "mdlearn": "./dist/index.js"

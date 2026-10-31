@@ -1,6 +1,6 @@
 ---
 name: mdlearn-tutor
-description: Run a study session from MDlearn lessons in the terminal — spaced-repetition reviews, new cards, Socratic follow-ups and ESA-style interview drills, with FSRS scheduling saved locally. Use when the user wants to study, review, be quizzed or tested, practise an interview, or asks what is due or how they are progressing.
+description: Run a study session from MDlearn lessons in the terminal — spaced-repetition reviews, new cards, Socratic follow-ups and interview drills, with FSRS scheduling saved locally. Use when the user wants to study, review, be quizzed or tested, practise an interview, or asks what is due or how they are progressing.
 ---
 
 # MDlearn tutor

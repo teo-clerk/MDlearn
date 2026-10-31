@@ -2,20 +2,21 @@
 // words, solid / shaky / again with the next review, missed cards revisited, then a short summary.
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useSearch } from 'wouter'
-import { BookOpenCheck, Check, CircleCheckBig, Film, GraduationCap, Lightbulb, Sparkles } from 'lucide-react'
+import { BookOpenCheck, Check, CircleCheckBig, Film, Lightbulb } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useStudySession, type SessionState } from './useSession'
 import { WidgetView } from '../widgets/WidgetView'
 import { Verdict } from '../widgets/Verdict'
 import { emptyDraft, prepareAnswer, ready, selfSubmitting, type Draft } from '../widgets/draft'
 import { Inline, Prose } from '../prose/Prose'
-import { Button, Empty, ErrorNote, Kbd, Spinner, linkButton } from '../ui/primitives'
+import { Button, Empty, ErrorNote, Kbd, Spinner } from '../ui/primitives'
+import { NoLessons } from '../ui/NoLessons'
 import { TopLeft } from '../layout/Shell'
 import { docRoute } from '../lib/paths'
 import { prettyTitle } from '../lib/title'
 import { Summary } from './Summary'
 import { Judge } from './Judge'
-import { studyApi, useSession, useTree } from '../api/queries'
+import { studyApi, useTree } from '../api/queries'
 import { t, tp } from '../i18n'
 import { whenText } from '../lib/when'
 
@@ -186,12 +187,7 @@ function RatingLine({ rating, when }: { rating: 1 | 2 | 3; when?: string }) {
 function Nothing({ ws }: { ws: string }) {
   const [, navigate] = useLocation()
   const tree = useTree(ws)
-  const canWrite = useSession().data?.caps.includes('write')
-  if (tree.data && !tree.data.orphanLessons.length && !tree.data.docs.some((d) => d.lessons.length)) return (
-    <Empty icon={GraduationCap} title={t('No lessons yet')} action={canWrite ? <Link href={`/start?ws=${ws}`} className={linkButton}><Sparkles className="size-[15px]" strokeWidth={1.8} aria-hidden />{t('Make lessons with an AI')}</Link> : undefined}>
-      {t('Lessons are what you study here. An AI can write them from your files, or you can make your own cards while you read.')}
-    </Empty>
-  )
+  if (tree.data && !tree.data.totals.lessons) return <NoLessons ws={ws} />
   return (
     <Empty icon={CircleCheckBig} title={t('You are all caught up')} action={<Button icon={BookOpenCheck} onClick={() => navigate(`/w/${ws}/progress`)}>{t('See your progress')}</Button>}>
       {t('Nothing is due and there are no new cards in this selection. Come back later, or read a document in the meantime.')}

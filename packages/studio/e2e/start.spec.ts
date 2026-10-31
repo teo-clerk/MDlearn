@@ -210,6 +210,12 @@ test('a folder with no lessons says so and leads to making them', async ({ page 
   await page.getByRole('link', { name: 'Make lessons with an AI' }).click()
   await expect(page.getByRole('heading', { name: 'Who writes the lessons?' })).toBeVisible()
 
+  for (const screen of ['exam', 'progress']) {
+    await page.goto(`/w/${ws}/${screen}`)
+    await expect(page.getByRole('heading', { name: 'No lessons yet' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Start the exam' })).toHaveCount(0)
+  }
+
   await page.goto(`/w/${ws}`)
   await page.getByRole('link', { name: 'Make lessons with an AI' }).click()
   await expect(page.getByRole('heading', { name: 'Who writes the lessons?' })).toBeVisible()

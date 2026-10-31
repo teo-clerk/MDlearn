@@ -6,6 +6,7 @@ import { BookOpenCheck, ChevronDown, ClipboardCheck } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { examApi, useTree } from '../api/queries'
 import { Button, Empty, ErrorNote, Spinner } from '../ui/primitives'
+import { NoLessons } from '../ui/NoLessons'
 import { TopLeft } from '../layout/Shell'
 import { ExamRun, type Given } from './ExamRun'
 import { ExamResults } from './ExamResults'
@@ -34,6 +35,7 @@ export default function ExamPage({ ws }: { ws: string }) {
   const [stage, setStage] = useState<Stage>({ kind: 'setup' })
   useEffect(() => { document.title = t('Mock exam · MDlearn Studio') }, [])
   const docs = (tree.data?.docs ?? []).filter((d) => d.lessons.length > 0)
+  if (tree.data && !tree.data.totals.lessons) return <NoLessons ws={ws} />
 
   const begin = async () => {
     setStage({ kind: 'loading' })

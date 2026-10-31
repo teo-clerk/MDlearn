@@ -98,6 +98,8 @@
    Otherwise a touchpad overscroll at the end of a pane, or anything taller than the window, slides the whole
    app up and leaves an empty band below it. */
 html, body, #root { height: 100%; overflow: clip; overscroll-behavior: none; }
+/* Fixed, so nothing inside can reach the page itself: on the root, clip still lets scrollIntoView move the whole app. */
+#root { position: fixed; inset: 0; }
 body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font-ui); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
 ::selection { background: var(--accent-soft); color: inherit; }
 * { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
@@ -213,7 +215,7 @@ details > summary::-webkit-details-marker { display: none; }
 
 /* printing: any page prints its content only; the cheat sheet sets A4 in two columns */
 @media print {
-  html, body, #root { height: auto !important; overflow: visible !important; background: #fff !important; }
+  html, body, #root { position: static !important; height: auto !important; overflow: visible !important; background: #fff !important; }
   .read a { text-decoration: none; color: inherit; }
   .no-print { display: none !important; }
   .sheet { font-size: 9.5pt; }

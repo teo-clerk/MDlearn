@@ -46,7 +46,7 @@ del examen ofrecen **Crear una tarjeta**. **Ajustes → Apariencia → Color en 
 | **IA local** | *Ajustes → IA local*: instala Ollama si falta, descarga un modelo recomendado (cada uno dice si este ordenador lo mueve bien) y elige con cuál responde Studio. |
 | **Importar** | *Importar…* en la barra lateral: una página web, un PDF, una baraja de Anki, un notebook, lecciones de un chat, o un artículo de **SciNet** si se está ejecutando en este ordenador. |
 | **Bandeja de entrada** | Ctrl+Mayús+K guarda una idea desde cualquier página, y *Bandeja de entrada* en la barra de una selección guarda un pasaje. Ordénalos en Hoy: **Tarjeta**, **Mover** a un documento, o **Hecho**. Son Markdown sencillo en `Inbox/`. |
-| **AI Studio** | Claude Code escribe o mejora lecciones a partir de un apunte (usa tu suscripción de Claude). |
+| **AI Studio** | Claude Code escribe o mejora lecciones a partir de un apunte (se ejecuta en este ordenador, con tu propia cuenta). |
 | **Fórmulas** · **Glosario** · **Mapa** | Cada fórmula, cada término definido y qué apuntes se basan en cuáles: un grafo en 2D o 3D, coloreado según lo bien que recuerdas cada apunte. |
 
 ## Mientras lees

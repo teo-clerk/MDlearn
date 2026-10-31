@@ -3,8 +3,17 @@
   "version": "1.3.0",
   "private": true,
   "description": "MDlearn Studio as a desktop app: the same Studio in its own window, no terminal needed.",
+  "license": "MIT",
   "author": "Teo Clerk",
   "homepage": "https://github.com/teo-clerk/MDlearn",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/teo-clerk/MDlearn.git",
+    "directory": "packages/desktop"
+  },
+  "bugs": {
+    "url": "https://github.com/teo-clerk/MDlearn/issues"
+  },
   "main": "dist/main.cjs",
   "desktopName": "mdlearn.desktop",
   "scripts": {

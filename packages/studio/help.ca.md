@@ -46,7 +46,7 @@ els de l'examen ofereixen **Crea una targeta**. **Configuració → Aparença �
 | **IA local** | *Configuració → IA local*: instal·la Ollama si falta, baixa un model recomanat (cadascun diu si aquest ordinador el fa anar bé) i tria amb quin respon Studio. |
 | **Importa** | *Importa…* a la barra lateral: una pàgina web, un PDF, una baralla d’Anki, un quadern, lliçons d’un xat, o un article de **SciNet** si s’està executant en aquest ordinador. |
 | **Safata d’entrada** | Ctrl+Maj+K desa una idea des de qualsevol pàgina, i *Safata d’entrada* a la barra d'una selecció desa un passatge. Endreça’ls a Avui: **Targeta**, **Mou** a un document, o **Fet**. Són Markdown senzill a `Inbox/`. |
-| **AI Studio** | Claude Code escriu o millora lliçons a partir d'un apunt (fa servir la teva subscripció de Claude). |
+| **AI Studio** | Claude Code escriu o millora lliçons a partir d'un apunt (s'executa en aquest ordinador, amb el teu compte). |
 | **Fórmules** · **Glossari** · **Mapa** | Cada fórmula, cada terme definit i quins apunts es basen en quins: un graf en 2D o 3D, acolorit segons com recordes cada apunt. |
 
 ## Mentre llegeixes

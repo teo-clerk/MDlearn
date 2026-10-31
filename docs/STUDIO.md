@@ -43,8 +43,8 @@ grades, schedules and progress.
 **Documents.** `parseDocument()` (core) reads any Markdown faithfully ("document mode": `---` kept,
 `{{…}}` literal, `<details>` folded, other HTML shown as text, a stray `$$` recovered, inline math across
 line breaks). Headings carry the outline's anchors and numbers (`§3.1`). Authored widgets and visual blocks
-inside a document work too. On the ESA corpus: 103 documents, 20,164 formulas, 0 lost math blocks, p95
-parse 150 ms (`npm run check-corpus -- ~/CODING/ESA-PROJECTS`).
+inside a document work too. On a real curriculum: 103 documents, 20,164 formulas, 0 lost math blocks, p95
+parse 150 ms (`npm run check-corpus -- <folder>`).
 
 **Lessons and answers.** Lessons reach the browser **redacted** (`redactWidget`: no keys, feedback, ideas,
 solutions). Answers are checked on the server (`checkStructured`) after validating their shape
@@ -104,7 +104,7 @@ downloader. The model in use and the search model cannot be removed.
 | Setting | Value | Why |
 |---|---|---|
 | executable | settings → SDK-bundled CLI → `mise which claude` | never the mise shim (it writes to stdout) |
-| auth | your Claude Code login; `env` is an allowlist (no `ANTHROPIC_*`) | an API key would silently take over |
+| auth | whatever the person's own Claude Code is signed in with; `env` is an allowlist that keeps `ANTHROPIC_API_KEY` | Studio never sees or stores a login, and a key set where Studio starts applies as it does in a terminal |
 | `settingSources` | `[]` + a local plugin (`dist/plugin`: the four MDlearn skills) | your user skills, hooks and MCP servers stay out |
 | MCP | `mdlearn` server only (`strictMcpConfig`) | outlines, sections, `lint_lesson` |
 | tools | Read, Glob, Grep, Write, Edit, MultiEdit, Skill, TodoWrite; no Bash, web or subagents | |
@@ -113,7 +113,7 @@ downloader. The model in use and the search model cannot be removed.
 Recipes: **create a course** (the server scaffolds lesson files from the document's outline, Claude fills
 them following the mdlearn-curriculum / mdlearn-course / mdlearn-visuals skills, then lints until clean),
 **improve a lesson** (one file), **something else** (free request, `learn/` by default), and **follow-up**
-(resumes the job's Claude session). One job runs at a time (they share your subscription limits; usage
+(resumes the job's Claude session). One job runs at a time (they share one Claude Code login; usage
 warnings are shown in the log). After a job the server re-lints every lesson it touched. **Undo** restores
 every file to its state before the job and deletes the files it created — except files you edited since.
 `--fake-ai` swaps Claude for a scripted engine (tests, demos).
@@ -266,7 +266,7 @@ reaches the browser. The CLI and MCP tutor keep self-checking, as before.
 
 The **knowledge index** (`<folder>/.mdlearn/index/knowledge.json`) holds, for each document, its display
 formulas (with section and the sentence before), defined terms, links to other documents and text chunks.
-It is built in the background on first use (about 4 s for the 105 ESA documents; instant afterwards because
+It is built in the background on first use (about 4 s for 105 documents; instant afterwards because
 unchanged files are skipped by mtime) and updated by the file watcher.
 
 - **Formulas** — every display formula in the folder, searchable by words and TeX, filtered by document;
@@ -299,7 +299,7 @@ unchanged files are skipped by mtime) and updated by the file watcher.
 **Ask** (`/w/:ws/ask`, also "Ask: …" in the search palette) answers a question from your own documents.
 
 1. **Passages.** The knowledge index splits every document into passages of at most ~400 words that know their
-   section (3,273 for the ESA folder).
+   section (3,273 for a 105-document folder).
 2. **Retrieval.** BM25 over the words (lightly stemmed, TeX ignored) and — when the search model is installed —
    cosine similarity over meaning vectors; the two rankings are fused with reciprocal-rank fusion (k = 60) and
    the best eight passages go on. Without vectors the search is by words only and says so.

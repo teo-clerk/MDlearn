@@ -46,7 +46,7 @@ Colour has a job here: the kind of a callout, a formula term and its explanation
 | **Local AI** | *Settings → Local AI*: install Ollama if it is missing, download a recommended model (each says whether this computer runs it well), and choose the one Studio answers with. |
 | **Import** | *Import…* in the sidebar: a web page, a PDF, an Anki deck, a notebook, lessons from a chat, or a paper from **SciNet** if it is running on this computer. |
 | **Inbox** | Ctrl+Shift+K saves a thought from anywhere, and *Inbox* in a selection's toolbar saves a passage. Sort them on Today: **Card**, **Move** into a document, or **Done**. They are plain Markdown in `Inbox/`. |
-| **AI Studio** | Claude Code writes or improves lessons from a note (uses your Claude subscription). |
+| **AI Studio** | Claude Code writes or improves lessons from a note (it runs on this computer, under your own login). |
 | **Formulas** · **Glossary** · **Map** | Every formula, every defined term, and which notes build on which: a graph in 2D or 3D, coloured by how well you remember each note. |
 
 ## While reading

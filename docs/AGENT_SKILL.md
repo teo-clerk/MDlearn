@@ -34,7 +34,7 @@ text inside the notes. Edge cases, the full grammar and every diagnostic code: `
 
 ## Companion lessons (curated sources)
 
-When the source is already a polished document — a curriculum such as ESA-PROJECTS with numbered
+When the source is already a polished document — a curriculum with numbered
 sections, objectives and exercises — do not rewrite it. Write a **companion lesson**: the learner
 reads the document; the lesson supplies retrieval, worked practice and misconception checks.
 

@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+**MDlearn is now open source,** under the MIT License. The README, contribution guide and security policy are written
+for people who are new to it, and the Help page lists the open-source licences of what's inside.
+
+**A first page that explains itself.** It says what MDlearn does in three steps with one main action, and the tutorial
+is right below. People who have been here before see their recent folders first. A folder with no lessons now says so
+and offers to make them, where Study used to say *You are all caught up*.
+
+**Accent colours that show.** Picking a colour used to change almost nothing, because selected rows, options, charts
+and borders were fixed to ink. They all follow your accent now, in both themes.
+
 **A course from your class files.** The first page now starts where most people do: *Make a course from my class
 files* takes PDFs, PowerPoint, Word files and pictures, keeps the originals, reads what it can, and says what it couldn't.
 Then Claude, your coding assistant or a chat writes the lessons, and they appear as they are written.
@@ -22,8 +32,12 @@ own folder, and until now its lessons opened from a link but never reached the l
 do, in Studio, the CLI and the MCP tools. Lessons sit under their `course.md`.
 
 **Pictures.** A document or lesson can show a picture from the web by its `https` address, in Markdown or in
-`<img>`; one that can't be loaded leaves its description and a link. Paste or drop a screenshot into the editor and
-it's saved under `assets/`. Click any picture, or press Enter on it, to see it larger.
+`<img>`. It waits until you allow its site, because a document could use a picture's address to send information out,
+and one that can't be loaded leaves its description and a link. Paste or drop a screenshot into the editor and it's
+saved under `assets/`. Click any picture, or press Enter on it, to see it larger.
+
+**Fixes.** Jumping to a section could shift the whole app up and hide its top bar until you reloaded. Claude Code now
+uses whatever it's signed in with, including your own `ANTHROPIC_API_KEY`. A damaged notes file no longer breaks Today.
 
 **Any coding assistant.** Codex, OpenCode, Pi and Claude Code can write lessons in a folder with nothing to install:
 `mdlearn agents`, or *Get this folder ready for my AI* in Ctrl+K, puts the instructions in the folder. Your own

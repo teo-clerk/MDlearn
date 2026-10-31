@@ -46,7 +46,7 @@ passaggio per evidenziarlo come **Importante**, **Non chiaro** o **Per l'esame**
 | **AI locale** | *Impostazioni → AI locale*: installa Ollama se manca, scarica un modello consigliato (ognuno dice se questo computer lo fa girare bene) e scegli quello con cui risponde Studio. |
 | **Importa** | *Importa…* nella barra laterale: una pagina web, un PDF, un mazzo Anki, un notebook, lezioni da una chat, o un articolo da **SciNet** se è in esecuzione su questo computer. |
 | **Inbox** | Ctrl+Maiusc+K salva un pensiero da qualsiasi pagina, e *Inbox* nella barra di una selezione salva un passaggio. Sistemali in Oggi: **Carta**, **Sposta** in un documento, o **Fatto**. Sono Markdown semplice in `Inbox/`. |
-| **AI Studio** | Claude Code scrive o migliora lezioni a partire da un appunto (usa il tuo abbonamento Claude). |
+| **AI Studio** | Claude Code scrive o migliora lezioni a partire da un appunto (gira su questo computer, con il tuo account). |
 | **Formule** · **Glossario** · **Mappa** | Ogni formula, ogni termine definito e quali appunti si basano su quali: un grafo in 2D o 3D, colorato secondo quanto ricordi ogni appunto. |
 
 ## Mentre leggi

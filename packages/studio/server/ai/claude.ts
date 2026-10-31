@@ -1,5 +1,5 @@
 // Claude Code as the engine for course jobs, through the Agent SDK with an isolated configuration:
-// your Claude login (never an API key), only the MDlearn skills and MCP server, no shell, and every
+// the person's own Claude Code login, only the MDlearn skills and MCP server, no shell, and every
 // write checked by the job manager before it happens.
 import { query, type HookCallback, type SDKMessage } from '@anthropic-ai/claude-agent-sdk'
 import { execFileSync } from 'node:child_process'
@@ -13,7 +13,7 @@ import type { AiEngine, JobEvent, JobSpec, RunContext } from './engine.js'
 const require = createRequire(import.meta.url)
 /** In the desktop app this Node is Electron's: it runs the MCP server as Node only when told to. */
 const AS_NODE: Record<string, string> = process.versions.electron ? { ELECTRON_RUN_AS_NODE: '1' } : {}
-const ENV_KEEP = ['HOME', 'PATH', 'USER', 'LANG', 'LC_ALL', 'TERM', 'XDG_CONFIG_HOME', 'XDG_DATA_HOME', 'XDG_RUNTIME_DIR', 'TMPDIR']
+const ENV_KEEP = ['ANTHROPIC_API_KEY', 'HOME', 'PATH', 'USER', 'LANG', 'LC_ALL', 'TERM', 'XDG_CONFIG_HOME', 'XDG_DATA_HOME', 'XDG_RUNTIME_DIR', 'TMPDIR']
 const APPEND = `You are MDlearn Studio's course author, working inside the user's notes folder.
 Use the mdlearn MCP tools to read source documents (doc_outline, get_section) and to check lessons (lint_lesson).
 Write only the files the task names. Never edit the user's source documents. Keep answers short; the user sees your tool calls live.`

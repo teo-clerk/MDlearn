@@ -101,7 +101,7 @@ from my class files**, give it the files, and pick who writes the lessons:
 
 Lessons appear as they are written, and then you study them like any other.
 
-**AI Studio** uses Claude Code (your own subscription) to write lessons from a note: *Create a course*
+**AI Studio** runs Claude Code on your computer, under your own login, to write lessons from a note: *Create a course*
 for one document, *Whole folder* for many, *Improve a lesson* to fix one. Every change is checked by
 the compiler and can be undone. A course for a long note uses a fair share of your Claude usage, so
 start with the note you are studying this week.

@@ -1,6 +1,6 @@
 ---
 name: mdlearn-curriculum
-description: Convert a whole curriculum folder (e.g. ESA-PROJECTS, a project's docs/, or 00_FOUNDATIONS) into MDlearn companion lessons in batch — plan per document, scaffold, fill, lint until clean, track coverage. Use when asked to convert, refresh or audit lessons for many documents or a whole project, not a single note.
+description: Convert a whole curriculum folder (e.g. a course's notes, a project's docs/, or 00_FOUNDATIONS) into MDlearn companion lessons in batch — plan per document, scaffold, fill, lint until clean, track coverage. Use when asked to convert, refresh or audit lessons for many documents or a whole project, not a single note.
 ---
 
 # MDlearn curriculum conversion

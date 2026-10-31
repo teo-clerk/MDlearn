@@ -46,7 +46,7 @@ ceux de l'examen proposent **Créer une carte**. **Réglages → Apparence → C
 | **IA locale** | *Réglages → IA locale* : installez Ollama s’il manque, téléchargez un modèle recommandé (chacun indique si cet ordinateur le fait bien tourner) et choisissez celui avec lequel Studio répond. |
 | **Importer** | *Importer…* dans la barre latérale : une page web, un PDF, un paquet Anki, un notebook, des leçons d’un chat, ou un article de **SciNet** s’il tourne sur cet ordinateur. |
 | **Boîte de réception** | Ctrl+Maj+K enregistre une idée depuis n'importe quelle page, et *Boîte de réception* dans la barre d'une sélection enregistre un passage. Triez-les dans Aujourd'hui : **Fiche**, **Déplacer** vers un document, ou **Terminé**. C'est du Markdown simple dans `Inbox/`. |
-| **AI Studio** | Claude Code écrit ou améliore des leçons à partir d'une note (utilise votre abonnement Claude). |
+| **AI Studio** | Claude Code écrit ou améliore des leçons à partir d'une note (il tourne sur cet ordinateur, avec votre propre compte). |
 | **Formules** · **Glossaire** · **Carte** | Chaque formule, chaque terme défini, et quelles notes s'appuient sur lesquelles : un graphe en 2D ou en 3D, coloré selon ce que vous retenez de chaque note. |
 
 ## Pendant la lecture

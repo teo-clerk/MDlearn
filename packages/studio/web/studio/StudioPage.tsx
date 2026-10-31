@@ -112,7 +112,7 @@ function NewJob({ ws, onStarted, onBatch, params }: { ws: string; onStarted: (id
             ))}
           </div>
         )}
-        {kind === 'course' && <p className="text-[13px] text-muted">{t('Have the files from a class?')} <Link href={`/start?ws=${ws}&add=1`} className="underline underline-offset-2 hover:text-text">{t('Make a course from them')}</Link></p>}
+        {kind === 'course' && <p className="mb-1 text-[13px] text-muted">{t('Have the files from a class?')} <Link href={`/start?ws=${ws}&add=1`} className="underline underline-offset-2 hover:text-text">{t('Make a course from them')}</Link></p>}
         {kind === 'course' && source === 'topic' && (
           <div className="flex flex-col gap-3">
             <label className="block text-[13px] font-medium">{t('What do you want to learn?')}
@@ -174,7 +174,7 @@ function NewJob({ ws, onStarted, onBatch, params }: { ws: string; onStarted: (id
         )}
         {kind === 'custom' && (
           <textarea value={text} onChange={(e) => setText(e.target.value)} rows={4} aria-label={t('What should Claude do?')}
-            placeholder={t('e.g. Add a lesson of ten flashcard-style questions on the radar equation, or: make every quiz in 04_sar harder.')}
+            placeholder={t('e.g. Add a lesson of ten questions on the first law, or: make every quiz in chapter 4 harder.')}
             className="w-full rounded-[6px] border border-border-strong bg-bg px-2.5 py-2 text-[14px] outline-none focus:border-accent" />
         )}
       </div>
@@ -182,7 +182,7 @@ function NewJob({ ws, onStarted, onBatch, params }: { ws: string; onStarted: (id
       {kind !== 'folder' && (
         <div className="mt-4 flex items-center gap-3">
           <Button variant="primary" icon={Sparkles} busy={busy} disabled={!req || engines.isLoading} onClick={start}>{t('Start')}</Button>
-          <span className="text-[12.5px] text-muted">{t('Runs on your Claude subscription; uses your usage limits.')}</span>
+          <span className="text-[12.5px] text-muted">{t('Runs Claude Code on this computer, under your own login.')}</span>
         </div>
       )}
     </section>

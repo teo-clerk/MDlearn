@@ -35,7 +35,7 @@ export async function reviewSession(ws: Workspace, opt: { limit?: string; scope?
   const lessons = loaded.map((l) => l.lesson).filter((l): l is Lesson => !!l)
   if (!lessons.length) {
     out(`No lessons found in ${ws.root}.`)
-    out('Run this inside a folder with lessons (e.g. ~/CODING/ESA-PROJECTS), or pass --root <folder>.')
+    out('Run this inside a folder with lessons, or pass --root <folder>.')
     process.exitCode = 1
     return
   }

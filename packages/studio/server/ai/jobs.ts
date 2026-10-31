@@ -1,4 +1,4 @@
-// AI jobs: one at a time (they share your subscription limits), streamed to the browser, cancellable,
+// AI jobs: one at a time (they share one Claude Code login), streamed to the browser, cancellable,
 // linted when they finish, and undoable (every file they touch is snapshotted first).
 import { randomUUID } from 'node:crypto'
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'

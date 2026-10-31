@@ -2,12 +2,13 @@
 // such), what is due, the streak, and every lesson.
 import { useEffect } from 'react'
 import { Link, useLocation } from 'wouter'
-import { BookOpenCheck, ChartNoAxesColumn } from 'lucide-react'
+import { BookOpenCheck } from 'lucide-react'
 import { useReport } from '../api/queries'
 import { lessonRoute } from '../lib/paths'
 import { prettyTitle } from '../lib/title'
-import { Button, Empty, ErrorNote, MemoryMark, Spinner } from '../ui/primitives'
+import { Button, ErrorNote, MemoryMark, Spinner } from '../ui/primitives'
 import { TopLeft } from '../layout/Shell'
+import { NoLessons } from '../ui/NoLessons'
 import { t, tp, locale } from '../i18n'
 import { whenText } from '../lib/when'
 import { Confidence } from './Confidence'
@@ -20,7 +21,7 @@ export default function ProgressPage({ ws }: { ws: string }) {
   if (rep.isLoading) return <div className="p-10"><Spinner /></div>
   if (rep.error) return <ErrorNote error={rep.error} retry={() => rep.refetch()} />
   const r = rep.data!
-  if (!r.lessons.length) return <Empty icon={ChartNoAxesColumn} title={t('No lessons yet')}>{t('Progress appears once this folder has lessons (in a learn/ folder) and you have studied some cards.')}</Empty>
+  if (!r.lessons.length) return <NoLessons ws={ws} />
   const stats: [string, string, string][] = [
     [t('Seen'), t('{done} of {total}', { done: r.totals.seen, total: r.totals.cards }), t('cards you have studied at least once')],
     [t('Due now'), String(r.totals.due), r.nextDue && !r.totals.due ? t('next {when}', { when: whenText(r.nextDue) }) : t('cards ready for review')],

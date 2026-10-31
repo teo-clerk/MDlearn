@@ -49,7 +49,7 @@ export default function AskPage({ ws }: { ws: string }) {
       <SearchModel ws={ws} s={s} canSetup={!!session.data?.caps.includes('ai')} />
       <form onSubmit={(e) => { e.preventDefault(); void submit(q) }} className="mb-6">
         <textarea ref={field} value={q} onChange={(e) => setQ(e.target.value)} rows={2} maxLength={1000} aria-label={t('Your question')} disabled={s ? !s.chatReady : false}
-          placeholder={s && !s.chatReady ? t('The local model is not available.') : t('Ask something, e.g. why does multi-looking reduce speckle?')}
+          placeholder={s && !s.chatReady ? t('The local model is not available.') : t('Ask something, e.g. why can no engine beat the Carnot limit?')}
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void submit(q) } }}
           className="w-full resize-y rounded-[8px] border border-border-strong bg-raised px-3.5 py-2.5 text-[15px] outline-none placeholder:text-subtle focus:border-focus disabled:opacity-60" />
         <div className="mt-2 flex items-center gap-3">

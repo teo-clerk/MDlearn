@@ -11,10 +11,10 @@ describe('goals file', () => {
   it('starts with sensible defaults and round-trips', () => {
     const ws = workspace(sandbox())
     expect(loadGoals(ws)).toEqual(DEFAULT_GOALS)
-    saveGoals(ws, { ...DEFAULT_GOALS, dailyGoal: 35, deadlines: [{ scope: '', date: '2026-11-15', label: 'ESA interview' }], suspended: ['l/c'] })
+    saveGoals(ws, { ...DEFAULT_GOALS, dailyGoal: 35, deadlines: [{ scope: '', date: '2026-11-15', label: 'Final exam' }], suspended: ['l/c'] })
     const g = loadGoals(ws)
     expect(g).toMatchObject({ dailyGoal: 35, suspended: ['l/c'] })
-    expect(g.deadlines[0]).toEqual({ scope: '', date: '2026-11-15', label: 'ESA interview' })
+    expect(g.deadlines[0]).toEqual({ scope: '', date: '2026-11-15', label: 'Final exam' })
   })
   it('refuses a malformed save and a damaged file, leaving the old file alone', () => {
     const ws = workspace(sandbox())

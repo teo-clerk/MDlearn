@@ -1022,7 +1022,7 @@ describe('LessonPreview', () => {
 
 | Milestone | Scope | Exit criterion |
 |---|---|---|
-| **M0 Core** ✅ | `@mdlearn/core` (Stage 0–3, registry, checkers, importer, tutor), `mdlearn` CLI, `mdlearn-mcp` server, three skills — see [TOOLING.md](TOOLING.md) | Done: all DSL examples and hazard fixtures pass; companion lessons for ESA 00_FOUNDATIONS lint clean |
+| **M0 Core** ✅ | `@mdlearn/core` (Stage 0–3, registry, checkers, importer, tutor), `mdlearn` CLI, `mdlearn-mcp` server, three skills — see [TOOLING.md](TOOLING.md) | Done: all DSL examples and hazard fixtures pass; companion lessons for a real curriculum's foundations track lint clean |
 | **M1 Player MVP** | Prose, KaTeX, quiz, cloze (text/number), callouts, session reducer, progress store; other widgets as locked stubs | The Bayes lesson runs end to end (stubs for M2/M3 widgets), keyboard-only, offline |
 | **M2 Retention (v1 release)** | FSRS reviews, streak, explain, order, steps, math blanks (MathLive), JS code runner, attempt-event log, test-out mode (take a lesson's checks first; ≥ 80 % first-try correct marks it mastered and skips worked examples) | Review session across two lessons; resume after reload; all widgets except Python live |
 | **M3 Python & diagrams** | Pyodide on a sandbox origin, CodeMirror language packs, Mermaid | Python code widgets run tests with timeouts |

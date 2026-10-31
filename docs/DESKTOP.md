@@ -80,8 +80,7 @@ npm run desktop:dist              # this system's installers, in packages/deskto
 ```
 
 On Linux `desktop:dist` makes the AppImage, `.deb` and `.zip`; Windows and macOS builds need their own system
-(the workflow uses GitHub's runners: on this private repository a release costs about 150–200 Actions minutes,
-macOS counting ten times, out of 2,000 free a month).
+(the workflow uses GitHub's runners).
 
 ## Tests
 

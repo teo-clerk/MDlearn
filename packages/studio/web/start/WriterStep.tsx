@@ -54,7 +54,7 @@ function FromHere({ ws, name }: { ws: string; name: string }) {
       </label>
       {!!error && <ErrorNote error={error} />}
       <div><Button variant="primary" icon={Sparkles} busy={busy} onClick={() => void start()}>{t('Write the lessons')}</Button></div>
-      <p className="text-[12.5px] text-muted">{t('This uses your Claude plan. You can watch it, stop it and undo it.')}</p>
+      <p className="text-[12.5px] text-muted">{t('This runs Claude Code on this computer, under your own login. You can watch it, stop it and undo it.')}</p>
     </div>
   )
 }
