@@ -75,6 +75,9 @@ reads the document; the lesson supplies retrieval, worked practice and misconcep
   each key term at first use.
 - Every display formula has, in the same card, a gloss naming each new symbol ("where $P(H)$ is …").
 - A diagram sits in the card whose text explains it. Prefer a tree or flow over a box of text.
+- A picture earns its place by carrying information (a graph, a circuit, an instrument, a slide's figure).
+  Use one from the sources by its relative path, with alt text that says what it shows. Never add a picture
+  for decoration: interesting extras that teach nothing make people learn less.
 - Write in the notes' language and set `lang`; keep the notes' notation.
 
 ## Choose the check

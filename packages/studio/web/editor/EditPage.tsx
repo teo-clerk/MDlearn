@@ -6,6 +6,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { AlertTriangle, Check, History, Plus, Save } from 'lucide-react'
 import type { Checked, WebAnswer } from '@mdlearn/core'
 import { fileApi, keys, useSession, useTree } from '../api/queries'
+import { useUi } from '../state/ui'
 import type { FileInfo, HistoryEntry, PreviewResponse } from '../../shared/types'
 import { TopActions, TopLeft } from '../layout/Shell'
 import { Button, Empty, ErrorNote, Spinner } from '../ui/primitives'
@@ -45,6 +46,10 @@ function Workbench({ ws, initial }: { ws: string; initial: FileInfo }) {
   const session = useSession()
   const tree = useTree(ws)
   const handle = useRef<EditorHandle>(null)
+  const notify = useUi((u) => u.notify)
+  const addPicture = async (file: File) => {
+    try { return (await fileApi.picture(ws, path, file)).url } catch (e) { notify((e as Error).message); return null }
+  }
   const [text, setText] = useState(initial.text)
   const savedText = useRef(initial.text)
   const baseMtime = useRef(initial.mtime)
@@ -169,7 +174,7 @@ function Workbench({ ws, initial }: { ws: string; initial: FileInfo }) {
       <div className="grid min-h-0 flex-1 grid-cols-1 min-[1100px]:grid-cols-2">
         <section aria-label={t('Source')} className={`${pane === 'write' ? 'flex' : 'hidden'} min-h-0 flex-col border-border min-[1100px]:flex min-[1100px]:border-r`}>
           <div className="min-h-0 flex-1 px-3">
-            <Editor ref={handle} initial={initial.text} onChange={setText} onSave={() => void saveRef.current()} problems={problems} ariaLabel={t('Markdown source of {path}', { path })} />
+            <Editor ref={handle} initial={initial.text} onChange={setText} onSave={() => void saveRef.current()} onPicture={addPicture} problems={problems} ariaLabel={t('Markdown source of {path}', { path })} />
           </div>
           <div className="shrink-0 border-t border-border px-3 py-1.5 text-[12.5px]">
             <button type="button" onClick={() => setChecksOpen((o) => !o)} aria-expanded={checksOpen} className="inline-flex items-center gap-2 text-muted hover:text-text cursor-pointer">

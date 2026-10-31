@@ -105,6 +105,10 @@ export const latexApi = {
 }
 
 export const fileApi = {
+  picture: (ws: string, doc: string, file: File) => {
+    const form = new FormData(); form.set('doc', doc); form.set('file', file)
+    return api.upload<{ path: string; url: string }>(`/api/w/${ws}/pictures`, form)
+  },
   get: (ws: string, path: string) => api.get<FileInfo>(`/api/w/${ws}/file?${qs({ path })}`),
   save: (ws: string, body: { path: string; text: string; baseMtime?: number; overwrite?: boolean }) => api.post<{ mtime: number }>(`/api/w/${ws}/files/save`, body),
   create: (ws: string, path: string, text: string) => api.post<{ path: string; mtime: number }>(`/api/w/${ws}/files/create`, { path, text }),

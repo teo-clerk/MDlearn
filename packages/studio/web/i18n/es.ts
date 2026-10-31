@@ -1203,4 +1203,8 @@ export default {
   'Today’s inbox file is full. Sort some of it first.': 'El archivo de la bandeja de hoy está lleno. Ordena una parte primero.',
   'That section is no longer in the document.': 'Esa sección ya no está en el documento.',
   'Two lessons have the id {id}, so they share their progress. Give one a different id in its frontmatter.': 'Dos lecciones tienen el id {id}, así que comparten el progreso. Da a una de ellas otro id en su frontmatter.',
+  'A picture': 'Una imagen',
+  'Open the picture': 'Abrir la imagen',
+  'describe this picture': 'describe esta imagen',
+  'That is not a PNG, JPEG, GIF or WebP picture.': 'No es una imagen PNG, JPEG, GIF o WebP.',
 } satisfies Dict

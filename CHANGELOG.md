@@ -6,6 +6,10 @@
 own folder, and until now its lessons opened from a link but never reached the library, Today or Study. They now
 do, in Studio, the CLI and the MCP tools. Lessons sit under their `course.md`.
 
+**Pictures.** A document or lesson can show a picture from the web by its `https` address, in Markdown or in
+`<img>`; one that can't be loaded leaves its description and a link. Paste or drop a screenshot into the editor and
+it's saved under `assets/`. Click any picture, or press Enter on it, to see it larger.
+
 ## 1.3.0 — 2026-10-31
 
 **Study papers from SciNet.** *Import → From SciNet* finds a paper in your SciNet library, by meaning or by title, and

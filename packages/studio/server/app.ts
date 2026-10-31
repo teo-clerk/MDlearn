@@ -6,6 +6,7 @@ import { compress } from 'hono/compress'
 import { bodyLimit } from 'hono/body-limit'
 import { readFileSync, statSync, existsSync } from 'node:fs'
 import { MEDIA_TYPES, mediaResponse } from './media.js'
+import { MAX_PICTURE_BYTES, savePicture } from './pictures.js'
 import { extname, relative, join, dirname, posix } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { z } from 'zod'
@@ -93,7 +94,7 @@ export function createApp(deps: Deps): Hono {
   app.use('*', security(o))
   app.use('/api/*', compress())
   // JSON requests are small; only uploads may be large (their own limit below)
-  app.use('/api/*', async (c, next) => (c.req.path === '/api/workspaces/upload' || /^\/api\/w\/[^/]+\/import\/file$/.test(c.req.path) ? next() : bodyLimit({ maxSize: 2 * 1024 * 1024, onError: (cx) => cx.json({ error: { code: 'too-large', message: 'Request too large.' } }, 413) })(c, next)))
+  app.use('/api/*', async (c, next) => (c.req.path === '/api/workspaces/upload' || /^\/api\/w\/[^/]+\/(import\/file|pictures)$/.test(c.req.path) ? next() : bodyLimit({ maxSize: 2 * 1024 * 1024, onError: (cx) => cx.json({ error: { code: 'too-large', message: 'Request too large.' } }, 413) })(c, next)))
   app.onError((err, c) => {
     if (err instanceof UserError) return c.json({ error: { code: err.code, message: err.message } }, err.code === 'not-found' ? 404 : err.code === 'path' ? 403 : err.code === 'conflict' || err.code === 'file-exists' ? 409 : 400)
     if (err instanceof z.ZodError) return c.json({ error: { code: 'invalid', message: err.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ') } }, 400)
@@ -433,6 +434,13 @@ export function createApp(deps: Deps): Hono {
 
   // ---- editor: read with a version stamp, save without overwriting someone else's change, preview, history
   app.get('/api/w/:ws/file', need('read', o), (c) => c.json(readFileInfo(ws(c), deps.workspaces, pathParam(c))))
+  app.post('/api/w/:ws/pictures', need('write', o), bodyLimit({ maxSize: MAX_PICTURE_BYTES, onError: (cx) => cx.json({ error: { code: 'too-large', message: 'That picture is larger than 20 MB.' } }, 413) }), async (c) => {
+    const h = ws(c), body = await c.req.parseBody(), file = body['file']
+    if (typeof file !== 'object' || !('arrayBuffer' in file)) throw new UserError('empty', 'No file was received.')
+    const doc = z.string().max(1024).parse(body['doc'])
+    deps.workspaces.resolve(h, doc)
+    return c.json(savePicture(h, doc, new Uint8Array(await file.arrayBuffer())))
+  })
   app.post('/api/w/:ws/files/save', need('write', o), async (c) => {
     const body = z.object({ path: z.string().min(1).max(1024), text: z.string().max(MAX_FILE_CHARS), baseMtime: z.number().optional(), overwrite: z.boolean().optional() }).parse(await c.req.json())
     return c.json(saveFile(ws(c), deps.workspaces, body))

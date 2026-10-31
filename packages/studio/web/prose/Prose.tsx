@@ -6,6 +6,7 @@ import type { MdNode } from '@mdlearn/core'
 import { CONTAINER_TAGS, INLINE_TAGS, cleanStyle } from '@mdlearn/core/html'
 import { Tex } from './Tex'
 import { SafeHtml } from './SafeHtml'
+import { Picture } from './Picture'
 import { t } from '../i18n'
 
 const CodeBlock = lazy(() => import('./CodeBlock'))
@@ -105,7 +106,7 @@ function Node({ node: n, cx }: { node: MdNode; cx: ProseContext }): ReactNode {
     }
     case 'image': {
       const url = String(n.url ?? '')
-      return url ? <img src={cx.imageSrc ? cx.imageSrc(url) : url} alt={String(n.alt ?? '')} loading="lazy" /> : null
+      return url ? <Picture key={url} src={cx.imageSrc ? cx.imageSrc(url) : url} alt={String(n.alt ?? '')} /> : null
     }
     case 'blank': return cx.blank ? cx.blank(String(n.id)) : <span className="gap" aria-label={t('gap')} />
     case 'strayBlank': return <span className="gap" aria-label={t('gap')} />

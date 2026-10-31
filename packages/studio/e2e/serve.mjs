@@ -69,6 +69,15 @@ ${LONG}
 $$S = \\frac{P_t}{4\\pi R^2}$$
 `)
 writeFileSync(join(root, 'demo/editable.md'), '# Editable\n\nFirst paragraph.\n')
+writeFileSync(join(root, 'demo/picture-notes.md'), '# Picture notes\n\nStart here.\n')
+writeFileSync(join(root, 'demo/web-pictures.md'), `# Web pictures
+
+![A tide gauge](https://pictures.example.org/gauge.png)
+
+<img src="https://pictures.example.org/from-html.png" alt="A chart in HTML" width="120">
+
+![A lost picture](https://pictures.example.org/gone.png)
+`)
 // Related passages: a document on two subjects, and one document for each
 const glacierText = 'Glacier ice creeps downhill under its own weight, and basal sliding over meltwater speeds the flow of the ice. '
 const riverText = 'A braided river splits around sediment bars, and every flood moves the gravel and reshapes the channels. '
