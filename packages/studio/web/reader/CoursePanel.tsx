@@ -97,7 +97,7 @@ function ChangeForm({ ws, doc, onClose }: { ws: string; doc: string; onClose: ()
     <div className="mt-3 flex flex-col gap-2">
       <label className="block text-[13px] font-medium">{t('What should change?')}
         <textarea autoFocus value={request} onChange={(e) => setRequest(e.target.value)} maxLength={2000} rows={2} placeholder={t('e.g. Add chapter 5, and explain lesson 3 more slowly')}
-          className="mt-1.5 w-full rounded-[6px] border border-border-strong bg-bg px-3 py-2 text-[14px] outline-none focus:border-text" />
+          className="mt-1.5 w-full rounded-[6px] border border-border-strong bg-bg px-3 py-2 text-[14px] outline-none focus:border-accent" />
       </label>
       <p className="text-[12.5px] text-muted">{t('Cards keep their history, even with new titles or better questions. You can undo the whole change.')}</p>
       {!!error && <ErrorNote error={error} />}

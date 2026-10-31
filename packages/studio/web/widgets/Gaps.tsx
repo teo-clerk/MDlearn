@@ -27,7 +27,7 @@ export function Gaps({ widget, draft, setDraft, result, autoFocus, onSubmit }: W
           onKeyDown={(e) => { if (e.key === 'Enter' && onSubmit) { e.preventDefault(); onSubmit() } }}
           inputMode={kind === 'number' ? 'decimal' : undefined} spellCheck={false} autoComplete="off"
           size={Math.max(6, Math.min(24, (draft.values[id] ?? '').length + 2))}
-          className={`h-[1.75em] rounded-[5px] border bg-raised px-1.5 font-ui text-[15px] outline-none transition-colors focus:border-text disabled:opacity-100 ${
+          className={`h-[1.75em] rounded-[5px] border bg-raised px-1.5 font-ui text-[15px] outline-none transition-colors focus:border-accent disabled:opacity-100 ${
             v ? (v.ok ? 'border-good bg-good-soft' : 'border-bad bg-bad-soft') : 'border-border-strong'}`} />
         {v && (v.ok ? <Check className="size-4 self-center text-good" aria-label={t('correct')} /> : (
           <span className="inline-flex items-center gap-1 self-center font-ui text-[13px] text-text">

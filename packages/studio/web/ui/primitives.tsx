@@ -10,6 +10,8 @@ const VARIANTS: Record<Variant, string> = {
   ghost: 'text-text hover:bg-hover disabled:opacity-40',
   danger: 'bg-raised text-bad border border-border-strong hover:bg-bad-soft',
 }
+/** A link that looks like the main button. */
+export const linkButton = 'inline-flex h-8 items-center gap-1.5 rounded-[6px] bg-accent px-3 text-[13.5px] font-medium text-on-accent hover:brightness-[1.06]'
 /** `collapse`: on a phone only the icon shows (the label stays for screen readers and as a tooltip). */
 export const Button = forwardRef<HTMLButtonElement, ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; icon?: LucideIcon; busy?: boolean; size?: 'sm' | 'md'; collapse?: boolean }>(
   function Button({ variant = 'secondary', icon: Icon, busy, size = 'md', collapse, className = '', children, disabled, ...rest }, ref) {

@@ -51,11 +51,11 @@ export function CardForm({ text, quote, from, onSave, onCancel }: { text: string
       ) : (
         <div className="mt-2 flex flex-col gap-2">
           <blockquote className="line-clamp-3 border-l border-border-strong pl-2 text-[12.5px] text-muted">{quote}</blockquote>
-          <textarea value={question} onChange={(e) => setQuestion(e.target.value)} rows={2} placeholder={t('Question')} aria-label={t('Question')} className="resize-y rounded-[6px] border border-border-strong bg-bg px-2 py-1.5 outline-none focus:border-text" />
-          <textarea value={answer} onChange={(e) => setAnswer(e.target.value)} rows={3} placeholder={t('Answer — one idea per line')} aria-label={t('Answer')} className="resize-y rounded-[6px] border border-border-strong bg-bg px-2 py-1.5 outline-none focus:border-text" />
+          <textarea value={question} onChange={(e) => setQuestion(e.target.value)} rows={2} placeholder={t('Question')} aria-label={t('Question')} className="resize-y rounded-[6px] border border-border-strong bg-bg px-2 py-1.5 outline-none focus:border-accent" />
+          <textarea value={answer} onChange={(e) => setAnswer(e.target.value)} rows={3} placeholder={t('Answer — one idea per line')} aria-label={t('Answer')} className="resize-y rounded-[6px] border border-border-strong bg-bg px-2 py-1.5 outline-none focus:border-accent" />
         </div>
       )}
-      <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={`Title (optional)${from ? ` · from §${from}` : ''}`} aria-label={t('Card title')} className="mt-2 h-8 w-full rounded-[6px] border border-border-strong bg-bg px-2 outline-none focus:border-text" />
+      <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={`Title (optional)${from ? ` · from §${from}` : ''}`} aria-label={t('Card title')} className="mt-2 h-8 w-full rounded-[6px] border border-border-strong bg-bg px-2 outline-none focus:border-accent" />
       <div className="mt-2 flex gap-1.5">
         <Button size="sm" variant="primary" disabled={!ready} busy={busy} onClick={save}>{t('Save card')}</Button>
         <Button size="sm" variant="ghost" onClick={onCancel}>{t('Cancel')}</Button>

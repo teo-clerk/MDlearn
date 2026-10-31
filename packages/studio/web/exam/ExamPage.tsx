@@ -21,7 +21,7 @@ type Stage =
   | { kind: 'grading'; plan: ExamPlan }
   | { kind: 'results'; plan: ExamPlan; given: Given[]; result: ExamResult }
   | { kind: 'error'; error: unknown; retry: () => void }
-const option = (on: boolean) => `inline-flex h-8 min-w-[2.75rem] items-center justify-center rounded-[6px] border px-3 text-[13px] tabular cursor-pointer ${on ? 'border-text bg-hover font-medium' : 'border-border hover:bg-hover'}`
+const option = (on: boolean) => `inline-flex h-8 min-w-[2.75rem] items-center justify-center rounded-[6px] border px-3 text-[13px] tabular cursor-pointer ${on ? 'border-accent bg-accent-soft font-medium' : 'border-border hover:bg-hover'}`
 
 export default function ExamPage({ ws }: { ws: string }) {
   const params = new URLSearchParams(useSearch())
@@ -70,7 +70,7 @@ export default function ExamPage({ ws }: { ws: string }) {
             <div>
               <label htmlFor="exam-scope" className="text-[12.5px] text-muted">{t('On')}</label>
               <span className="relative mt-1.5 block max-w-[28rem]">
-                <select id="exam-scope" value={doc} onChange={(e) => setDoc(e.target.value)} className="h-9 w-full cursor-pointer appearance-none truncate rounded-[6px] border border-border-strong bg-bg pl-2.5 pr-8 text-[14px] outline-none focus:border-text">
+                <select id="exam-scope" value={doc} onChange={(e) => setDoc(e.target.value)} className="h-9 w-full cursor-pointer appearance-none truncate rounded-[6px] border border-border-strong bg-bg pl-2.5 pr-8 text-[14px] outline-none focus:border-accent">
                   <option value="">{t('Everything in this folder')}</option>
                   {docs.map((d) => <option key={d.path} value={d.path}>{d.title || d.path}</option>)}
                 </select>

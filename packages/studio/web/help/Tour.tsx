@@ -74,7 +74,7 @@ export function Tour() {
         <h2 id="tour-title" className="mt-0.5 text-[15.5px] font-semibold">{step.title}</h2>
         <p id="tour-body" className="mt-1 text-[13.5px] leading-relaxed text-text/85">{step.body}</p>
         <div className="mt-3.5 flex items-center gap-2">
-          <span className="flex gap-1" aria-hidden>{steps.map((_, k) => <span key={k} className={`size-1.5 rounded-full transition-colors ${k === i ? 'bg-text' : 'bg-border-strong'}`} />)}</span>
+          <span className="flex gap-1" aria-hidden>{steps.map((_, k) => <span key={k} className={`size-1.5 rounded-full transition-colors ${k === i ? 'bg-accent' : 'bg-border-strong'}`} />)}</span>
           <span className="ml-auto" />
           {i > 0 && <Button size="sm" variant="ghost" onClick={() => setI(i - 1)}>{t('Back')}</Button>}
           <Button size="sm" variant="primary" onClick={() => (last ? finish() : setI(i + 1))}>{last ? t('Done') : i === 0 ? t('Show me') : t('Next')}</Button>

@@ -49,7 +49,7 @@ export function NoteCard({ note, active, onFocus, actions, quoteFound, onSeek }:
         <form className="mt-2" onSubmit={async (e) => { e.preventDefault(); await actions.save(body); setEditing(false) }}>
           <textarea value={body} onChange={(e) => setBody(e.target.value)} autoFocus rows={3} aria-label={t('Note text')}
             onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) e.currentTarget.form?.requestSubmit(); if (e.key === 'Escape') { setBody(note.body); setEditing(false) } }}
-            className="w-full resize-y rounded-[6px] border border-border-strong bg-bg px-2 py-1.5 outline-none focus:border-text" />
+            className="w-full resize-y rounded-[6px] border border-border-strong bg-bg px-2 py-1.5 outline-none focus:border-accent" />
           <div className="mt-1 flex gap-1"><button type="submit" className="rounded-[5px] bg-accent px-2 py-1 text-[12.5px] font-medium text-on-accent cursor-pointer">{t('Save')}</button><button type="button" onClick={() => { setBody(note.body); setEditing(false) }} className="rounded-[5px] px-2 py-1 text-[12.5px] hover:bg-hover cursor-pointer">{t('Cancel')}</button></div>
         </form>
       ) : note.body ? (
@@ -60,7 +60,7 @@ export function NoteCard({ note, active, onFocus, actions, quoteFound, onSeek }:
         <form className="mt-2 flex items-end gap-1" onSubmit={async (e) => { e.preventDefault(); if (!question.trim()) return; setBusy(true); try { await actions.ask(question.trim()); setQuestion('') } finally { setBusy(false) } }}>
           <textarea value={question} onChange={(e) => setQuestion(e.target.value)} rows={1} placeholder={note.thread.length ? t('Ask a follow-up…') : t('Ask about this passage…')} aria-label={t('Question for the AI')}
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); e.currentTarget.form?.requestSubmit() } }}
-            className="max-h-32 min-h-8 flex-1 resize-none rounded-[6px] border border-border-strong bg-bg px-2 py-1.5 text-[13px] outline-none focus:border-text" />
+            className="max-h-32 min-h-8 flex-1 resize-none rounded-[6px] border border-border-strong bg-bg px-2 py-1.5 text-[13px] outline-none focus:border-accent" />
           <button type="submit" disabled={busy || !question.trim()} aria-label={t('Ask')} className="flex size-8 shrink-0 items-center justify-center rounded-[6px] bg-accent text-on-accent disabled:opacity-40 cursor-pointer">
             {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <ArrowUp className="size-4" aria-hidden />}
           </button>

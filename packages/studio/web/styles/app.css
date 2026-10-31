@@ -17,7 +17,7 @@
   --border: #e8e7e4;
   --border-strong: #d6d5d1;
   --hover: rgb(40 38 33 / 0.05);
-  --active: rgb(40 38 33 / 0.085);
+  --active: var(--accent-soft-l, rgb(40 38 33 / 0.085));
   /* accent: graphite unless Settings → Appearance sets --accent-l … (light) and --accent-d … (dark) on <html> */
   --accent: var(--accent-l, #2c2c2b);
   --accent-ink: var(--accent-ink-l, #2c2c2b);
@@ -43,7 +43,7 @@
   --bg: #191919; --sidebar: #202020; --panel: #1d1d1d; --raised: #252525;
   --text: #e7e6e2; --muted: #a09f9b; --subtle: #858480;
   --border: #2f2f2e; --border-strong: #3b3b3a;
-  --hover: rgb(255 255 255 / 0.055); --active: rgb(255 255 255 / 0.09);
+  --hover: rgb(255 255 255 / 0.055); --active: var(--accent-soft-d, rgb(255 255 255 / 0.09));
   --accent: var(--accent-d, #e7e6e2); --accent-ink: var(--accent-ink-d, #e7e6e2); --accent-soft: var(--accent-soft-d, rgb(255 255 255 / 0.08)); --on-accent: var(--on-accent-d, #191919); --focus: var(--focus-d, #8d9be0);
   --hue-blue: #4894e6; --hue-green: #72e89d; --hue-violet: #dbadf8; --hue-amber: #f99c15; --hue-rose: #dd5c67;
   --good: #6cc391; --good-soft: rgb(108 195 145 / 0.13); --warn: #e0a54a; --warn-soft: rgb(224 165 74 / 0.14); --bad: #f08074; --bad-soft: rgb(240 128 116 / 0.13);
@@ -55,7 +55,7 @@
     --bg: #191919; --sidebar: #202020; --panel: #1d1d1d; --raised: #252525;
     --text: #e7e6e2; --muted: #a09f9b; --subtle: #858480;
     --border: #2f2f2e; --border-strong: #3b3b3a;
-    --hover: rgb(255 255 255 / 0.055); --active: rgb(255 255 255 / 0.09);
+    --hover: rgb(255 255 255 / 0.055); --active: var(--accent-soft-d, rgb(255 255 255 / 0.09));
     --accent: var(--accent-d, #e7e6e2); --accent-ink: var(--accent-ink-d, #e7e6e2); --accent-soft: var(--accent-soft-d, rgb(255 255 255 / 0.08)); --on-accent: var(--on-accent-d, #191919); --focus: var(--focus-d, #8d9be0);
     --hue-blue: #4894e6; --hue-green: #72e89d; --hue-violet: #dbadf8; --hue-amber: #f99c15; --hue-rose: #dd5c67;
   --good: #6cc391; --good-soft: rgb(108 195 145 / 0.13); --warn: #e0a54a; --warn-soft: rgb(224 165 74 / 0.14); --bad: #f08074; --bad-soft: rgb(240 128 116 / 0.13);
@@ -107,6 +107,7 @@ body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--
   /* focused by the app, not a tab stop (the page, a question's options): no ring */
   [tabindex="-1"]:focus-visible { outline: none; }
   input, textarea { caret-color: var(--accent); }
+  input[type="checkbox"], input[type="radio"], input[type="range"], progress { accent-color: var(--accent); }
   ::placeholder { color: var(--muted); opacity: 1; }
 }
 .tabular { font-variant-numeric: tabular-nums; }
@@ -121,8 +122,9 @@ body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--
 .read h2 { font-size: 1.42rem; font-weight: 650; margin-top: 2.1em; margin-bottom: 0.2em; }
 .read h3 { font-size: 1.16rem; font-weight: 640; margin-top: 1.7em; margin-bottom: 0.1em; }
 .read h4, .read h5, .read h6 { font-size: 1rem; font-weight: 640; margin-top: 1.4em; }
-.read a { color: inherit; text-decoration: underline; text-decoration-color: var(--border-strong); text-underline-offset: 3px; text-decoration-thickness: 1px; }
-.read a:hover { text-decoration-color: var(--text); }
+.read a { color: inherit; text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--accent-ink) 55%, transparent); text-underline-offset: 3px; text-decoration-thickness: 1px; }
+.read a:hover { text-decoration-color: var(--accent-ink); }
+[data-colour="off"] .read a { text-decoration-color: var(--border-strong); }
 .read strong { font-weight: 640; }
 .read code { font-family: var(--font-mono); font-size: 0.84em; background: var(--code-bg); border: 1px solid var(--border); border-radius: 4px; padding: 0.08em 0.32em; }
 .read ul, .read ol { padding-left: 1.4em; }

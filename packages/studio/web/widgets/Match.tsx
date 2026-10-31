@@ -56,7 +56,7 @@ export function Match({ widget, draft, setDraft, result }: WidgetProps<Extract<D
     else { const l = Number(e.key) - 1; if (l >= 0 && l < widget.left.length) { e.preventDefault(); pair(l, sel.i) } }
   }
   const tone = (ok: boolean | null | undefined, chosen: boolean, paired: boolean) =>
-    ok === true ? 'border-good/60 bg-good-soft' : ok === false ? 'border-bad/50 bg-bad-soft' : chosen ? 'border-text bg-hover' : paired ? 'border-border-strong bg-raised' : 'border-border hover:bg-hover'
+    ok === true ? 'border-good/60 bg-good-soft' : ok === false ? 'border-bad/50 bg-bad-soft' : chosen ? 'border-accent bg-accent-soft' : paired ? 'border-border-strong bg-raised' : 'border-border hover:bg-hover'
   const item = (s: Side, content: Parameters<typeof Inline>[0]['nodes'], badge: string, partner: string | null, ok: boolean | null | undefined, hint?: string) => (
     <button key={`${s.side}${s.i}`} type="button" data-side={s.side} data-i={s.i} disabled={locked} onClick={() => pick(s)} aria-pressed={sel?.side === s.side && sel.i === s.i}
       className={`game-item flex w-full items-start gap-2.5 rounded-[7px] border px-3 py-2 text-left transition-colors ${tone(ok, sel?.side === s.side && sel.i === s.i, !!partner)} ${locked ? 'cursor-default' : 'cursor-pointer'}`}>

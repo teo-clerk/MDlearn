@@ -32,10 +32,10 @@ export function Quiz({ widget, draft, setDraft, result, autoFocus }: WidgetProps
               <button type="button" role={widget.multi ? 'checkbox' : 'radio'} aria-checked={picked} disabled={locked}
                 onClick={() => toggle(i)}
                 className={`flex w-full items-start gap-3 rounded-[7px] border px-3 py-2.5 text-left transition-colors ${
-                  state === 'correct' ? 'border-good/60 bg-good-soft' : state === 'wrong' ? 'border-bad/50 bg-bad-soft' : picked ? 'border-text bg-hover' : 'border-border hover:bg-hover'
+                  state === 'correct' ? 'border-good/60 bg-good-soft' : state === 'wrong' ? 'border-bad/50 bg-bad-soft' : picked ? 'border-accent bg-accent-soft' : 'border-border hover:bg-hover'
                 } ${locked ? 'cursor-default' : 'cursor-pointer'}`}>
                 <span className={`mt-[3px] flex size-[22px] shrink-0 items-center justify-center rounded-[5px] border text-[12px] font-semibold ${
-                  state === 'correct' ? 'border-good bg-good text-bg' : state === 'wrong' ? 'border-bad bg-bad text-bg' : picked ? 'border-text bg-text text-bg' : 'border-border-strong text-muted'}`} aria-hidden>
+                  state === 'correct' ? 'border-good bg-good text-bg' : state === 'wrong' ? 'border-bad bg-bad text-bg' : picked ? 'border-accent bg-accent text-on-accent' : 'border-border-strong text-muted'}`} aria-hidden>
                   {state === 'correct' ? <Check className="size-3.5" strokeWidth={2.8} /> : state === 'wrong' ? <X className="size-3.5" strokeWidth={2.8} /> : LETTERS[i]}
                 </span>
                 <span className="read min-w-0 flex-1 text-[16.5px] leading-[1.55]"><Inline nodes={o.content} /></span>

@@ -94,7 +94,7 @@ export function JobView({ ws, id, onBack }: { ws: string; id: string; onBack(): 
       {!live && j.sessionId && !j.undone && (
         <form className="mt-8 flex gap-2" onSubmit={async (e) => { e.preventDefault(); if (follow.trim().length < 2) return; await act('follow', async () => { const n = await jobsApi.followup(ws, id, follow.trim()); setFollow(''); location.assign(`/w/${ws}/studio?job=${n.id}`); return null }) }}>
           <input value={follow} onChange={(e) => setFollow(e.target.value)} placeholder={t('Ask for a change, e.g. “now add a worked example to card 3”')} aria-label={t('Follow-up request')}
-            className="h-9 min-w-0 flex-1 rounded-[6px] border border-border-strong bg-bg px-3 text-[14px] outline-none focus:border-text" />
+            className="h-9 min-w-0 flex-1 rounded-[6px] border border-border-strong bg-bg px-3 text-[14px] outline-none focus:border-accent" />
           <Button type="submit" variant="primary" busy={busy === 'follow'} disabled={follow.trim().length < 2}>{t('Continue')}</Button>
         </form>
       )}

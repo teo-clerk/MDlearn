@@ -71,7 +71,7 @@ export function ImportDialog({ ws, onClose }: { ws: string; onClose: () => void 
             <div role="radiogroup" aria-label={t('What to import')} className="mt-4 grid grid-cols-2 gap-2">
               {KINDS().map((k) => (
                 <button key={k.id} role="radio" aria-checked={kind === k.id} onClick={() => choose(k.id)}
-                  className={`${k.id === 'chat' || k.id === 'scinet' ? 'col-span-2 ' : ''}flex items-start gap-2.5 rounded-[8px] border px-3 py-2.5 text-left cursor-pointer ${kind === k.id ? 'border-text bg-hover' : 'border-border hover:bg-hover'}`}>
+                  className={`${k.id === 'chat' || k.id === 'scinet' ? 'col-span-2 ' : ''}flex items-start gap-2.5 rounded-[8px] border px-3 py-2.5 text-left cursor-pointer ${kind === k.id ? 'border-accent bg-accent-soft' : 'border-border hover:bg-hover'}`}>
                   <k.icon className="mt-0.5 size-4 shrink-0 text-muted" strokeWidth={1.8} aria-hidden />
                   <span><span className="block text-[13.5px] font-medium">{k.label}</span><span className="block text-[12px] leading-snug text-muted">{k.hint}</span></span>
                 </button>

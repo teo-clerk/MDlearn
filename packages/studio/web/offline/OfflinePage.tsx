@@ -96,7 +96,7 @@ export default function OfflinePage() {
           <p id="off-days" className="mt-5 text-[12.5px] text-muted">{t('Cards for')}</p>
           <div role="radiogroup" aria-labelledby="off-days" className="mt-1.5 flex gap-1.5">
             {DAYS.map((d) => <button key={d} type="button" role="radio" aria-checked={days === d} onClick={() => setDays(d)}
-              className={`inline-flex h-9 min-w-[4.5rem] items-center justify-center rounded-[6px] border px-3 text-[13.5px] cursor-pointer ${days === d ? 'border-text bg-hover font-medium' : 'border-border hover:bg-hover'}`}>{tp(d, '{n} day', '{n} days')}</button>)}
+              className={`inline-flex h-9 min-w-[4.5rem] items-center justify-center rounded-[6px] border px-3 text-[13.5px] cursor-pointer ${days === d ? 'border-accent bg-accent-soft font-medium' : 'border-border hover:bg-hover'}`}>{tp(d, '{n} day', '{n} days')}</button>)}
           </div>
           <Button className="mt-4" variant="primary" icon={CloudOff} busy={taking} disabled={!isOnline} onClick={() => void take()}>{t('Take offline')}</Button>
           {error && <p className="mt-2 text-[13px] text-bad" role="alert">{error}</p>}

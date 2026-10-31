@@ -183,3 +183,34 @@ A warning.
   await page.goto(`/w/${ws}/settings`)
   await page.getByRole('checkbox', { name: /Colour in notes/ }).check()
 })
+
+test('the first page explains itself to someone who has nothing yet, and steps aside later', async ({ page }) => {
+  await page.route('**/api/workspaces', (route) => route.fulfill({ json: [] }))
+  await page.goto('/')
+  await expect(page.getByText('Add the files from your class')).toBeVisible()
+  await expect(page.getByText('An AI writes the lessons')).toBeVisible()
+  await expect(page.getByRole('link', { name: /Make a course from my class files/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: /Open the tutorial/ })).toBeVisible()
+  await expect(page.getByText('Recent')).toHaveCount(0)
+
+  await page.unroute('**/api/workspaces')
+  await page.reload()
+  await expect(page.getByRole('heading', { name: 'Recent' })).toBeVisible()
+  await expect(page.getByText('Add the files from your class')).toHaveCount(0)
+})
+
+test('a folder with no lessons says so and leads to making them', async ({ page }) => {
+  await bringFiles(page, 'Lecture 3.pptx')
+  await expect(page.getByRole('heading', { name: 'Who writes the lessons?' })).toBeVisible()
+  const ws = new URL(page.url()).searchParams.get('ws')
+
+  await page.goto(`/w/${ws}/study`)
+  await expect(page.getByRole('heading', { name: 'No lessons yet' })).toBeVisible()
+  await expect(page.getByText('You are all caught up')).toHaveCount(0)
+  await page.getByRole('link', { name: 'Make lessons with an AI' }).click()
+  await expect(page.getByRole('heading', { name: 'Who writes the lessons?' })).toBeVisible()
+
+  await page.goto(`/w/${ws}`)
+  await page.getByRole('link', { name: 'Make lessons with an AI' }).click()
+  await expect(page.getByRole('heading', { name: 'Who writes the lessons?' })).toBeVisible()
+})

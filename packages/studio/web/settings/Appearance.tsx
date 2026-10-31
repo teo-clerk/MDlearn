@@ -11,7 +11,7 @@ import { Section } from './Section'
 const ACCENT_NAMES: Record<AccentId, () => string> = {
   graphite: () => t('Graphite'), blue: () => t('Blue'), green: () => t('Green'), violet: () => t('Violet'), amber: () => t('Amber'), rose: () => t('Rose'),
 }
-const option = (on: boolean) => `inline-flex h-8 items-center gap-1.5 rounded-[6px] border px-3 text-[13px] cursor-pointer ${on ? 'border-text bg-hover font-medium' : 'border-border hover:bg-hover'}`
+const option = (on: boolean) => `inline-flex h-8 items-center gap-1.5 rounded-[6px] border px-3 text-[13px] cursor-pointer ${on ? 'border-accent bg-accent-soft font-medium' : 'border-border hover:bg-hover'}`
 
 export function Appearance() {
   const theme = useUi((s) => s.theme), setTheme = useUi((s) => s.setTheme)
@@ -57,12 +57,12 @@ export function Appearance() {
               </span>
             </button>
           ))}
-          <label className={`ml-1 inline-flex h-8 items-center gap-2 rounded-[6px] border px-2.5 text-[13px] cursor-pointer ${custom ? 'border-text bg-hover font-medium' : 'border-border hover:bg-hover'}`}>
+          <label className={`ml-1 inline-flex h-8 items-center gap-2 rounded-[6px] border px-2.5 text-[13px] cursor-pointer ${custom ? 'border-accent bg-accent-soft font-medium' : 'border-border hover:bg-hover'}`}>
             <input type="color" value={custom ?? '#3b6fd4'} onChange={(e) => pick(e.target.value as Accent)} className="size-5 cursor-pointer rounded border-0 bg-transparent p-0" />
             {t('Custom colour')}
           </label>
         </div>
-        <p className="mt-1.5 max-w-[62ch] text-[12.5px] text-muted">{t('Buttons, focus rings and progress bars use it. Every choice keeps text readable in both themes.')}</p>
+        <p className="mt-1.5 max-w-[62ch] text-[12.5px] text-muted">{t('Selected items, buttons, links, focus rings and charts use it. Every choice keeps text readable in both themes.')}</p>
       </div>
     </Section>
   )

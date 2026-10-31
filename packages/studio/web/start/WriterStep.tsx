@@ -25,7 +25,7 @@ const TOOLS: { id: string; name: string; run: (ask: string) => string }[] = [
 function Option({ icon: Icon, title, hint, chosen, onChoose }: { icon: LucideIcon; title: string; hint: string; chosen: boolean; onChoose: () => void }) {
   return (
     <button role="radio" aria-checked={chosen} onClick={onChoose}
-      className={`flex flex-col items-start justify-start rounded-[8px] border p-3 text-left cursor-pointer ${chosen ? 'border-text bg-hover' : 'border-border hover:bg-hover'}`}>
+      className={`flex flex-col items-start justify-start rounded-[8px] border p-3 text-left cursor-pointer ${chosen ? 'border-accent bg-accent-soft' : 'border-border hover:bg-hover'}`}>
       <Icon className="size-[18px] text-muted" strokeWidth={1.7} aria-hidden />
       <span className="mt-2 block text-[14px] font-medium">{title}</span>
       <span className="mt-0.5 block text-[12.5px] leading-snug text-muted">{hint}</span>
@@ -49,7 +49,7 @@ function FromHere({ ws, name }: { ws: string; name: string }) {
     <div className="flex flex-col gap-3">
       <label className="block text-[13px] font-medium">{t('Anything it should know? (optional)')}
         <textarea value={wishes} onChange={(e) => setWishes(e.target.value)} maxLength={2000} rows={2} placeholder={t('e.g. The exam covers chapters 1 to 4 and is mostly problems')}
-          className="mt-1.5 w-full rounded-[6px] border border-border-strong bg-bg px-3 py-2 text-[14px] outline-none focus:border-text" />
+          className="mt-1.5 w-full rounded-[6px] border border-border-strong bg-bg px-3 py-2 text-[14px] outline-none focus:border-accent" />
       </label>
       {!!error && <ErrorNote error={error} />}
       <div><Button variant="primary" icon={Sparkles} busy={busy} onClick={() => void start()}>{t('Write the lessons')}</Button></div>

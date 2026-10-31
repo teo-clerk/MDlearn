@@ -8,7 +8,7 @@ import { Button, ErrorNote } from '../ui/primitives'
 import type { ClassFile, ClassUpload } from '../../shared/types'
 import { t, tp } from '../i18n'
 
-const field = 'mt-1.5 h-9 w-full rounded-[6px] border border-border-strong bg-bg px-3 text-[14px] outline-none focus:border-text'
+const field = 'mt-1.5 h-9 w-full rounded-[6px] border border-border-strong bg-bg px-3 text-[14px] outline-none focus:border-accent'
 
 export function FilesStep({ ws, onDone }: { ws?: string; onDone: (u: ClassUpload) => void }) {
   const handedOver = useUi((u) => u.classFiles)
@@ -38,7 +38,7 @@ export function FilesStep({ ws, onDone }: { ws?: string; onDone: (u: ClassUpload
       <div role="group" aria-label={t('Your class files')}
         onDragOver={(e) => { e.preventDefault(); setDragging(true) }} onDragLeave={(e) => { if (e.currentTarget === e.target) setDragging(false) }}
         onDrop={async (e) => { e.preventDefault(); setDragging(false); add((await fromDrop(e.dataTransfer, CLASS_ACCEPT)).map((p) => p.file)) }}
-        className={`rounded-[8px] border border-dashed p-5 text-center ${dragging ? 'border-text bg-hover' : 'border-border-strong'}`}>
+        className={`rounded-[8px] border border-dashed p-5 text-center ${dragging ? 'border-accent bg-accent-soft' : 'border-border-strong'}`}>
         <Upload className="mx-auto size-5 text-muted" strokeWidth={1.6} aria-hidden />
         <p className="mt-2 text-[14px] font-medium">{t('Drop your class files here')}</p>
         <p className="mt-0.5 text-[13px] text-muted">{t('PDF, PowerPoint, Word, pictures or text.')} <button onClick={() => input.current?.click()} className="underline underline-offset-2 hover:text-text cursor-pointer">{t('Choose files')}</button></p>

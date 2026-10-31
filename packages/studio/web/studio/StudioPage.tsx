@@ -92,7 +92,7 @@ function NewJob({ ws, onStarted, onBatch, params }: { ws: string; onStarted: (id
       </button>
     )
   }
-  const select = 'h-9 w-full rounded-[6px] border border-border-strong bg-bg px-2.5 text-[14px] outline-none focus:border-text'
+  const select = 'h-9 w-full rounded-[6px] border border-border-strong bg-bg px-2.5 text-[14px] outline-none focus:border-accent'
   return (
     <section className="mt-8 rounded-[10px] border border-border p-5" aria-label={t('New job')}>
       <div role="tablist" className="flex flex-wrap gap-1">
@@ -105,7 +105,7 @@ function NewJob({ ws, onStarted, onBatch, params }: { ws: string; onStarted: (id
         {kind === 'course' && (
           <div role="radiogroup" aria-label={t('Build the course from')} className="mb-3 flex gap-1.5">
             {(['topic', 'doc'] as const).map((k) => (
-              <label key={k} className={`cursor-pointer rounded-[6px] border px-2.5 py-1 text-[13px] ${source === k ? 'border-text bg-hover' : 'border-border hover:bg-hover'}`}>
+              <label key={k} className={`cursor-pointer rounded-[6px] border px-2.5 py-1 text-[13px] ${source === k ? 'border-accent bg-accent-soft' : 'border-border hover:bg-hover'}`}>
                 <input type="radio" name="source" value={k} checked={source === k} onChange={() => setSource(k)} className="sr-only" />
                 {k === 'topic' ? t('Any topic') : t('One of my documents')}
               </label>
@@ -162,20 +162,20 @@ function NewJob({ ws, onStarted, onBatch, params }: { ws: string; onStarted: (id
             <fieldset><legend className="text-[13px] font-medium">{t('Focus')}</legend>
               <div className="mt-1.5 flex flex-wrap gap-1.5">
                 {(['all', 'questions', 'clarity', 'marks', 'lint'] as const).map((f) => (
-                  <label key={f} className={`cursor-pointer rounded-[6px] border px-2.5 py-1 text-[13px] ${focus === f ? 'border-text bg-hover' : 'border-border hover:bg-hover'}`}>
+                  <label key={f} className={`cursor-pointer rounded-[6px] border px-2.5 py-1 text-[13px] ${focus === f ? 'border-accent bg-accent-soft' : 'border-border hover:bg-hover'}`}>
                     <input type="radio" name="focus" value={f} checked={focus === f} onChange={() => setFocus(f)} className="sr-only" />
                     {f === 'all' ? t('Everything') : f === 'questions' ? t('Better questions') : f === 'clarity' ? t('Clearer text') : f === 'marks' ? t('Mark key terms') : t('Fix problems')}
                   </label>
                 ))}
               </div>
             </fieldset>
-            <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} placeholder={t('Anything else? (optional)')} aria-label={t('Extra instructions')} className="rounded-[6px] border border-border-strong bg-bg px-2.5 py-2 text-[14px] outline-none focus:border-text" />
+            <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} placeholder={t('Anything else? (optional)')} aria-label={t('Extra instructions')} className="rounded-[6px] border border-border-strong bg-bg px-2.5 py-2 text-[14px] outline-none focus:border-accent" />
           </div>
         )}
         {kind === 'custom' && (
           <textarea value={text} onChange={(e) => setText(e.target.value)} rows={4} aria-label={t('What should Claude do?')}
             placeholder={t('e.g. Add a lesson of ten flashcard-style questions on the radar equation, or: make every quiz in 04_sar harder.')}
-            className="w-full rounded-[6px] border border-border-strong bg-bg px-2.5 py-2 text-[14px] outline-none focus:border-text" />
+            className="w-full rounded-[6px] border border-border-strong bg-bg px-2.5 py-2 text-[14px] outline-none focus:border-accent" />
         )}
       </div>
       {!!error && <ErrorNote error={error} />}
