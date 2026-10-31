@@ -1,12 +1,17 @@
 import { test, expect, _electron as electron, type ElectronApplication } from '@playwright/test'
 import { spawn } from 'node:child_process'
-import { mkdtempSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { tmpdir } from 'node:os'
 import { createConnection } from 'node:net'
 
-// Settings, the window's place and the library go to a throw-away config folder (XDG on Linux, HOME elsewhere)
+// Settings, the window's place and the library go to a throw-away folder (XDG on Linux, HOME elsewhere). The library
+// is named outright: its default is under the real HOME on Linux, which the app needs to start.
 const home = mkdtempSync(join(tmpdir(), 'mdl-desk-'))
+for (const dir of [join(home, 'config', 'mdlearn'), join(home, '.config', 'mdlearn')]) {
+  mkdirSync(dir, { recursive: true })
+  writeFileSync(join(dir, 'studio.json'), JSON.stringify({ libraryDir: join(home, 'library') }))
+}
 const env = { ...process.env, XDG_CONFIG_HOME: join(home, 'config'), HOME: process.platform === 'linux' ? process.env.HOME! : home, MDLEARN_TEST: '1' }
 const exe = process.env.MDLEARN_DESKTOP_EXE
 const launch = () => electron.launch(exe ? { executablePath: resolve(exe), args: [], env } : { args: [resolve(__dirname, '..')], env })
