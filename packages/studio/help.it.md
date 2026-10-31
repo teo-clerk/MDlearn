@@ -10,6 +10,20 @@ I tuoi appunti restano semplici file Markdown. Le **lezioni** (`learn/*.learn.md
 **Studia** ripropone ogni carta poco prima che tu la dimentichi. Da cinque a dieci minuti al giorno su
 **Oggi**: è questa l'abitudine che ripaga.
 
+## Come nascono le lezioni
+
+Parti dalla prima pagina con **Crea un corso dai miei file**. Dagli i tuoi PDF, PowerPoint, Word e immagini. Gli originali
+restano in `sources/`, e ciò che si può leggere diventa testo e immagini utilizzabili da qualsiasi IA. Poi scegli chi
+scrive le lezioni:
+
+| Chi | Come |
+|---|---|
+| **Claude, da qui** | Parte subito, e puoi seguirlo, fermarlo e annullarlo. |
+| **Il tuo assistente di programmazione** | Claude Code, Codex, OpenCode o Pi: MDlearn prepara la cartella e ti dà un solo comando. |
+| **Una chat** | ChatGPT, Claude.ai o Gemini: allega i file, incolla il prompt di MDlearn e riporta la risposta con **Importa → Da una chat**. |
+
+Le lezioni compaiono man mano che vengono scritte. Nell'editor, incolla o trascina uno screenshot per aggiungere un'immagine. Clicca su un'immagine per vederla più grande.
+
 ## Le pagine
 
 | Pagina | A cosa serve |

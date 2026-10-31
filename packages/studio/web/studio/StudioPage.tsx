@@ -1,6 +1,6 @@
 // AI Studio: ask Claude Code to build or improve the course; every job is visible, stoppable, undoable.
 import { useEffect, useMemo, useState } from 'react'
-import { useLocation, useSearch } from 'wouter'
+import { Link, useLocation, useSearch } from 'wouter'
 import { GraduationCap, Layers, PencilLine, Sparkles, Wand2 } from 'lucide-react'
 import { jobsApi, useEngines, useJobs, useSession, useTree, type JobRequest } from '../api/queries'
 import { Button, ErrorNote } from '../ui/primitives'
@@ -112,6 +112,7 @@ function NewJob({ ws, onStarted, onBatch, params }: { ws: string; onStarted: (id
             ))}
           </div>
         )}
+        {kind === 'course' && <p className="text-[13px] text-muted">{t('Have the files from a class?')} <Link href={`/start?ws=${ws}&add=1`} className="underline underline-offset-2 hover:text-text">{t('Make a course from them')}</Link></p>}
         {kind === 'course' && source === 'topic' && (
           <div className="flex flex-col gap-3">
             <label className="block text-[13px] font-medium">{t('What do you want to learn?')}

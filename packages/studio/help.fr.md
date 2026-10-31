@@ -10,6 +10,20 @@ Vos notes restent de simples fichiers Markdown. Les **leçons** (`learn/*.learn.
 **Réviser** vous remontre chaque fiche juste avant que vous ne l'oubliiez. Cinq à dix minutes par jour sur
 **Aujourd'hui** : c'est l'habitude qui paie.
 
+## Comment naissent les leçons
+
+Commencez sur la première page avec **Créer un cours à partir de mes fichiers**. Donnez-lui vos PDF, PowerPoint, Word et
+images. Les originaux restent dans `sources/`, et ce qui peut être lu devient du texte et des images utilisables par
+n'importe quelle IA. Choisissez ensuite qui écrit les leçons :
+
+| Qui | Comment |
+|---|---|
+| **Claude, depuis ici** | Il démarre tout de suite, et vous pouvez le suivre, l'arrêter et l'annuler. |
+| **Votre assistant de code** | Claude Code, Codex, OpenCode ou Pi : MDlearn prépare le dossier et vous donne une seule commande. |
+| **Un chat** | ChatGPT, Claude.ai ou Gemini : joignez vos fichiers, collez le prompt MDlearn et rapportez la réponse avec **Importer → Depuis un chat**. |
+
+Les leçons apparaissent au fur et à mesure. Dans l'éditeur, collez ou déposez une capture pour ajouter une image. Cliquez sur une image pour l'agrandir.
+
 ## Les pages
 
 | Page | À quoi elle sert |

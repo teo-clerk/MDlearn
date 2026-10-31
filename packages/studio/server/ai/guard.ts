@@ -5,9 +5,13 @@ import { realPath } from '@mdlearn/core/node'
 
 const PROTECTED = new Set(['.git', '.claude', '.mdlearn', 'node_modules', '.venv'])
 /** Is `abs` a Markdown file inside one of the allowed folders (symlinks resolved, protected folders excluded)? */
-export function writeAllowed(abs: string, scope: string[]): string | null {
+export function writeAllowed(abs: string, scope: string[], keepOut: string[] = []): string | null {
   const target = realPath(resolve(abs))
   if (!/\.md$/i.test(target)) return 'Only Markdown (.md) files can be written by AI jobs.'
+  for (const k of keepOut) {
+    const rel = relative(realPath(k), target)
+    if (!rel || (rel !== '..' && !rel.startsWith(`..${sep}`) && !isAbsolute(rel))) return 'This job may read that file but not change it.'
+  }
   for (const s of scope) {
     const base = realPath(s)
     if (/\.md$/i.test(base)) { if (base === target) return null; continue } // a single file

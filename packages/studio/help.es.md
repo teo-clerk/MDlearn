@@ -10,6 +10,20 @@ Tus apuntes siguen siendo archivos Markdown normales. Las **lecciones** (`learn/
 **Estudiar** te vuelve a mostrar cada tarjeta justo antes de que la olvides. De cinco a diez minutos al día en
 **Hoy**: ese es el hábito que da resultado.
 
+## Cómo se crean las lecciones
+
+Empieza en la primera página con **Crear un curso con mis archivos de clase**. Dale tus PDF, PowerPoint, Word e imágenes.
+Los originales se quedan en `sources/`, y lo que se puede leer se convierte en texto e imágenes que cualquier IA puede
+usar. Luego elige quién escribe las lecciones:
+
+| Quién | Cómo |
+|---|---|
+| **Claude, desde aquí** | Empieza enseguida, y puedes seguirlo, detenerlo y deshacerlo. |
+| **Tu asistente de programación** | Claude Code, Codex, OpenCode o Pi: MDlearn prepara la carpeta y te da un solo comando. |
+| **Un chat** | ChatGPT, Claude.ai o Gemini: adjunta tus archivos, pega el prompt de MDlearn y trae la respuesta con **Importar → Desde un chat**. |
+
+Las lecciones aparecen a medida que se escriben. En el editor, pega o suelta una captura para añadir una imagen. Haz clic en una imagen para verla más grande.
+
 ## Las páginas
 
 | Página | Para qué sirve |

@@ -426,6 +426,16 @@ the same fixed prompt the MCP server's `create_course` uses (`coursePrompt` in c
 given (read, never edited), otherwise from well-established knowledge with doubtful claims flagged
 `<!-- added: verify … -->` and sources listed. Its write scope is that new folder only.
 
+**From class files.** The first page's *Make a course from my class files* opens `/start`: name the course, drop the files,
+choose who writes the lessons. `POST /api/courses?name=` (local only) makes a library folder and `POST /api/w/:ws/sources` adds
+to one (100 MB a file, 400 MB at a time, 100 files). Originals go to `sources/`. `server/import/office.ts` turns `.pptx` (slide
+order, titles, bullets, tables, speaker notes, pictures; `fflate` + `linkedom`) and `.docx` (mammoth, then Turndown) into
+`sources/text/<name>.md` with pictures in `sources/media/<name>/`; a PDF goes through the quick reader when poppler is there.
+Each file reports what was read. An equation can't come through as text, so it is counted and the person is told: a PowerPoint
+keeps its picture of the equation, a Word file doesn't. Old `.ppt`/`.doc` files are kept, with a note to save them in the new format;
+one file that can't be read never stops the others. The `course.class` job writes `course.md` and the lessons at the top of the
+folder (`coursePrompt` with `classFiles`), and its `keepOut` stops it changing `sources/`, `AGENTS.md` or `CLAUDE.md`.
+
 **Coding assistants.** A folder can carry the instructions, so Codex, OpenCode, Pi and Claude Code need no setup:
 `mdlearn agents [folder]`, or *Get this folder ready for my AI* in the palette (`POST /api/w/:ws/agents/prepare`), writes
 `AGENTS.md`, `CLAUDE.md` (a line that points to it) and `.agents/skills/`, the location those assistants share. It runs only
@@ -473,6 +483,7 @@ choices; they live in `localStorage` and `public/theme.js` applies them before t
 |---|---|
 | Another website in your browser (CSRF, DNS rebinding) | Host allowlist; every change needs same-origin `Origin`/`Sec-Fetch-Site`, the `X-MDL: 1` header and a JSON (or multipart) body; no CORS; GET never changes anything |
 | Other devices on the network | off by default (bound to 127.0.0.1); `--lan` binds 0.0.0.0 and requires a 32-byte token (link/QR → HttpOnly, SameSite=Strict cookie); LAN clients can read, study, take notes and ask the local model — not open folders, write files or run Claude jobs (`--lan-full` to allow). Plain HTTP: use trusted networks |
+| Class files | Word and PowerPoint files are untrusted zip files: the unpacked size is capped at 400 MB from the zip's own directory before anything is read, only named parts are opened, pictures are kept only if their first bytes prove them, and the Markdown is rendered like any document. A file name can't leave `sources/`. Text in slides is data: the job prompt and `AGENTS.md` say to take instructions only from the student. Needs `write`, so a phone can't add files. |
 | Pictures | The page policy allows `https:` pictures and nothing else from outside, so a document can show one: that site sees your address and when you opened it, and no referrer or cookie goes with it. `:::html` stays offline. A pasted or dropped picture is checked by its first bytes (PNG, JPEG, GIF, WebP; 20 MB) whatever its name says, written under `assets/<document>/` and never replaces a file; it needs `write`, so a phone can't add one. |
 | Malicious Markdown / uploads | the compiler keeps only allowlisted HTML tags and attributes (other blocks are sanitised by DOMPurify in the browser, scripts/styles/frames/forms/handlers removed, E107) and drops unsafe URLs; the page CSP forbids inline scripts and handlers; React renders text; KaTeX trust allowlist; Mermaid `strict`; uploads limited to Markdown/text/images, 2 MB each, sanitised relative paths |
 | Path traversal | every path goes through `realPath`-based `inRoot` (symlinks and dangling links resolved), hidden folders refused; job ids must be UUIDs; undo only restores files inside the folder |

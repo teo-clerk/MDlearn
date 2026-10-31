@@ -10,6 +10,20 @@ Your notes stay plain Markdown files. **Lessons** (`learn/*.learn.md`) hold shor
 **Study** brings each card back just before you would forget it. Five to ten minutes a day on
 **Today** is the habit that pays off.
 
+## How lessons get made
+
+Start on the first page with **Make a course from my class files**. Give it your PDFs, PowerPoint and Word files and
+pictures. The originals stay in `sources/`, and what can be read becomes text and pictures that any AI can use. Then
+choose who writes the lessons:
+
+| Who | How |
+|---|---|
+| **Claude, from here** | It starts at once, and you can watch it, stop it and undo it. |
+| **Your coding assistant** | Claude Code, Codex, OpenCode or Pi: MDlearn gets the folder ready and gives you one command. |
+| **A chat** | ChatGPT, Claude.ai or Gemini: attach your files, paste the MDlearn prompt, and bring the answer back with **Import → From a chat**. |
+
+Lessons appear as they are written. In the editor, paste or drop a screenshot to add a picture. Click any picture to see it larger.
+
 ## The pages
 
 | Page | What it is for |

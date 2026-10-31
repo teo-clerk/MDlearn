@@ -218,6 +218,14 @@ export interface ScinetPaper { id: number; title: string; year: number | null; s
 export interface ScinetDetail extends ScinetPaper { authors: string[]; venue: string | null; abstract: string | null; doi: string | null; arxivId: string | null; pages: number | null; parsedBy: string | null; formulas: 'latex' | 'text' }
 /** MDlearn for other assistants: the prompt for chats, where the Claude Code plugin is, what can be downloaded. */
 export interface Integrations { prompt: string; pluginDir?: string; skillZip: boolean; guide: boolean }
+/** One class file brought into a course: where it is, what text came out of it, and anything the person should know. */
+export interface ClassFile {
+  name: string; path: string; kind: 'word' | 'slides' | 'pdf' | 'picture' | 'text' | 'other'
+  /** The Markdown made from it. */ text?: string
+  slides?: number; pictures?: number; skipped?: number; equations?: number
+  problem?: 'old-format' | 'unknown-type' | 'no-reader' | 'no-text' | 'unreadable'
+}
+export interface ClassUpload { id: string; name: string; root: string; files: ClassFile[] }
 /** What getting a folder ready for coding assistants wrote, and which of the person's own files it left alone. */
 export interface PreparedFolder { written: string[]; kept: string[] }
 export interface McpSetup { server: string; commands: { codex: string; pi: string; opencode: string } }

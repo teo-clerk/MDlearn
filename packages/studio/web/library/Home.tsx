@@ -1,10 +1,10 @@
 // Start page: open a folder in place, upload/drop files, or pick up a recent folder.
 import { useRef, useState } from 'react'
-import { useLocation } from 'wouter'
-import { FolderOpen, Upload, Clock, FileText, GraduationCap } from 'lucide-react'
+import { Link, useLocation } from 'wouter'
+import { FolderOpen, Upload, Clock, FileText, GraduationCap, Presentation } from 'lucide-react'
 import { helpApi, importApi, useOpenFolder, useSession, useUpload, useWorkspaces } from '../api/queries'
 import { useUi } from '../state/ui'
-import { fromDrop, fromInput, nameFor, toForm, type Picked } from '../lib/upload'
+import { CLASS_ACCEPT, fromDrop, fromInput, nameFor, toForm, type Picked } from '../lib/upload'
 import { Button, Spinner, ErrorNote } from '../ui/primitives'
 import { OpenFolderDialog } from './OpenFolderDialog'
 import { t, locale } from '../i18n'
@@ -27,6 +27,13 @@ export function Home() {
   const folderInput = useRef<HTMLInputElement>(null)
   const canFs = session.data?.caps.includes('fs')
   const setImportOpen = useUi((u) => u.setImportOpen)
+  const setClassFiles = useUi((u) => u.setClassFiles)
+  /** Markdown is notes to open; a PDF or a PowerPoint in the drop means a class's files. */
+  const dropped = async (data: DataTransfer) => {
+    const picked = await fromDrop(data, CLASS_ACCEPT)
+    if (picked.some((p) => /\.(pdf|pptx?|docx?|odt|odp)$/i.test(p.path))) { setClassFiles(picked.map((p) => p.file)); navigate('/start') }
+    else send(picked)
+  }
   const startImport = async () => { const f = await importApi.folder(); setImportOpen(true); navigate(`/w/${f.id}`) }
   const [tutorialError, setTutorialError] = useState<string | null>(null)
   const openTutorial = async () => {
@@ -42,7 +49,7 @@ export function Home() {
     <div className="h-full overflow-y-auto overscroll-contain bg-bg print:h-auto print:overflow-visible"
       onDragOver={(e) => { if (canFs) { e.preventDefault(); setDragging(true) } }}
       onDragLeave={(e) => { if (e.currentTarget === e.target) setDragging(false) }}
-      onDrop={async (e) => { if (!canFs) return; e.preventDefault(); setDragging(false); send(await fromDrop(e.dataTransfer)) }}>
+      onDrop={async (e) => { if (!canFs) return; e.preventDefault(); setDragging(false); await dropped(e.dataTransfer) }}>
       <div className="mx-auto max-w-[680px] px-6 pb-16 pt-[12vh]">
         <div className="flex items-center gap-2.5">
           <img src="/favicon.svg" alt="" className="size-7" />
@@ -53,7 +60,14 @@ export function Home() {
         </p>
 
         {canFs && (
-          <div className="mt-8 grid gap-3 sm:grid-cols-2">
+          <Link href="/start" className="mt-8 flex items-center gap-3.5 rounded-[10px] border border-border-strong p-4 hover:bg-hover">
+            <Presentation className="size-6 shrink-0 text-muted" strokeWidth={1.5} aria-hidden />
+            <span className="min-w-0 flex-1"><span className="block text-[15px] font-semibold">{t('Make a course from my class files')}</span>
+              <span className="block text-[13px] text-muted">{t('PDF, PowerPoint, Word or pictures. Your AI writes the lessons, and you study them here.')}</span></span>
+          </Link>
+        )}
+        {canFs && (
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <button onClick={() => setBrowsing(true)} className="group rounded-[8px] border border-border p-4 text-left hover:bg-hover cursor-pointer">
               <FolderOpen className="size-5 text-muted" strokeWidth={1.6} aria-hidden />
               <p className="mt-2.5 text-[14px] font-medium">{t('Open a folder')}</p>

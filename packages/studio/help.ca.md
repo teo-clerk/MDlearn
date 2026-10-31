@@ -10,6 +10,20 @@ Els teus apunts continuen sent fitxers Markdown normals. Les **lliçons** (`lear
 **Estudia** et torna a mostrar cada targeta just abans que l'oblidis. De cinc a deu minuts al dia a
 **Avui**: aquest és l'hàbit que dona fruits.
 
+## Com es fan les lliçons
+
+Comença a la primera pàgina amb **Crea un curs amb els meus fitxers de classe**. Dona-li els teus PDF, PowerPoint, Word i
+imatges. Els originals es queden a `sources/`, i el que es pot llegir es converteix en text i imatges que qualsevol IA pot
+fer servir. Després tria qui escriu les lliçons:
+
+| Qui | Com |
+|---|---|
+| **Claude, des d'aquí** | Comença de seguida, i el pots seguir, aturar i desfer. |
+| **El teu assistent de programació** | Claude Code, Codex, OpenCode o Pi: MDlearn prepara la carpeta i et dona una sola ordre. |
+| **Un xat** | ChatGPT, Claude.ai o Gemini: adjunta els fitxers, enganxa el prompt d'MDlearn i porta la resposta amb **Importa → Des d'un xat**. |
+
+Les lliçons apareixen a mesura que s'escriuen. A l'editor, enganxa o deixa anar una captura per afegir una imatge. Fes clic en una imatge per veure-la més gran.
+
 ## Les pàgines
 
 | Pàgina | Per a què serveix |

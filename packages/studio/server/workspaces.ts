@@ -121,11 +121,22 @@ export class Workspaces {
     if (!existsSync(dir)) { mkdirSync(dirname(dir), { recursive: true }); cpSync(source, dir, { recursive: true, filter: (f) => !/[\\/]\.mdlearn([\\/]|$)/.test(f) }) }
     return this.open(dir)
   }
-  upload(name: string, files: { path: string; data: Uint8Array }[]): Handle {
+  /** A new, empty folder in the library, named after what it will hold. */
+  private newFolder(name: string): string {
     const lib = this.settings.get().libraryDir
     const slug = (name.trim() || 'Uploaded notes').replace(/[^\p{L}\p{N} ._-]+/gu, '-').replace(/^[.-]+/, '').slice(0, 60) || 'notes'
     let dir = join(lib, slug)
     for (let n = 2; existsSync(dir); n++) dir = join(lib, `${slug}-${n}`)
+    return dir
+  }
+  /** A folder for one course, made of a class's files. */
+  course(name: string): Handle {
+    const dir = this.newFolder(name)
+    mkdirSync(dir, { recursive: true })
+    return this.open(dir)
+  }
+  upload(name: string, files: { path: string; data: Uint8Array }[]): Handle {
+    const dir = this.newFolder(name)
     for (const f of files) {
       const segs = f.path.split(/[\\/]+/).filter(Boolean)
       // the browser sends "Folder/sub/file.md": drop the dropped folder's own name, keep the structure below it

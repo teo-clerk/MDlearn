@@ -1,10 +1,11 @@
 // What the AI Studio can be asked to do, turned into job specs: the prompt, the folders it may write,
 // and any files the server prepares first (lesson scaffolds), all inside the job's undo snapshot.
-import { existsSync } from 'node:fs'
+import { existsSync, readdirSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
 import { coursePrompt } from '@mdlearn/core'
 import { findDoc, lessonDirFor, scaffoldLessons, loadDoc, inRoot } from '@mdlearn/core/node'
 import { slugify } from '../import/common.js'
+import { SOURCES } from '../import/class-files.js'
 import type { Handle } from '../workspaces.js'
 import { UserError } from '../workspaces.js'
 import type { PreWrite } from './jobs.js'
@@ -100,6 +101,20 @@ export function customJob(h: Handle, request: string, scopeRel: string): Recipe 
       prompt: `${request.trim()}
 
 Context: this is a folder of Markdown notes used with MDlearn. Lessons are \`.learn.md\` files (mdlearn-course skill); you may create or edit Markdown files only inside ${posix(relative(h.root, scope)) || '.'}/. Check every lesson you write with lint_lesson until it has no errors or warnings. Finish with a short summary.`,
+    },
+  }
+}
+
+export interface ClassCourse { name: string; level?: string; language?: string; request?: string }
+/** A course from the class files in sources/, written at the top of the folder that holds them. */
+export function classCourse(h: Handle, o: ClassCourse): Recipe {
+  if (!existsSync(join(h.root, SOURCES))) throw new UserError('not-found', 'This folder has no class files yet.')
+  const files = readdirSync(join(h.root, SOURCES), { withFileTypes: true }).filter((f) => f.isFile()).length
+  return {
+    spec: {
+      recipe: 'course.class', title: `Course: ${o.name.slice(0, 70)}`, maxTurns: 60 + 40 * Math.max(1, files),
+      writeScope: [h.root], keepOut: [join(h.root, SOURCES), join(h.root, 'AGENTS.md'), join(h.root, 'CLAUDE.md')],
+      prompt: coursePrompt({ topic: o.name, level: o.level, language: o.language, request: o.request, classFiles: SOURCES, save: 'write' }),
     },
   }
 }

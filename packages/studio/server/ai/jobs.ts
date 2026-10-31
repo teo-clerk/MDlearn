@@ -87,7 +87,7 @@ export class JobManager {
       this.bus.publish({ type: 'job.event', ws: job.ws, jobId: job.id, event: e })
     }
     const beforeWrite = (abs: string): 'allow' | string => {
-      const refused = writeAllowed(abs, job.spec.writeScope)
+      const refused = writeAllowed(abs, job.spec.writeScope, job.spec.keepOut)
       if (refused) { emit({ kind: 'denied', tool: 'Write', reason: `${posix(relative(job.handle.root, abs))}: ${refused}` }); return refused }
       const existed = existsSync(abs)
       snaps.take(abs)

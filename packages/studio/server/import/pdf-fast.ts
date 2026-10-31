@@ -133,11 +133,16 @@ async function pdfXml(bytes: Uint8Array): Promise<string> {
   } finally { rmSync(dir, { recursive: true, force: true }) }
 }
 
-export async function importPdfFast(h: Handle, fileName: string, bytes: Uint8Array): Promise<ImportResult> {
+/** A PDF's text as Markdown, from its text layer. Throws for a file that is not a PDF or holds no text (a scan). */
+export async function pdfToMarkdown(bytes: Uint8Array): Promise<PdfMarkdown & { pages: Page[] }> {
   if (Buffer.from(bytes.subarray(0, 5)).toString('latin1') !== '%PDF-') throw new UserError('invalid', 'This file is not a PDF.')
   const pages = parseXml(await pdfXml(bytes))
   const md = pagesToMarkdown(pages)
   if (md.words < 30) throw new UserError('empty', 'No text could be read from this PDF. It may be scanned pictures; the high-quality import can read those.')
+  return { ...md, pages }
+}
+export async function importPdfFast(h: Handle, fileName: string, bytes: Uint8Array): Promise<ImportResult> {
+  const { pages, ...md } = await pdfToMarkdown(bytes)
   const name = fileName.replace(/\.pdf$/i, '')
   const rel = freePath(h, IMPORT_DIR, slugify(md.title ?? name))
   const date = new Date().toISOString().slice(0, 10)

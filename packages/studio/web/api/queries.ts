@@ -150,6 +150,7 @@ export type JobRequest =
   | { recipe: 'course.create'; doc: string }
   | { recipe: 'lesson.improve'; lesson: string; focus: 'questions' | 'clarity' | 'lint' | 'all' | 'leech'; note?: string; card?: { key: string; title: string; wrong: string[] } }
   | { recipe: 'custom'; request: string; scope?: string }
+  | { recipe: 'course.class'; name: string; level?: 'beginner' | 'intermediate' | 'advanced'; language?: string; request?: string }
   | { recipe: 'course.topic'; topic: string; level?: 'beginner' | 'intermediate' | 'advanced'; language?: string; minutes?: number; notes?: string }
 export const jobsApi = {
   start: (ws: string, req: JobRequest) => api.post<JobSummary>(`/api/w/${ws}/ai/jobs`, req),
@@ -234,6 +235,11 @@ export const useOnboarding = () => useQuery({ queryKey: ['onboarding'], queryFn:
 export const helpApi = {
   tourDone: (tourDone: boolean) => api.post<{ tourDone: boolean }>('/api/onboarding', { tourDone }),
   tutorial: (reset = false) => api.post<{ id: string; name: string; root: string }>('/api/workspaces/tutorial', { reset }),
+}
+const classForm = (files: File[]) => { const form = new FormData(); for (const f of files) form.append('files', f, f.name); return form }
+export const classApi = {
+  create: (name: string, files: File[]) => api.upload<import('../../shared/types').ClassUpload>(`/api/courses?name=${encodeURIComponent(name)}`, classForm(files)),
+  add: (ws: string, files: File[]) => api.upload<import('../../shared/types').ClassUpload>(`/api/w/${ws}/sources`, classForm(files)),
 }
 export const agentsApi = {
   prepare: (ws: string) => api.post<import('../../shared/types').PreparedFolder>(`/api/w/${ws}/agents/prepare`, {}),

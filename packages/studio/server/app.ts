@@ -8,6 +8,7 @@ import { readFileSync, statSync, existsSync } from 'node:fs'
 import { MEDIA_TYPES, mediaResponse } from './media.js'
 import { MAX_PICTURE_BYTES, savePicture } from './pictures.js'
 import { installMcp, mcpCommands, prepareFolder } from './agents.js'
+import { addClassFile } from './import/class-files.js'
 import { extname, relative, join, dirname, posix } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { z } from 'zod'
@@ -46,13 +47,13 @@ import { insertAfterQuote } from './insert.js'
 import { capture, cardFromItem, listInbox, moveItem, settle } from './inbox.js'
 import type { JobManager } from './ai/jobs.js'
 import type { AiEngine } from './ai/engine.js'
-import { createCourse, improveLesson, customJob, importPdf, topicCourse } from './ai/recipes.js'
+import { classCourse, createCourse, improveLesson, customJob, importPdf, topicCourse } from './ai/recipes.js'
 import { BatchRunner } from './ai/batch.js'
 import type { EventBus, Envelope } from './bus.js'
 import type { SettingsStore } from './settings.js'
 import { Latex } from './latex.js'
 import { TEX_FILE, texRoot } from './latex-files.js'
-import type { SessionInfo, LessonResponse, CompileResponse, PreviewResponse, Integrations, MapNode, MapResponse, Hardware, ImportResult, LocalAiInfo, McpSetup, PreparedFolder } from '../shared/types.js'
+import type { SessionInfo, LessonResponse, CompileResponse, PreviewResponse, Integrations, MapNode, MapResponse, Hardware, ImportResult, LocalAiInfo, McpSetup, PreparedFolder, ClassFile, ClassUpload } from '../shared/types.js'
 
 /** Languages with a translated help page (help.<lang>.md). */
 const HELP_LANGS = new Set(['it', 'es', 'fr', 'ca'])
@@ -87,6 +88,7 @@ export interface Deps {
 const IMAGE_TYPES: Record<string, string> = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.webp': 'image/webp' }
 const MAX_CAPTURE = 4000
 const MAX_UPLOAD_FILES = 2000, MAX_UPLOAD_FILE = 2 * 1024 * 1024
+const MAX_CLASS_FILES = 100, MAX_CLASS_UPLOAD = 400 * 1024 * 1024
 const UPLOAD_TYPES = /\.(md|markdown|txt|png|jpe?g|gif|webp)$/i
 
 export function createApp(deps: Deps): Hono {
@@ -95,7 +97,7 @@ export function createApp(deps: Deps): Hono {
   app.use('*', security(o))
   app.use('/api/*', compress())
   // JSON requests are small; only uploads may be large (their own limit below)
-  app.use('/api/*', async (c, next) => (c.req.path === '/api/workspaces/upload' || /^\/api\/w\/[^/]+\/(import\/file|pictures)$/.test(c.req.path) ? next() : bodyLimit({ maxSize: 2 * 1024 * 1024, onError: (cx) => cx.json({ error: { code: 'too-large', message: 'Request too large.' } }, 413) })(c, next)))
+  app.use('/api/*', async (c, next) => (c.req.path === '/api/workspaces/upload' || c.req.path === '/api/courses' || /^\/api\/w\/[^/]+\/(import\/file|pictures|sources)$/.test(c.req.path) ? next() : bodyLimit({ maxSize: 2 * 1024 * 1024, onError: (cx) => cx.json({ error: { code: 'too-large', message: 'Request too large.' } }, 413) })(c, next)))
   app.onError((err, c) => {
     if (err instanceof UserError) return c.json({ error: { code: err.code, message: err.message } }, err.code === 'not-found' ? 404 : err.code === 'path' ? 403 : err.code === 'conflict' || err.code === 'file-exists' ? 409 : 400)
     if (err instanceof z.ZodError) return c.json({ error: { code: 'invalid', message: err.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ') } }, 400)
@@ -191,6 +193,25 @@ export function createApp(deps: Deps): Hono {
     const h = deps.workspaces.upload(name, accepted)
     return c.json({ id: h.id, name: h.name, root: h.root, files: accepted.length, skipped })
   })
+
+  // ---- a course from a class's files: a new folder, or more files for one that exists
+  const classFiles = async (c: Context, h: Handle): Promise<ClassUpload> => {
+    const body = await c.req.parseBody({ all: true })
+    const raw = body['files'] ?? body['files[]']
+    const files = (Array.isArray(raw) ? raw : raw ? [raw] : []).filter((f): f is File => typeof f === 'object' && 'arrayBuffer' in f)
+    if (!files.length) throw new UserError('empty', 'No files were received.')
+    if (files.length > MAX_CLASS_FILES) throw new UserError('too-many', 'At most 100 files at a time.')
+    if (files.some((f) => f.size > MAX_IMPORT_BYTES)) throw new UserError('too-large', 'That file is larger than 100 MB.')
+    const saved: ClassFile[] = []
+    for (const f of files) saved.push(await addClassFile(h, f.name, new Uint8Array(await f.arrayBuffer())))
+    return { id: h.id, name: h.name, root: h.root, files: saved }
+  }
+  const classLimit = bodyLimit({ maxSize: MAX_CLASS_UPLOAD, onError: (c) => c.json({ error: { code: 'too-large', message: 'At most 400 MB at a time.' } }, 413) })
+  app.post('/api/courses', need('fs', o), classLimit, async (c) => {
+    const name = z.string().trim().min(1).max(100).parse(c.req.query('name'))
+    return c.json(await classFiles(c, deps.workspaces.course(name)))
+  })
+  app.post('/api/w/:ws/sources', need('write', o), classLimit, async (c) => c.json(await classFiles(c, ws(c))))
 
   // ---- reading
   app.get('/api/w/:ws/tree', need('read', o), (c) => c.json(deps.workspaces.tree(ws(c))))
@@ -717,6 +738,7 @@ export function createApp(deps: Deps): Hono {
       z.object({ recipe: z.literal('course.create'), doc: z.string().min(1).max(1024) }),
       z.object({ recipe: z.literal('lesson.improve'), lesson: z.string().min(1).max(1024), focus: z.enum(['questions', 'clarity', 'lint', 'all', 'leech']).default('all'), note: z.string().max(2000).default(''),
         card: z.object({ key: z.string().max(300), title: z.string().max(200), wrong: z.array(z.string().max(300)).max(5).default([]) }).optional() }),
+      z.object({ recipe: z.literal('course.class'), name: z.string().trim().min(1).max(200), level: z.enum(['beginner', 'intermediate', 'advanced']).default('beginner'), language: z.string().max(40).optional(), request: z.string().max(2000).optional() }),
       z.object({ recipe: z.literal('custom'), request: z.string().min(3).max(4000), scope: z.string().max(512).default('learn') }),
       z.object({ recipe: z.literal('course.topic'), topic: z.string().trim().min(2).max(300), level: z.enum(['beginner', 'intermediate', 'advanced']).default('beginner'),
         language: z.string().max(40).optional(), minutes: z.number().int().min(5).max(600).default(45), notes: z.string().max(1024).optional() }),
@@ -725,7 +747,7 @@ export function createApp(deps: Deps): Hono {
       const st = await deps.claudeStatus()
       if (!st.available) throw new UserError('engine', st.error ?? 'Claude Code is not available.')
     }
-    const r = body.recipe === 'course.topic' ? topicCourse(h, body) : body.recipe === 'course.create' ? createCourse(h, body.doc) : body.recipe === 'lesson.improve' ? improveLesson(h, body.lesson, body.focus, body.note, body.card ? { cardKey: body.card.key, title: body.card.title, wrong: body.card.wrong } : undefined) : customJob(h, body.request, body.scope)
+    const r = body.recipe === 'course.class' ? classCourse(h, body) : body.recipe === 'course.topic' ? topicCourse(h, body) : body.recipe === 'course.create' ? createCourse(h, body.doc) : body.recipe === 'lesson.improve' ? improveLesson(h, body.lesson, body.focus, body.note, body.card ? { cardKey: body.card.key, title: body.card.title, wrong: body.card.wrong } : undefined) : customJob(h, body.request, body.scope)
     const { jobs: jm, engine } = jobs()
     return c.json(jm.start(h, engine, r.spec, r.preWrite ? { preWrite: r.preWrite } : {}))
   })

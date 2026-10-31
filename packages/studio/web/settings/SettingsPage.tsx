@@ -7,7 +7,8 @@ import type { McpSetup } from '../../shared/types'
 import { useUi } from '../state/ui'
 import { Button, ErrorNote, Spinner } from '../ui/primitives'
 import { TopLeft } from '../layout/Shell'
-import { LANGS, currentLang, locale, t } from '../i18n'
+import { t } from '../i18n'
+import { promptFor } from './prompt'
 import { Appearance, Language } from './Appearance'
 import { Section } from './Section'
 import { Command, CopyButton } from './Command'
@@ -60,13 +61,6 @@ function McpTools() {
       </div>
     </details>
   )
-}
-
-/** The chat prompt, asking for courses in the interface language when it is not English (the prompt itself stays English). */
-function promptFor(prompt: string): { text: string; language: string | null } {
-  const lang = LANGS.find((l) => l.code === currentLang())!
-  if (lang.code === 'en') return { text: prompt, language: null }
-  return { text: `${prompt.trimEnd()}\n\nUnless I ask otherwise, write the course in ${lang.english}.\n`, language: new Intl.DisplayNames(locale(), { type: 'language' }).of(lang.code) ?? lang.name }
 }
 
 function OtherApps() {

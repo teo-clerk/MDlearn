@@ -10,6 +10,9 @@ interface UiState {
   panelTab: PanelTab
   captureOpen: boolean
   setCaptureOpen(open: boolean): void
+  /** Class files dropped on the start page, on their way to /start. */
+  classFiles: File[]
+  setClassFiles(files: File[]): void
   notice: string | null
   notify(text: string | null): void
   palette: boolean
@@ -43,6 +46,8 @@ export const useUi = create<UiState>((set) => ({
   setCaptureOpen: (captureOpen) => set({ captureOpen }),
   notice: null,
   notify: (notice) => set({ notice }),
+  classFiles: [],
+  setClassFiles: (classFiles) => set({ classFiles }),
   palette: false,
   tour: false,
   setTour: (tour) => set({ tour }),
