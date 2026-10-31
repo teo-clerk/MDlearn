@@ -11,6 +11,9 @@ describe('a folder in a pasted command', () => {
     expect(quoted.startsWith("'")).toBe(true)
     expect(quoted.slice(1, -1)).toBe(name)
   })
+  it('keeps a quote inside a Windows name the way PowerShell reads it', () => {
+    expect(shellPath(`C:\\Users\\me\\it's $HOME`)).toBe(`'C:\\Users\\me\\it''s $HOME'`)
+  })
   it('keeps a quote inside a name that needs quoting', () => {
     expect(shellPath(`/tmp/it's $HOME`)).toBe(`'/tmp/it'\\''s $HOME'`)
   })

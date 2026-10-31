@@ -5,7 +5,7 @@ import { Check, Monitor, Moon, Sun } from 'lucide-react'
 import { useUi, type CompanionKind, type Theme } from '../state/ui'
 import { ACCENTS, applyAccent, parseHex, savedAccent, swatch, type Accent, type AccentId } from '../lib/accent'
 import { applyColour, colourOn } from '../lib/colour'
-import { forgetSites, useAllowedSites } from '../prose/webPictures'
+import { forgetSites, useSitesAnywhere } from '../prose/webPictures'
 import { LANGS, currentLang, setLang, t, tp } from '../i18n'
 import { Section } from './Section'
 
@@ -18,7 +18,7 @@ export function Appearance() {
   const theme = useUi((s) => s.theme), setTheme = useUi((s) => s.setTheme)
   const [accent, setAccent] = useState<Accent>(savedAccent)
   const [colour, setColour] = useState(colourOn)
-  const sites = useAllowedSites()
+  const sites = useSitesAnywhere()
   const companion = useUi((s) => s.companion), setCompanion = useUi((s) => s.setCompanion)
   const companions: [CompanionKind, string][] = [['off', t('Off')], ['orb', t('Orb')], ['pixel', t('Pixel')]]
   const custom = parseHex(accent) ? accent : null

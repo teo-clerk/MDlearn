@@ -12,7 +12,7 @@ const MIME = { png: 'image/png', jpg: 'image/jpeg', gif: 'image/gif', webp: 'ima
 
 const INTERNAL = new BlockList()
 for (const [net, bits] of [['0.0.0.0', 8], ['10.0.0.0', 8], ['100.64.0.0', 10], ['127.0.0.0', 8], ['169.254.0.0', 16], ['172.16.0.0', 12], ['192.0.0.0', 24], ['192.168.0.0', 16], ['198.18.0.0', 15], ['224.0.0.0', 4], ['240.0.0.0', 4]] as const) INTERNAL.addSubnet(net, bits, 'ipv4')
-for (const [net, bits] of [['::', 127], ['fc00::', 7], ['fe80::', 10], ['ff00::', 8]] as const) INTERNAL.addSubnet(net, bits, 'ipv6')
+for (const [net, bits] of [['::', 127], ['64:ff9b::', 96], ['2001::', 32], ['2002::', 16], ['fc00::', 7], ['fe80::', 10], ['ff00::', 8]] as const) INTERNAL.addSubnet(net, bits, 'ipv6')
 const isPublic = (ip: string) => !INTERNAL.check(ip, isIP(ip) === 6 ? 'ipv6' : 'ipv4')
 
 /** The network, passed in so tests never touch it. */
@@ -41,7 +41,13 @@ export async function webPicture(raw: string, net: PictureFetch = realPictureFet
     const url = await publicUrl(next, net)
     const res = await net.fetch(url, { redirect: 'manual', signal: AbortSignal.timeout(TIMEOUT_MS), headers: { accept: 'image/*', 'user-agent': UA } }).catch(() => { throw unavailable() })
     const moved = res.status >= 300 && res.status < 400 ? res.headers.get('location') : null
-    if (moved) { next = new URL(moved, url).href; continue }
+    if (moved) {
+      // the person allowed this site, so it can't pass the address on to another one
+      const to = URL.canParse(moved, url) ? new URL(moved, url) : null
+      if (to?.hostname !== url.hostname) throw unavailable()
+      next = to.href
+      continue
+    }
     if (!res.ok) throw unavailable()
     const bytes = await readCapped(res, MAX_PICTURE_BYTES, 'The picture')
     const type = pictureType(bytes)

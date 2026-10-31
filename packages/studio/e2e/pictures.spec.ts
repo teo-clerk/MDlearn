@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test'
-import { openFolder } from './helpers'
+import { writeFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { openFolder, testRoot } from './helpers'
 
 // a real 1×1 PNG
 const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
@@ -9,6 +11,7 @@ test('a web picture waits for a click, comes through the app, opens larger, and 
   page.on('console', (m) => { if (/Content Security Policy/.test(m.text())) refused.push(m.text()) })
   await page.route((url) => url.hostname.endsWith('example.org'), (route) => { outside.push(route.request().url()); return route.fulfill({ status: 200, body: '' }) })
   const ws = await openFolder(page)
+  writeFileSync(join(testRoot(), 'demo/more-web-pictures.md'), '# More\n\n![Another document](https://pictures.example.org/a.png?d=secret)\n')
   await page.goto(`/w/${ws}/doc?path=demo%2Fweb-pictures.md`)
 
   await expect(page.getByText('A tide gauge')).toBeVisible()
@@ -40,6 +43,10 @@ test('a web picture waits for a click, comes through the app, opens larger, and 
 
   await page.reload()
   await expect(page.getByRole('img', { name: 'A tide gauge' })).toBeVisible()
+
+  await page.goto(`/w/${ws}/doc?path=demo%2Fmore-web-pictures.md`)
+  await expect(page.getByRole('button', { name: 'Show pictures from pictures.example.org' })).toBeVisible()
+  await expect(page.getByRole('img', { name: 'Another document' })).toHaveCount(0)
 
   await page.goto(`/w/${ws}/settings`)
   await page.getByRole('button', { name: 'Forget them' }).click()

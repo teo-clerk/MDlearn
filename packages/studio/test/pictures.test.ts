@@ -91,7 +91,7 @@ describe('a picture from the web', () => {
   })
   for (const [url, why] of [
     ['http://pictures.example.org/a.png', 'plain http'], ['https://user:pw@pictures.example.org/a.png', 'a login in the address'],
-    ['https://127.0.0.1/a.png', 'this computer'], ['https://[::1]/a.png', 'this computer over IPv6'], ['https://[::ffff:10.0.0.1]/a.png', 'a mapped private address'],
+    ['https://127.0.0.1/a.png', 'this computer'], ['https://[::1]/a.png', 'this computer over IPv6'], ['https://[::ffff:10.0.0.1]/a.png', 'a mapped private address'], ['https://[64:ff9b::7f00:1]/a.png', 'this computer through NAT64'], ['https://[2002:7f00:1::]/a.png', 'this computer through 6to4'], ['https://[2001:0:7f00:1::]/a.png', 'a Teredo address'],
     ['https://192.168.1.1/a.png', 'the local network'], ['https://169.254.169.254/latest', 'a cloud metadata address'], ['https://nowhere.invalid/a.png', 'a name that does not resolve'], ['not a url', 'no address at all'],
   ]) it(`refuses ${why}`, async () => {
     const { net, asked } = site(() => new Response(PNG))
@@ -104,11 +104,16 @@ describe('a picture from the web', () => {
     expect(asked).toEqual([])
   })
   it('checks every redirect', async () => {
-    const { net, asked } = site(() => new Response(null, { status: 302, headers: { location: 'https://127.0.0.1/secret.png' } }))
+    const { net, asked } = site((u) => (u.pathname === '/a.png' ? new Response(null, { status: 302, headers: { location: 'http://pictures.example.org/b.png' } }) : new Response(PNG)))
     await expect(webPicture('https://pictures.example.org/a.png', net)).rejects.toThrow(/public website/)
     expect(asked).toEqual(['https://pictures.example.org/a.png'])
   })
-  it('follows a redirect to another public site', async () => {
+  for (const [to, why] of [['https://elsewhere.example.net/b.png?from=allowed', 'another site'], ['https://127.0.0.1/secret.png', 'this computer'], ['http://[', 'a broken address']]) it(`does not let an allowed site send the request on to ${why}`, async () => {
+    const { net, asked } = site(() => new Response(null, { status: 302, headers: { location: to } }))
+    await expect(webPicture('https://pictures.example.org/a.png', net)).rejects.toThrow(/could not be loaded/)
+    expect(asked).toEqual(['https://pictures.example.org/a.png'])
+  })
+  it('follows a redirect within the site', async () => {
     const { net } = site((u) => (u.pathname === '/a.png' ? new Response(null, { status: 301, headers: { location: '/b.png' } }) : new Response(PNG)))
     expect((await webPicture('https://pictures.example.org/a.png', net)).type).toBe('image/png')
   })

@@ -32,8 +32,8 @@ own folder, and until now its lessons opened from a link but never reached the l
 do, in Studio, the CLI and the MCP tools. Lessons sit under their `course.md`.
 
 **Pictures.** A document or lesson can show a picture from the web by its `https` address, in Markdown or in
-`<img>`. It waits until you allow its site, because a document could use a picture's address to send information out,
-and one that can't be loaded leaves its description and a link. Paste or drop a screenshot into the editor and it's
+`<img>`. It waits until you allow its site for that document, because a document could use a picture's address to send
+information out, and one that can't be loaded leaves its description and a link. Paste or drop a screenshot into the editor and it's
 saved under `assets/`. Click any picture, or press Enter on it, to see it larger.
 
 **Fixes.** Jumping to a section could shift the whole app up and hide its top bar until you reloaded. Claude Code now
