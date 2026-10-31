@@ -5,7 +5,7 @@ import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statS
 import { basename, dirname, join, relative, resolve, sep } from 'node:path'
 import { homedir } from 'node:os'
 import { parseDocument, report, type Lesson, type DocModel } from '@mdlearn/core'
-import { workspace, sourceDocs, loadLessons, lessonPaths, lessonOfDoc, loadDoc, loadProgress, type LoadedLesson, resolverFor, fileExistsFor, inRoot, checkJs, IGNORED_DIRS, type Workspace } from '@mdlearn/core/node'
+import { workspace, realPath, sourceDocs, loadLessons, lessonPaths, lessonOfDoc, loadDoc, loadProgress, type LoadedLesson, resolverFor, fileExistsFor, inRoot, checkJs, IGNORED_DIRS, type Workspace } from '@mdlearn/core/node'
 import type { SettingsStore } from './settings.js'
 import { texDocs } from './latex-files.js'
 import type { Tree, TreeDoc, WorkspaceSummary, BrowseResult } from '../shared/types.js'
@@ -42,7 +42,7 @@ export class Workspaces {
   }
   handles(): Handle[] { return [...this.open_.values()] }
   list(): WorkspaceSummary[] {
-    const lib = this.settings.get().libraryDir
+    const lib = realPath(this.settings.get().libraryDir)
     return this.settings.get().recents.filter((r) => existsSync(r.root)).map((r) => {
       const ws = workspace(r.root)
       return { id: workspaceId(r.root), name: basename(r.root), root: r.root, docs: sourceDocs(ws).length, lessons: lessonPaths(ws).length, lastOpened: r.lastOpened, inLibrary: r.root.startsWith(lib + sep) }

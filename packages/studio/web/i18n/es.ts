@@ -795,7 +795,7 @@ export default {
   'Only http and https addresses can be imported.': 'Solo se pueden importar direcciones http y https.',
   'Addresses with a user name or password are not accepted.': 'No se aceptan direcciones con nombre de usuario o contraseña.',
   'No article text could be found on that page.': 'No se encontró texto de artículo en esa página.',
-  'Reading PDFs needs poppler (the pdftohtml program). Install it, e.g. `sudo pacman -S poppler`, or use the high-quality import.': 'Para leer PDF hace falta poppler (el programa pdftohtml). Instálalo, p. ej. `sudo pacman -S poppler`, o usa la importación de alta calidad.',
+  'Reading PDFs needs poppler (the pdftohtml program). Install it with a package manager, or use the high-quality import.': 'Para leer PDF hace falta poppler (el programa pdftohtml). Instálalo con un gestor de paquetes, o usa la importación de alta calidad.',
   'No text could be read from this PDF. It may be scanned pictures; the high-quality import can read those.': 'No se pudo leer texto de este PDF. Puede que sean imágenes escaneadas; la importación de alta calidad puede leerlas.',
   'This does not look like an Anki deck (.apkg): there is no collection inside.': 'Esto no parece un mazo de Anki (.apkg): dentro no hay ninguna colección.',
   'This deck has no cards.': 'Este mazo no tiene tarjetas.',

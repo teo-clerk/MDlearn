@@ -128,7 +128,7 @@ async function pdfXml(bytes: Uint8Array): Promise<string> {
     return stdout
   } catch (e) {
     const err = e as NodeJS.ErrnoException & { stderr?: string }
-    if (err.code === 'ENOENT') throw new UserError('missing-tool', 'Reading PDFs needs poppler (the pdftohtml program). Install it, e.g. `sudo pacman -S poppler`, or use the high-quality import.')
+    if (err.code === 'ENOENT') throw new UserError('missing-tool', 'Reading PDFs needs poppler (the pdftohtml program). Install it with a package manager, or use the high-quality import.')
     throw new UserError('pdf', `This PDF could not be read${err.stderr ? `: ${err.stderr.slice(0, 160)}` : '.'}`)
   } finally { rmSync(dir, { recursive: true, force: true }) }
 }

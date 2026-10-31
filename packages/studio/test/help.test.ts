@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { mkdtempSync, cpSync, writeFileSync, existsSync, readFileSync } from 'node:fs'
+import { mkdtempSync, cpSync, writeFileSync, existsSync, readFileSync, symlinkSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { tmpdir } from 'node:os'
 import { createApp } from '../server/app'
@@ -31,6 +31,15 @@ describe('help and onboarding', () => {
     expect(await (await post('/api/onboarding', { tourDone: true })).json()).toEqual({ tourDone: true })
     expect(settings.get().onboarding.tourDone).toBe(true)
     expect((await post('/api/onboarding', { tourDone: 'yes' })).status).toBe(400)
+  })
+  it('knows a folder is in the library when the library is reached through a link', () => {
+    const { settings } = setup()
+    const link = join(tmp('mdl-link-'), 'library')
+    symlinkSync(tmp('mdl-real-lib-'), link, 'junction')
+    settings.update((s) => ({ ...s, libraryDir: link }))
+    const spaces = new Workspaces(settings)
+    const course = spaces.course('Thermo')
+    expect(spaces.list().find((w) => w.id === course.id)?.inLibrary).toBe(true)
   })
   it('the tutorial is copied into the library, opened, and can start over', async () => {
     const { post, libraryDir } = setup()

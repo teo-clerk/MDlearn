@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { resolve, join } from 'node:path'
+import { resolve, join, relative } from 'node:path'
 import { mkdtempSync, cpSync, writeFileSync, mkdirSync, utimesSync, readFileSync, symlinkSync, existsSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { spawn } from 'node:child_process'
@@ -72,6 +72,12 @@ describe('course loading', () => {
 })
 
 describe('path guard', () => {
+  it('a folder reached through a link keeps short paths, as on macOS where the temp folder is a link', () => {
+    const real = sandbox(), link = join(sandbox(), 'via-link')
+    symlinkSync(real, link, 'junction')
+    const ws = workspace(link)
+    expect(relative(ws.root, inRoot(ws.root, 'tides/01.learn.md')!)).toBe(join('tides', '01.learn.md'))
+  })
   it('accepts paths inside, rejects ../ and symlinks that escape', () => {
     const root = sandbox(), outside = sandbox()
     mkdirSync(join(root, 'learn'))

@@ -1,0 +1,7 @@
+# The same files on every system: the build reads Markdown line by line, and Windows would otherwise check it out as CRLF.
+* text=auto eol=lf
+*.png binary
+*.pdf binary
+*.docx binary
+*.pptx binary
+*.webm binary

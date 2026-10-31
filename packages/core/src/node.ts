@@ -110,7 +110,7 @@ export const loadLessons = (ws: Workspace): LoadedLesson[] => lessonPaths(ws).ma
 // ---------------------------------------------------------------- curriculum layout
 export interface Workspace { root: string; learnDir: string }
 export function workspace(root: string, learnDirName = 'learn'): Workspace {
-  const abs = resolve(root)
+  const abs = realPath(resolve(root))
   return { root: abs, learnDir: join(abs, learnDirName) }
 }
 /** Source documents of a curriculum (Markdown outside learn/, tooling and hidden dirs). */

@@ -326,7 +326,7 @@ If your notes are in git, add `.mdlearn/` to their `.gitignore`.
 | `mdlearn plan` prints nothing | the document has no `##` sections: write the lesson with Claude or by hand |
 | AI Studio says Claude Code is not installed | install Claude Code and run `claude` once to log in |
 | Ask / Explain / Visualise are unavailable | start Ollama and `ollama pull qwen3:8b` (the model is set in `studio.json`) |
-| Quick PDF import fails | install poppler (`pdftohtml`) |
+| Quick PDF import fails | install poppler: `brew install poppler`, `sudo apt install poppler-utils` or `sudo pacman -S poppler` |
 
 ## Documentation
 
