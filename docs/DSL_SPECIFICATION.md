@@ -107,7 +107,7 @@ ignored, so one bad key never takes the lesson down. Only a missing title (E102)
 |---|---|---|---|
 | `title` | string | first `#` heading (I816) | **Required** (E102 if neither exists). |
 | `level` | `beginner` \| `intermediate` \| `advanced` | — | Selects the lesson blueprint and scaffolding (PEDAGOGICAL_SPEC §6). |
-| `lang` | BCP-47 tag | `en` | Answer matching (diacritics, decimal comma), `<html lang>`. Write the lesson in the notes' language. |
+| `lang` | BCP-47 tag | `en` | Answer matching (diacritics, decimal comma), `<html lang>`. Write the lesson in the notes' language, or the one the student asks for. |
 | `time` | minutes (number, or `"12 min"`) | estimated | Author's estimate. The compiler estimates too and notes a >50 % drift (I607). |
 | `prereq` | string or list | `[]` (the player adds the previous lesson in `course.md`) | Lesson ids (linked) or free text (shown as "you should know"). |
 | `goals` | list of strings (≤ 6) | `[]` | 2–4 measurable objectives, Bloom verbs ("Compute…", "Explain…"). |

@@ -53,7 +53,8 @@ to try.
 - **Colour with a job.** Callouts, formula terms and highlights each mean one thing. Mark a passage *confusing* or
   *for the exam* and MDlearn does something about it.
 - **Mock exams, deadlines and progress**, with an honest look at how well you know what you think you know.
-- **Your language:** the app comes in English, Italian, Spanish, French and Catalan.
+- **Your language:** the app comes in English, Italian, Spanish, French and Catalan. Courses can be written in any
+  language your AI can write, and translated later without losing your progress.
 
 ![A question in a study session](docs/images/study.png)
 

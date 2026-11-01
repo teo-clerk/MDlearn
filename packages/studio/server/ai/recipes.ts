@@ -111,7 +111,7 @@ Context: this is a folder of Markdown notes used with MDlearn. Lessons are \`.le
 }
 
 /** Change a course someone has started: their cards' ids are written down first (undoable), then the AI works around them. */
-export function changeCourse(h: Handle, doc: string, request: string): Recipe {
+export function changeCourse(h: Handle, doc: string, request: string, everyCard = false): Recipe {
   const dir = dirname(courseDoc(h, doc)), { rows, before } = studiedState(h, doc)
   return {
     spec: {
@@ -132,13 +132,19 @@ ${rows.map((r) => r.line).join('\n')}
 Follow the mdlearn-course skill. Call lint_lesson on every lesson you change until it reports no errors and no warnings. Finish with one line per file you changed.`,
     },
     preWrite: (write) => {
-      for (const r of rows.filter((x) => x.ids.size)) {
-        const source = readFileSync(r.abs, 'utf8'), pinned = pinIds(source, r.abs, r.ids)
+      for (const r of rows.filter((x) => everyCard || x.ids.size)) {
+        const source = readFileSync(r.abs, 'utf8'), pinned = pinIds(source, r.abs, everyCard ? undefined : r.ids)
         if (pinned !== source) write(r.abs, pinned, true)
       }
     },
     after: () => changesSince(h, doc, before),
   }
+}
+
+/** A translation gives every card a new title, so every id is written down first, studied or not. */
+export function translateCourse(h: Handle, doc: string, language: string): Recipe {
+  const change = changeCourse(h, doc, `Translate the whole course into ${language}: \`course.md\` and every lesson, with all titles, goals, explanations, questions, answers, hints and feedback. Accepted answers must be in ${language} too. Leave formulas, code, numbers, file names, links and \`::read[…]\` references as they are. Set \`lang\` in each lesson's frontmatter to the language tag of ${language}. Add no cards and remove none.`, true)
+  return { ...change, spec: { ...change.spec, recipe: 'course.translate', title: `Translate into ${language}` } }
 }
 
 export interface ClassCourse { name: string; level?: string; language?: string; request?: string }

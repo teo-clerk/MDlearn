@@ -49,7 +49,7 @@ import { insertAfterQuote } from './insert.js'
 import { capture, cardFromItem, listInbox, moveItem, settle } from './inbox.js'
 import type { JobManager } from './ai/jobs.js'
 import type { AiEngine } from './ai/engine.js'
-import { changeCourse, classCourse, createCourse, improveLesson, customJob, importPdf, keptOut, topicCourse } from './ai/recipes.js'
+import { changeCourse, translateCourse, classCourse, createCourse, improveLesson, customJob, importPdf, keptOut, topicCourse } from './ai/recipes.js'
 import { courseInfo, letGo, moveLesson, pauseLesson, reconnect } from './course.js'
 import { BatchRunner } from './ai/batch.js'
 import type { EventBus, Envelope } from './bus.js'
@@ -778,6 +778,7 @@ export function createApp(deps: Deps): Hono {
       z.object({ recipe: z.literal('lesson.improve'), lesson: z.string().min(1).max(1024), focus: z.enum(['questions', 'clarity', 'lint', 'marks', 'all', 'leech']).default('all'), note: z.string().max(2000).default(''),
         card: z.object({ key: z.string().max(300), title: z.string().max(200), wrong: z.array(z.string().max(300)).max(5).default([]) }).optional() }),
       z.object({ recipe: z.literal('course.change'), doc: z.string().min(1).max(1024), request: z.string().trim().min(2).max(2000) }),
+      z.object({ recipe: z.literal('course.translate'), doc: z.string().min(1).max(1024), language: z.string().trim().min(2).max(40) }),
       z.object({ recipe: z.literal('course.class'), name: z.string().trim().min(1).max(200), level: z.enum(['beginner', 'intermediate', 'advanced']).default('beginner'), language: z.string().max(40).optional(), request: z.string().max(2000).optional() }),
       z.object({ recipe: z.literal('custom'), request: z.string().min(3).max(4000), scope: z.string().max(512).default('learn') }),
       z.object({ recipe: z.literal('course.topic'), topic: z.string().trim().min(2).max(300), level: z.enum(['beginner', 'intermediate', 'advanced']).default('beginner'),
@@ -787,7 +788,7 @@ export function createApp(deps: Deps): Hono {
       const st = await deps.claudeStatus()
       if (!st.available) throw new UserError('engine', st.error ?? 'Claude Code is not available.')
     }
-    const r = body.recipe === 'course.change' ? changeCourse(h, body.doc, body.request) : body.recipe === 'course.class' ? classCourse(h, body) : body.recipe === 'course.topic' ? topicCourse(h, body) : body.recipe === 'course.create' ? createCourse(h, body.doc) : body.recipe === 'lesson.improve' ? improveLesson(h, body.lesson, body.focus, body.note, body.card ? { cardKey: body.card.key, title: body.card.title, wrong: body.card.wrong } : undefined) : customJob(h, body.request, body.scope)
+    const r = body.recipe === 'course.change' ? changeCourse(h, body.doc, body.request) : body.recipe === 'course.translate' ? translateCourse(h, body.doc, body.language) : body.recipe === 'course.class' ? classCourse(h, body) : body.recipe === 'course.topic' ? topicCourse(h, body) : body.recipe === 'course.create' ? createCourse(h, body.doc) : body.recipe === 'lesson.improve' ? improveLesson(h, body.lesson, body.focus, body.note, body.card ? { cardKey: body.card.key, title: body.card.title, wrong: body.card.wrong } : undefined) : customJob(h, body.request, body.scope)
     const { jobs: jm, engine } = jobs()
     return c.json(jm.start(h, engine, r.spec, { ...(r.preWrite ? { preWrite: r.preWrite } : {}), ...(r.after ? { after: r.after } : {}) }))
   })

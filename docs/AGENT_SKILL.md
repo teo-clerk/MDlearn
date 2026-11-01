@@ -78,7 +78,7 @@ reads the document; the lesson supplies retrieval, worked practice and misconcep
 - A picture earns its place by carrying information (a graph, a circuit, an instrument, a slide's figure).
   Use one from the sources by its relative path, with alt text that says what it shows. Never add a picture
   for decoration: interesting extras that teach nothing make people learn less.
-- Write in the notes' language and set `lang`; keep the notes' notation.
+- Write in the notes' language, or the one the student asks for, and set `lang` to match; keep the notes' notation.
 
 ## Choose the check
 

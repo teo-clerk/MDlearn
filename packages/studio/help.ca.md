@@ -24,7 +24,7 @@ fer servir. Després tria qui escriu les lliçons:
 
 Les lliçons apareixen a mesura que s'escriuen. A l'editor, enganxa o deixa anar una captura per afegir una imatge. Fes clic en una imatge per veure-la més gran. Una imatge del web espera fins que permetis el seu lloc, perquè un document la podria fer servir per treure informació.
 
-Per canviar un curs ja començat, obre la seva pàgina de presentació. Pots moure o posar en pausa una lliçó, afegir fitxers o demanar un canvi. Les targetes conserven el calendari, fins i tot amb títols nous.
+Per canviar un curs ja començat, obre la seva pàgina de presentació. Pots moure o posar en pausa una lliçó, afegir fitxers o demanar un canvi. Les targetes conserven el calendari, fins i tot amb títols nous. Per passar un curs a una altra llengua, fes servir *Tradueix aquest curs*: cada targeta conserva el calendari.
 
 ## El color a les notes
 

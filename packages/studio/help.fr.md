@@ -24,7 +24,7 @@ n'importe quelle IA. Choisissez ensuite qui écrit les leçons :
 
 Les leçons apparaissent au fur et à mesure. Dans l'éditeur, collez ou déposez une capture pour ajouter une image. Cliquez sur une image pour l'agrandir. Une image du web attend que vous autorisiez son site, car un document pourrait s’en servir pour faire sortir des informations.
 
-Pour changer un cours déjà commencé, ouvrez sa page de présentation. Vous pouvez déplacer ou mettre en pause une leçon, ajouter des fichiers ou demander un changement. Les cartes gardent leur calendrier, même avec de nouveaux titres.
+Pour changer un cours déjà commencé, ouvrez sa page de présentation. Vous pouvez déplacer ou mettre en pause une leçon, ajouter des fichiers ou demander un changement. Les cartes gardent leur calendrier, même avec de nouveaux titres. Pour passer un cours dans une autre langue, utilisez *Traduire ce cours* : chaque carte garde son calendrier.
 
 ## La couleur dans vos notes
 

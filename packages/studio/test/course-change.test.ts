@@ -204,6 +204,27 @@ describe('changing a started course with an AI', () => {
   })
 })
 
+describe('translating a course', () => {
+  it('writes every id down first, studied or not, so no card starts over', async () => {
+    const s = setup()
+    s.study('heat/first-law', NOW - 7 * DAY)
+    const started = await (await s.post('/ai/jobs', { recipe: 'course.translate', doc: 'course.md', language: 'Spanish' })).json() as JobSummary
+    const job = await finished(s, started.id)
+    expect(job).toMatchObject({ status: 'done', recipe: 'course.translate', title: 'Translate into Spanish' })
+    const first = readFileSync(join(s.root, '01-heat.learn.md'), 'utf8')
+    expect(first).toContain('## First law {#first-law}')
+    expect(first).toContain('## What heat is {#what-heat-is}')
+    expect(readFileSync(join(s.root, '02-engines.learn.md'), 'utf8')).toContain('## Carnot limit {#carnot-limit}')
+    expect(job.prompt).toContain('Translate the whole course into Spanish')
+    expect(job.prompt).toContain('Keep every `{#id}`')
+    expect(job.changes).toMatchObject({ kept: 3, removed: [] })
+  })
+  it('needs a language', async () => {
+    const s = setup()
+    expect((await s.post('/ai/jobs', { recipe: 'course.translate', doc: 'course.md', language: ' ' })).status).toBe(400)
+  })
+})
+
 describe('highlights with a purpose', () => {
   const anchor = { section: null, quote: { exact: 'heat flows downhill', prefix: '', suffix: '' } }
   it('saves one with no text, and lists confusing passages on Today, newest first', async () => {
