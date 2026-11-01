@@ -39,7 +39,8 @@ del examen ofrecen **Crear una tarjeta**. **Ajustes → Apariencia → Color en 
 | **Hoy** | Tu sesión diaria: primero las tarjetas pendientes, luego algunas nuevas. Aquí están también los objetivos y las fechas límite. |
 | **Estudiar** | Una tarjeta cada vez: responde, di si estabas seguro, lee la valoración. |
 | **Simulacro de examen** | Preguntas sobre lo que has estudiado, mezcladas entre lecciones, con tiempo si quieres, corregidas solo al final. |
-| **Preguntar** | Una pregunta sobre toda la carpeta, que el modelo local responde con tus propios pasajes. |
+| **Preguntar** | Una pregunta sobre toda la carpeta, apuntes y lecciones, que el modelo local o Claude responde con tus propios pasajes, en el idioma en que preguntes. |
+| **Compañero** | Al pie de la barra lateral. Haz clic en él mientras lees para preguntar lo que quieras sobre tu curso, o qué repasar ahora. Puedes cambiarlo u ocultarlo en *Ajustes → Apariencia*. |
 | **Progreso** | Lo que has visto, cuánto recuerdas de cada lección, tu precisión y tu racha. Y el **control de seguridad**: las tarjetas de las que estabas seguro pero fallaste, listas para repasar. |
 | **Estudiar sin conexión** | En el móvil: llévate las tarjetas de los próximos días (Hoy → *Llévate sin conexión las tarjetas de los próximos días*), estudia sin conexión y las respuestas se sincronizan cuando el ordenador está a tu alcance. Deja la página abierta mientras no tengas conexión. |
 | **LaTeX** | *Nueva nota → Documento LaTeX*, o cualquier archivo `.tex` bajo *LaTeX* en la barra lateral: escribe a la izquierda, **Compilar** (Ctrl+S) para ver el PDF a la derecha; los errores llevan a su línea. Necesita Tectonic o TeX Live en el ordenador. |
@@ -100,4 +101,4 @@ tarjetas de repaso. El tutorial muestra cada uno en directo con su código.
 
 Todo se queda en tu carpeta: las lecciones en `learn/`, tus respuestas en `learn/.mdlearn/progress.json`,
 las notas y el historial de IA en `.mdlearn/`. Nada sale de tu ordenador salvo que inicies una tarea de AI Studio
-(Claude): Preguntar, Explicar y Visualizar se ejecutan con el modelo local.
+(Claude) o elijas Claude para preguntar. Explicar y Visualizar se ejecutan siempre con el modelo local, y Preguntar también si no eliges Claude.

@@ -39,7 +39,8 @@ els de l'examen ofereixen **Crea una targeta**. **Configuració → Aparença �
 | **Avui** | La teva sessió diària: primer les targetes pendents, després unes quantes de noves. Aquí també hi ha els objectius i les dates límit. |
 | **Estudia** | Una targeta cada vegada: respon, digues si n'estaves segur, llegeix la valoració. |
 | **Simulacre d’examen** | Preguntes sobre el que has estudiat, barrejades entre lliçons, amb temps si vols, corregides només al final. |
-| **Pregunta** | Una pregunta sobre tota la carpeta, que el model local respon amb els teus propis passatges. |
+| **Pregunta** | Una pregunta sobre tota la carpeta, apunts i lliçons, que el model local o Claude respon amb els teus propis passatges, en la llengua en què preguntis. |
+| **Company** | Al peu de la barra lateral. Fes-hi clic mentre llegeixes per preguntar el que vulguis sobre el teu curs, o què has de repassar ara. Pots canviar-lo o amagar-lo a *Configuració → Aparença*. |
 | **Progrés** | El que has vist, com recordes cada lliçó, la teva precisió i la teva ratxa. I el **control de seguretat**: les targetes de les quals n’estaves segur però vas fallar, a punt per repassar. |
 | **Estudia sense connexió** | Al mòbil: emporta’t les targetes dels propers dies (Avui → *Emporta’t sense connexió les targetes dels propers dies*), estudia sense connexió i les respostes se sincronitzen quan l’ordinador és a l’abast. Deixa la pàgina oberta mentre no tinguis connexió. |
 | **LaTeX** | *Nota nova → Document LaTeX*, o qualsevol fitxer `.tex` a *LaTeX* a la barra lateral: escriu a l’esquerra, **Compila** (Ctrl+S) per veure el PDF a la dreta; els errors porten a la seva línia. Cal Tectonic o TeX Live a l’ordinador. |
@@ -100,4 +101,4 @@ targetes de repàs. El tutorial mostra cadascun en directe amb el seu codi.
 
 Tot queda a la teva carpeta: les lliçons a `learn/`, les teves respostes a `learn/.mdlearn/progress.json`,
 les notes i l'historial de la IA a `.mdlearn/`. Res no surt del teu ordinador tret que iniciïs una tasca d'AI Studio
-(Claude): Pregunta, Explica i Visualitza s'executen amb el model local.
+(Claude) o triïs Claude per preguntar. Explica i Visualitza s'executen sempre amb el model local, i Pregunta també si no tries Claude.

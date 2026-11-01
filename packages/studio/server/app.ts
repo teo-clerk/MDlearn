@@ -593,14 +593,17 @@ export function createApp(deps: Deps): Hono {
 
   // ---- ask your whole folder
   const downloads = deps.downloads ?? new ModelDownloads(() => deps.settings.get().ollama)
-  const askSvc = deps.ask ?? new AskService(knowledge, deps.bus, deps.settings, downloads)
+  const askSvc = deps.ask ?? new AskService(knowledge, deps.bus, deps.settings, downloads, deps.claudeOnce)
   app.get('/api/w/:ws/ask/status', need('askLocal', o), async (c) => c.json(await askSvc.status(ws(c))))
   app.get('/api/w/:ws/related', need('read', o), async (c) => c.json(await askSvc.related(ws(c), pathParam(c), z.string().max(300).optional().parse(c.req.query('section')))))
   app.post('/api/w/:ws/ask/setup', need('ai', o), async (c) => { await askSvc.setup(ws(c)); return c.json(await askSvc.status(ws(c))) })
   app.get('/api/w/:ws/ask/history', need('askLocal', o), (c) => c.json(askSvc.history(ws(c))))
   app.post('/api/w/:ws/ask', need('askLocal', o), async (c) => {
-    const { question } = z.object({ question: z.string().trim().min(2).max(1000) }).parse(await c.req.json())
-    return c.json(await askSvc.ask(ws(c), question))
+    const { question, ...options } = z.object({ question: z.string().trim().min(2).max(1000), engine: z.enum(['local', 'claude']).default('local'), lang: z.enum(['en', 'it', 'es', 'fr', 'ca']).default('en'),
+      companion: z.boolean().default(false), doc: z.string().min(1).max(1024).optional(), thread: z.array(z.string().max(64)).max(6).default([]) }).parse(await c.req.json())
+    // Claude runs on this computer's account: only from this computer (the 'ai' capability)
+    if (options.engine === 'claude' && !capsOf(c, o).includes('ai')) throw new UserError('capability', 'Claude can be used only on the computer running MDlearn Studio.')
+    return c.json(await askSvc.ask(ws(c), question, options))
   })
   app.post('/api/w/:ws/ask/delete', need('askLocal', o), async (c) => {
     const { id } = z.object({ id: z.string().max(64).nullable() }).parse(await c.req.json())

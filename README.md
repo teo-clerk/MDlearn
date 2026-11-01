@@ -61,6 +61,9 @@ to try.
 - **Reading that keeps up with technical notes:** math, tables, diagrams, code you can run, and notes beside the text.
 - **Colour with a job.** Callouts, formula terms and highlights each mean one thing. Mark a passage *confusing* or
   *for the exam* and MDlearn does something about it.
+- **Someone to ask.** Click the companion at the foot of the sidebar and ask anything about your course, in any
+  language: a lesson, what to review next, a follow-up. It shows where each answer came from, and says when something isn't in
+  your course.
 - **Mock exams, deadlines and progress**, with an honest look at how well you know what you think you know.
 - **Your language:** the app comes in English, Italian, Spanish, French and Catalan. Courses can be written in any
   language your AI can write, and translated later without losing your progress.
@@ -75,14 +78,16 @@ computer, and your notes are never changed unless you ask.
 It only goes online when you do something that needs it: importing a web page, allowing a site's pictures, playing
 an embedded video, downloading a local AI model, or running code that needs a Python package.
 
-When an AI writes your lessons, the files you give it go to that AI, under its own terms. To keep everything on
-your computer, use a local model through [Ollama](https://ollama.com) for asking and explaining.
+When an AI writes your lessons, the files you give it go to that AI, under its own terms. When Claude answers a
+question, the passages and titles it reads go to Anthropic the same way, along with your study progress if you asked
+the companion. To keep everything on your computer, use a local model
+through [Ollama](https://ollama.com) for asking and explaining.
 
 ## Optional extras
 
 | You need | For |
 |---|---|
-| [Claude Code](https://claude.com/claude-code), signed in once | writing lessons from inside MDlearn, and the terminal tutor |
+| [Claude Code](https://claude.com/claude-code), signed in once | writing lessons from inside MDlearn, asking about your course without a local model, and the terminal tutor |
 | [Ollama](https://ollama.com), then a model from *Settings → Local AI* | asking about a passage, explaining it, and searching your folder by meaning |
 | [SciNet](https://github.com/teo-clerk/SciNet) running on this computer | importing papers from your library |
 

@@ -68,7 +68,7 @@ export const useAskStatus = (ws: string) => useQuery({
 })
 export const useAskHistory = (ws: string) => useQuery({ queryKey: ['ask-history', ws], queryFn: () => api.get<AskEntry[]>(`/api/w/${ws}/ask/history`) })
 export const askApi = {
-  ask: (ws: string, question: string) => api.post<{ id: string; entry: AskEntry }>(`/api/w/${ws}/ask`, { question }),
+  ask: (ws: string, question: string, options: { engine: 'local' | 'claude'; lang: string; companion?: boolean; doc?: string; thread?: string[] }) => api.post<{ id: string; entry: AskEntry }>(`/api/w/${ws}/ask`, { question, ...options }),
   setup: (ws: string) => api.post<AskStatus>(`/api/w/${ws}/ask/setup`, {}),
   remove: (ws: string, id: string | null) => api.post<{ ok: true }>(`/api/w/${ws}/ask/delete`, { id }),
   saveNote: (ws: string, id: string, n: number) => api.post<{ doc: string }>(`/api/w/${ws}/ask/note`, { id, n }),

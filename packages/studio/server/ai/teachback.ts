@@ -18,7 +18,7 @@ let running = 0
 export interface TeachInput { lesson?: string; doc?: string; section?: string; text: string; lang: string; engine: 'local' | 'claude' }
 const MAX_SOURCE = 9000
 const MAX_IDEAS = 10
-const LANGS: Record<string, string> = { en: 'English', it: 'Italian', es: 'Spanish', fr: 'French', ca: 'Catalan' }
+export const LANGS: Record<string, string> = { en: 'English', it: 'Italian', es: 'Spanish', fr: 'French', ca: 'Catalan' }
 
 const Reply = z.object({
   ideas: z.array(z.object({ index: z.number().int().min(1).optional(), idea: z.string().max(400).optional(), verdict: z.enum(['covered', 'partly', 'missing']), evidence: z.string().max(400).optional() })).max(20),
