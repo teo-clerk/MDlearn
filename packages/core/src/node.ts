@@ -286,12 +286,13 @@ function withLock<T>(file: string, fn: () => T): T {
 }
 /** Remove a lock left by a crashed writer — only if it is still the same stale file we looked at. */
 function breakIfStale(lock: string): void {
-  try {
-    const st = statSync(lock)
-    if (Date.now() - st.mtimeMs <= LOCK_STALE_MS) return
-    const again = statSync(lock)
-    if (again.ino === st.ino && again.mtimeMs === st.mtimeMs) unlinkSync(lock)
-  } catch (e) { if (errno(e) !== 'ENOENT' && !lockBusy(errno(e))) throw e } // released meanwhile: just retry
+  // null: released meanwhile, so just retry
+  const look = () => { try { return statSync(lock) } catch (e) { if (errno(e) === 'ENOENT' || lockBusy(errno(e))) return null; throw e } }
+  const st = look()
+  if (!st || Date.now() - st.mtimeMs <= LOCK_STALE_MS) return
+  const again = look()
+  if (!again || again.ino !== st.ino || again.mtimeMs !== st.mtimeMs) return
+  try { unlinkSync(lock) } catch (e) { if (errno(e) !== 'ENOENT' && look()) throw e } // still there: it can't be removed, and waiting won't help
 }
 function writeMerged(ws: Workspace, add: Pick<Progress, 'reviews' | 'attempts'>, keepExisting = false): Progress {
   const p = progressPath(ws)
