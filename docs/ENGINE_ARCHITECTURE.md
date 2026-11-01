@@ -89,7 +89,7 @@ mdlearn/
 │   │   │   ├── learn/srs.ts        # event log → FSRS cards
 │   │   │   └── learn/streak.ts
 │   │   └── test/                   # hazard fixtures, golden CourseAST snapshots
-│   ├── cli/                        # @mdlearn/cli → mdlearn lint|build|status|outline|section|plan|new|queue|review|report
+│   ├── cli/                        # mdlearn → mdlearn lint|build|status|outline|section|plan|new|queue|review|report
 │   └── mcp/                        # @mdlearn/mcp → mdlearn-mcp: curriculum, authoring and tutor tools (docs/TOOLING.md)
 └── apps/
     └── player/                     # Vite + React SPA

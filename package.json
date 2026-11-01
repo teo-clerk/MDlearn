@@ -17,7 +17,7 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build -w @mdlearn/core && npm run build -w @mdlearn/studio && npm run build -w @mdlearn/cli && npm run build -w @mdlearn/mcp",
+    "build": "npm run build -w @mdlearn/core && npm run build -w @mdlearn/studio && npm run build -w mdlearn && npm run build -w @mdlearn/mcp",
     "test": "vitest run",
     "typecheck": "tsc -p packages/core --noEmit && tsc -p packages/cli --noEmit && tsc -p packages/mcp --noEmit && tsc -p packages/studio/tsconfig.server.json --noEmit && tsc -p packages/studio/tsconfig.web.json && tsc -p packages/desktop",
     "check-docs": "tsx scripts/check-docs.ts docs/*.md",
@@ -25,7 +25,8 @@
     "check-corpus": "tsx scripts/check-corpus.ts",
     "dev": "tsx packages/cli/src/index.ts studio --dev",
     "desktop:dev": "npm run start -w @mdlearn/desktop",
-    "desktop:dist": "npm run dist -w @mdlearn/desktop"
+    "desktop:dist": "npm run dist -w @mdlearn/desktop",
+    "publish:npm": "npm run build && npm test && npm publish -w @mdlearn/core -w @mdlearn/mcp -w @mdlearn/studio -w mdlearn --access public"
   },
   "devDependencies": {
     "@babel/parser": "7.29.9",

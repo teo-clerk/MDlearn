@@ -1,9 +1,10 @@
 {
   "name": "@mdlearn/core",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "MDlearn compiler, importer, answer checkers and learning models (DOM-free).",
   "license": "MIT",
   "author": "Teo Clerk",
+  "engines": { "node": ">=22.15" },
   "homepage": "https://github.com/teo-clerk/MDlearn#readme",
   "repository": {
     "type": "git",
