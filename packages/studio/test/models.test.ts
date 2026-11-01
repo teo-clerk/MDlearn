@@ -7,7 +7,7 @@ import { createApp } from '../server/app'
 import { EventBus } from '../server/bus'
 import { settingsStore } from '../server/settings'
 import { Workspaces } from '../server/workspaces'
-import { CATALOG, MODEL_NAME, ModelDownloads, fit, memoryFor, ollamaInstallHelp, parseNvidiaSmi } from '../server/ai/models'
+import { CATALOG, MODEL_NAME, ModelDownloads, fit, localAi, memoryFor, ollamaInstallHelp, parseNvidiaSmi } from '../server/ai/models'
 import type { Hardware, LocalAiInfo, ModelDownload } from '../shared/types'
 
 const fixture = resolve(__dirname, '../../core/test/fixtures/curriculum')
@@ -17,11 +17,11 @@ const LAPTOP: Hardware = { memoryGb: 30, gpu: { name: 'GeForce RTX 4060 Laptop G
 
 // A stand-in for Ollama: tags, version, delete, and a pull in two layers that can be held open (to cancel it)
 let models: { name: string; size: number; details?: { family: string; parameter_size: string } }[] = []
-let hold = false, deleted: string[] = []
+let hold = false, deleted: string[] = [], listRequests = 0
 let ollama: Server, url = ''
 beforeAll(async () => {
   ollama = createServer((req, res) => {
-    if (req.url === '/api/tags') { res.end(JSON.stringify({ models: [...models, { name: 'kimi:cloud', size: 340, remote_host: 'https://ollama.com:443' }] })); return }
+    if (req.url === '/api/tags') { listRequests++; res.end(JSON.stringify({ models: [...models, { name: 'kimi:cloud', size: 340, remote_host: 'https://ollama.com:443' }] })); return }
     if (req.url === '/api/version') { res.end(JSON.stringify({ version: '0.17.4' })); return }
     let body = ''
     req.on('data', (d) => (body += d)).on('end', () => {
@@ -103,6 +103,13 @@ describe('Settings → Local AI', () => {
     const done = await until((i) => !!i.download?.done)
     expect(done.download).toMatchObject({ model: 'qwen3:4b', completed: 350, total: 400, done: true })
     expect(done.catalog.find((c) => c.name === 'qwen3:4b')?.installed).toBe(true)
+  })
+  it('never reports a finished download beside an older list of models', async () => {
+    const { settings } = setup()
+    const seen = listRequests
+    const finishing = { state: () => (listRequests > seen ? { model: 'qwen3:4b', status: 'success', done: true } : { model: 'qwen3:4b', status: 'pulling', done: false }) }
+    const info = await localAi(settings.get().ollama!, finishing as unknown as ModelDownloads, LAPTOP)
+    expect(info.download?.done && !info.catalog.find((c) => c.name === 'qwen3:4b')?.installed).toBe(false)
   })
   it('one download at a time; a download can be cancelled', async () => {
     const { post, until } = setup()
