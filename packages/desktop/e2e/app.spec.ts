@@ -65,7 +65,7 @@ test('a PDF is read with nothing else installed', async () => {
   await win.getByText('New here? Open the tutorial').click()
   await expect(win).toHaveURL(/\/w\/[^/]+/)
   const ws = new URL(win.url()).pathname.split('/')[2]
-  const pdf = readFileSync(resolve(import.meta.dirname, '../../studio/test/fixtures/sample.pdf')).toString('base64')
+  const pdf = readFileSync(resolve(__dirname, '../../studio/test/fixtures/sample.pdf')).toString('base64')
   const summary = await win.evaluate(async ({ ws, pdf }) => {
     const form = new FormData()
     form.append('kind', 'pdf-fast')
