@@ -39,7 +39,8 @@ passaggio per evidenziarlo come **Importante**, **Non chiaro** o **Per l'esame**
 | **Oggi** | La tua sessione giornaliera: prima le carte da ripassare, poi qualche carta nuova. Qui ci sono anche obiettivi e scadenze. |
 | **Studia** | Una carta alla volta: rispondi, di' se eri sicuro, leggi il riscontro. |
 | **Simulazione d’esame** | Domande su ciò che hai studiato, mescolate tra le lezioni, a tempo se vuoi, corrette solo alla fine. |
-| **Chiedi** | Una domanda su tutta la cartella, a cui il modello locale risponde con i tuoi passaggi. |
+| **Chiedi** | Una domanda su tutta la cartella, appunti e lezioni, a cui il modello locale o Claude risponde con i tuoi passaggi, nella lingua in cui chiedi. |
+| **Compagno** | In fondo alla barra laterale. Cliccalo mentre leggi per chiedere qualsiasi cosa sul tuo corso, o cosa ripassare adesso. Puoi cambiarlo o nasconderlo in *Impostazioni → Aspetto*. |
 | **Progressi** | Cosa hai visto, quanto ricordi ogni lezione, la tua precisione e la tua serie. E la **verifica della sicurezza**: le carte di cui eri sicuro ma che hai sbagliato, pronte da ripassare. |
 | **Studia offline** | Sul telefono: porta con te le carte dei prossimi giorni (Oggi → *Porta offline le carte dei prossimi giorni*), studia senza connessione e le risposte si sincronizzano quando il computer è raggiungibile. Tieni aperta la pagina mentre sei offline. |
 | **LaTeX** | *Nuova nota → Documento LaTeX*, o qualsiasi file `.tex` sotto *LaTeX* nella barra laterale: scrivi a sinistra, **Compila** (Ctrl+S) per vedere il PDF a destra; gli errori portano alla loro riga. Serve Tectonic o TeX Live sul computer. |
@@ -100,4 +101,4 @@ carte di ripasso. Il tutorial mostra ciascuno dal vivo con il suo sorgente.
 
 Tutto resta nella tua cartella: le lezioni in `learn/`, le tue risposte in `learn/.mdlearn/progress.json`,
 le note e la cronologia dell'IA in `.mdlearn/`. Niente lascia il tuo computer a meno che tu non avvii un lavoro di AI Studio
-(Claude): Chiedi, Spiega e Visualizza girano sul modello locale.
+(Claude) o scelga Claude per chiedere. Spiega e Visualizza girano sempre sul modello locale, e anche Chiedi se non scegli Claude.

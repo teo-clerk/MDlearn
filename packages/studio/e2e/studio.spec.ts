@@ -10,7 +10,7 @@ test('an AI job (demo engine) writes a lesson that passes the checks, and can be
   await expect(page.getByText('checks pass')).toBeVisible({ timeout: 20_000 })
   const file = (await page.getByRole('link', { name: /\.learn\.md$/ }).first().innerText()).trim()
   await page.getByRole('button', { name: 'Undo all changes' }).click()
-  await expect(page.getByRole('status')).toContainText('Undone')
+  await expect(page.getByText(/^Undone:/)).toBeVisible()
   const r = await page.request.get(`/api/w/${ws}/lesson?path=${encodeURIComponent(file)}`)
   expect(r.status()).toBe(404)
 })

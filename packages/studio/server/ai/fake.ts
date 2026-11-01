@@ -56,6 +56,8 @@ Received power falls with the {{fourth}} power of range.
 
 /** The demo stand-in for a one-shot Claude answer (teach-back): the first key idea covered, the second partly, the rest missing. */
 export async function fakeOnce(req: { system: string; prompt: string }): Promise<string> {
+  if (/numbered passages/.test(req.system)) return 'A demo answer, from the first passage [1].'
+  if (/search words/.test(req.system)) return ''
   const given = [...req.prompt.matchAll(/^(\d+)\. (.+)$/gm)].map((m) => Number(m[1]))
   const ideas = given.length ? given.map((index, k) => ({ index, verdict: k === 0 ? 'covered' : k === 1 ? 'partly' : 'missing', ...(k === 0 ? { evidence: 'your first sentence' } : {}) }))
     : [{ idea: 'What the section is about.', verdict: 'covered' }, { idea: 'Why it holds.', verdict: 'missing' }]

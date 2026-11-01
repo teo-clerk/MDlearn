@@ -39,7 +39,8 @@ ceux de l'examen proposent **Créer une carte**. **Réglages → Apparence → C
 | **Aujourd'hui** | Votre session quotidienne : d'abord les fiches à réviser, puis quelques nouvelles. Les objectifs et les échéances sont ici aussi. |
 | **Réviser** | Une fiche à la fois : répondez, dites si vous étiez sûr, lisez le retour. |
 | **Examen blanc** | Des questions sur ce que vous avez étudié, mélangées entre les leçons, chronométrées si vous voulez, corrigées seulement à la fin. |
-| **Demander** | Une question sur tout le dossier, à laquelle le modèle local répond avec vos propres passages. |
+| **Demander** | Une question sur tout le dossier, notes et leçons, à laquelle le modèle local ou Claude répond avec vos propres passages, dans la langue de votre question. |
+| **Compagnon** | En bas de la barre latérale. Cliquez dessus pendant votre lecture pour poser n'importe quelle question sur votre cours, ou demander quoi réviser ensuite. Vous pouvez le changer ou le masquer dans *Réglages → Apparence*. |
 | **Progrès** | Ce que vous avez vu, à quel point vous retenez chaque leçon, votre précision et votre série. Et le **contrôle de confiance** : les fiches dont vous étiez sûr mais que vous avez ratées, prêtes à revoir. |
 | **Étudier hors ligne** | Sur un téléphone : emportez les fiches des prochains jours (Aujourd’hui → *Emporter hors ligne les cartes des prochains jours*), étudiez sans connexion, et les réponses se synchronisent quand l’ordinateur est joignable. Gardez la page ouverte hors ligne. |
 | **LaTeX** | *Nouvelle note → Document LaTeX*, ou tout fichier `.tex` sous *LaTeX* dans la barre latérale : écrivez à gauche, **Compiler** (Ctrl+S) pour voir le PDF à droite ; les erreurs mènent à leur ligne. Il faut Tectonic ou TeX Live sur l’ordinateur. |
@@ -100,4 +101,4 @@ des fiches de révision. Le tutoriel montre chacun en direct avec sa source.
 
 Tout reste dans votre dossier : les leçons dans `learn/`, vos réponses dans `learn/.mdlearn/progress.json`,
 les notes et l'historique de l'IA dans `.mdlearn/`. Rien ne quitte votre ordinateur sauf si vous lancez une tâche AI Studio
-(Claude) : Demander, Expliquer et Visualiser tournent sur le modèle local.
+(Claude) ou choisissez Claude pour poser une question. Expliquer et Visualiser tournent toujours sur le modèle local, et Demander aussi si vous ne choisissez pas Claude.

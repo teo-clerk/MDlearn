@@ -7,7 +7,7 @@ import { createApp } from '../server/app'
 import { EventBus } from '../server/bus'
 import { settingsStore } from '../server/settings'
 import { Workspaces } from '../server/workspaces'
-import { buildPrompt, citedNumbers } from '../server/ask/service'
+import { buildPrompt, citedNumbers } from '../server/ask/prompt'
 import type { AskEntry, AskStatus, Note, RelatedResponse } from '../shared/types'
 
 const fixture = resolve(__dirname, '../../core/test/fixtures/curriculum')
@@ -33,8 +33,9 @@ beforeAll(async () => {
         setTimeout(() => { models = [...models, 'embeddinggemma:latest']; res.end(JSON.stringify({ status: 'success' }) + '\n') }, 50)
         return
       }
-      lastChat = j
       res.setHeader('content-type', 'application/x-ndjson')
+      if (/search words/.test(j.messages[0].content)) { res.end(JSON.stringify({ done: true }) + '\n'); return } // nothing to add to the search
+      lastChat = j
       for (const piece of 'The radar equation has $R^4$ [1], and speckle is noise [2][9].'.match(/.{1,9}/g)!) res.write(JSON.stringify({ message: { content: piece }, done: false }) + '\n')
       res.end(JSON.stringify({ done: true }) + '\n')
     })
@@ -82,7 +83,7 @@ describe('asking the whole folder', () => {
     expect(st).toMatchObject({ installed: false, model: 'embeddinggemma', chatReady: true })
     expect(st.total).toBeGreaterThan(0)
     const r = await (await post('/ask', { question: 'How does multi-looking reduce speckle variance?' })).json() as { id: string; entry: AskEntry }
-    expect(r.entry.mode).toBe('words'); expect(r.entry.notice).toMatch(/words only/)
+    expect(r.entry.mode).toBe('words'); expect(r.entry.notice).toBe('words')
     expect(r.entry.sources[0]).toMatchObject({ n: 1, doc: 'speckle.md', docTitle: 'Speckle' })
     expect(r.entry.sources[0].section).toMatchObject({ num: '1' })
     const done = await until(finished(get, r.id), (e) => e?.done)
@@ -93,7 +94,7 @@ describe('asking the whole folder', () => {
   it('answers without calling the model when nothing matches', async () => {
     const { post, get } = setup()
     const r = await (await post('/ask', { question: 'zebra giraffe' })).json() as { entry: AskEntry }
-    expect(r.entry).toMatchObject({ done: true, sources: [] }); expect(r.entry.answer).toMatch(/Nothing in this folder matches/)
+    expect(r.entry).toMatchObject({ done: true, sources: [], notice: 'nothing', answer: '' })
     expect(lastChat).toBeNull()
     expect((await get<AskEntry[]>('/ask/history'))[0].question).toBe('zebra giraffe')
   })

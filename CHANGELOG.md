@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.6.0 — 2026-11-01
+
+**Ask the companion anything about your course.** The companion is now on by default, as a small pixel creature at the
+foot of the sidebar, and clicking it opens a conversation. It knows your notes, your lessons, your progress and the page
+you are on, so you can ask about a passage, what to review next, or just "and why is that?". It shows where each answer
+came from, and says plainly when something isn't in your course. It stays away from study sessions and mock exams, and
+you can change it or turn it off in Settings.
+
+**Asking now reads your lessons.** Ask only searched your notes, so a course without notes had nothing to find. Each
+card of a lesson now counts too.
+
+**Any language.** Answers come in the language you ask in, whatever language the course is in, and a question in another
+language now finds the right passages. Messages from the search follow the language of the app.
+
+**Claude can answer.** Asking needed a local model. Without one, Claude Code answers instead, and the page says what goes to
+Anthropic: the passages and titles it reads, and your study progress if you asked the companion.
+
 ## 1.5.1 — 2026-11-01
 
 **MDlearn is on npm.** With Node.js 22.15 or newer, `npx mdlearn studio` opens the app in your browser, and

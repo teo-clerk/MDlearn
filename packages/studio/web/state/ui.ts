@@ -42,7 +42,7 @@ interface UiState {
   setTour(open: boolean): void
 }
 const CELEBRATE_MS = 6000
-const savedCompanion = (): CompanionKind => { try { const c = localStorage.getItem('mdl-companion'); return c === 'orb' || c === 'pixel' ? c : 'off' } catch { return 'off' } }
+const savedCompanion = (): CompanionKind => { try { const c = localStorage.getItem('mdl-companion'); return c === 'off' || c === 'orb' ? c : 'pixel' } catch { return 'pixel' } }
 const saved = (): Theme => { try { const t = localStorage.getItem('mdl-theme'); return t === 'light' || t === 'dark' ? t : 'system' } catch { return 'system' } }
 const wide = () => typeof window === 'undefined' || window.matchMedia('(min-width: 1100px)').matches
 

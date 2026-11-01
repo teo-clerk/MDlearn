@@ -296,18 +296,30 @@ unchanged files are skipped by mtime) and updated by the file watcher.
 
 ## 9. Ask your whole folder
 
-**Ask** (`/w/:ws/ask`, also "Ask: …" in the search palette) answers a question from your own documents.
+**Ask** (`/w/:ws/ask`, also "Ask: …" in the search palette) answers a question from your own documents and lessons.
 
 1. **Passages.** The knowledge index splits every document into passages of at most ~400 words that know their
-   section (3,273 for a 105-document folder).
+   section (3,273 for a 105-document folder). Each card of a lesson is a passage too, so a course with no notes can
+   be asked about as well. *Related* stays with notes, on an index of its own.
 2. **Retrieval.** BM25 over the words (lightly stemmed, TeX ignored) and — when the search model is installed —
-   cosine similarity over meaning vectors; the two rankings are fused with reciprocal-rank fusion (k = 60) and
-   the best eight passages go on. Without vectors the search is by words only and says so.
-3. **Answer.** The local model (default `qwen3:8b`) gets the passages and the question, must answer *only* from
-   them, and cites each claim as `[1]`, `[2]`; `[n]` becomes a link to that passage's section. If nothing
-   matches, no model call is made. Answers stream like a note's and can be stopped.
+   cosine similarity over meaning vectors; the rankings are fused with reciprocal-rank fusion (k = 60) and the best
+   eight passages go on. Without vectors the search is by words only and says so.
+3. **Answer.** The local model (default `qwen3:8b`), or Claude when you choose it or there is no local model, gets
+   the passages and the question, must answer *only* from them, and cites each claim as `[1]`, `[2]`; `[n]` becomes
+   a link to that passage. If nothing matches, no answer is written. Answers stream like a note's and can be
+   stopped; Claude's arrives whole. Claude runs on the computer running MDlearn only, with no tools and no access to
+   any folder, and the page says what goes to Anthropic: the passages and titles it reads, and for the companion your
+   study record. A lesson that links outside the folder is left out, so a course someone else made can't pull in
+   private files, and so is one over 1 MB.
 4. **History** in `<folder>/.mdlearn/asks.json` (last 100). *Keep as a note* attaches the question and answer to
    the section a source comes from, so it shows up beside that text.
+
+**Any language.** The answer is written in the language of the question, whatever language the course is in; a
+question too short to tell uses the language of the app. Meaning vectors cross languages by themselves. Words don't,
+so when under half of a question's words appear anywhere in the folder and there are no vectors, the AI is first asked
+for search words in the language of the folder (it sees a spread of the folder's titles), and those replace the
+question's own words in the search. The question it answers stays as you wrote it. Search notices are sent as codes,
+so the app says them in its own language.
 
 **The search model.** `embeddinggemma` (≈620 MB, 768 numbers per passage) is downloaded once through Ollama's
 `/api/pull` from the Ask page (or *Index now*); progress is shown and indexing runs in the background —
@@ -455,11 +467,15 @@ marks too much, and *Improve a lesson → Mark key terms* adds them to an existi
 *Make a card*. *Settings → Appearance → Colour in notes* turns every hue grey per device (`data-colour="off"`, set before the first paint by
 `public/theme.js`). Icons, underlines and labels carry the same meaning, so nothing depends on seeing colour.
 
-**Companion (a test).** *Settings → Appearance → Companion*: off by default, or an orb (`thinking-orbs`, loaded only for someone who picks it) or a
-12×12 one-colour pixel creature (`web/companion/sprites.ts`, plain data). It sits at the foot of the sidebar and shows what is really happening,
-from `useActivity.ts`: a job, an answer on its way, a teach-back, the end of a session, or five minutes without input. Clicking it shows cards
-due, the inbox and any running job. It hides on Study and Mock exam until the session ends, stays off phones, and always says in words what it
-shows. There is no hunger, currency, sound, or reward for time in the app: the research found agents help a little and virtual pets mixed at best,
+**Companion.** *Settings → Appearance → Companion*: a 12×12 one-colour pixel creature by default (`web/companion/sprites.ts`, plain data), an orb
+(`thinking-orbs`, loaded only for someone who picks it), or off, which is remembered. It sits at the foot of the sidebar and shows what is really happening,
+from `useActivity.ts`: a job, an answer on its way, a teach-back, the end of a session, or five minutes without input. Clicking it opens a
+panel where you can ask anything about your course (`web/companion/AskBox.tsx`), with cards due, the inbox and any running job below. It uses Ask
+(§9) with three additions: your study record (`server/ask/record.ts`: lessons, what is due, predicted recall, deadlines, cards you were sure of but
+got wrong), so it can say what to review; the page you are on; and the last three questions, so a follow-up can name nothing. When your course does
+not cover a question it says so, then answers from general knowledge and says that part is not from your course, where the Ask page declines. The panel
+is not modal: Esc closes it, and the conversation stays until you start a new one or reload. It hides on Study and Mock exam until the session ends,
+stays off phones, and always says in words what it shows. There is no hunger, currency, sound, or reward for time in the app: the research found agents help a little and virtual pets mixed at best,
 and that engagement without a link to study didn't raise learning. Keep one or remove it after a week of use; it's one folder and one commit.
 
 **Coding assistants.** A folder can carry the instructions, so Codex, OpenCode, Pi and Claude Code need no setup:

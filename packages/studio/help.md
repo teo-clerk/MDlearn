@@ -39,7 +39,8 @@ Colour has a job here: the kind of a callout, a formula term and its explanation
 | **Today** | Your daily session: cards due first, then a few new ones. Goals and deadlines live here too. |
 | **Study** | One card at a time: answer, say whether you were sure, read the feedback. |
 | **Mock exam** | Questions on what you have studied, mixed across lessons, timed if you like, marked only at the end. |
-| **Ask** | A question about the whole folder, answered by the local model from your own passages. |
+| **Ask** | A question about the whole folder, notes and lessons, answered from your own passages by the local model or Claude, in the language you ask in. |
+| **Companion** | At the foot of the sidebar. Click it while you read to ask anything about your course, or what to review next. You can change or hide it in *Settings → Appearance*. |
 | **Progress** | What you have seen, how well you remember each lesson, your accuracy and streak, and the **confidence check**: the cards you were sure about and got wrong, ready to review. |
 | **Study offline** | On a phone: take the next days' cards (Today → *Take the next days' cards offline*), study with no connection, and the answers sync when the computer is reachable. Keep the page open while offline. |
 | **LaTeX** | *New note → LaTeX document*, or any `.tex` file under *LaTeX* in the sidebar: write on the left, **Compile** (Ctrl+S) to see the PDF on the right; errors link to their line. Needs Tectonic or TeX Live on the computer. |
@@ -100,4 +101,4 @@ review cards. The tutorial shows each one live with its source.
 
 Everything stays in your folder: lessons in `learn/`, your answers in `learn/.mdlearn/progress.json`,
 notes and AI history in `.mdlearn/`. Nothing leaves your computer unless you start an AI Studio job
-(Claude) — Ask, Explain and Visualise run on the local model.
+(Claude) or choose Claude for asking. Explain and Visualise always run on the local model, and Ask does too unless you choose Claude.

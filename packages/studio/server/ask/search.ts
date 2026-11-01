@@ -32,6 +32,11 @@ export class Bm25 {
     }
     this.avg = this.len.reduce((a, b) => a + b, 0) / Math.max(1, this.len.length) || 1
   }
+  /** The share of a query's words that appear anywhere: a question in another language than the notes shares almost none. */
+  known(query: string): number {
+    const terms = [...new Set(tokenize(query))]
+    return terms.length ? terms.filter((w) => this.df.has(w)).length / terms.length : 0
+  }
   search(query: string, limit: number): Scored[] {
     const terms = [...new Set(tokenize(query))]
     const n = this.tf.length
