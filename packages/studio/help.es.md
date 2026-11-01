@@ -24,7 +24,7 @@ usar. Luego elige quién escribe las lecciones:
 
 Las lecciones aparecen a medida que se escriben. En el editor, pega o suelta una captura para añadir una imagen. Haz clic en una imagen para verla más grande. Una imagen de la web espera hasta que permitas su sitio, porque un documento podría usarla para sacar información.
 
-Para cambiar un curso ya empezado, abre su página de presentación. Puedes mover o pausar una lección, añadir archivos o pedir un cambio. Las tarjetas conservan su calendario, incluso con títulos nuevos.
+Para cambiar un curso ya empezado, abre su página de presentación. Puedes mover o pausar una lección, añadir archivos o pedir un cambio. Las tarjetas conservan su calendario, incluso con títulos nuevos. Para pasar un curso a otro idioma, usa *Traducir este curso*: cada tarjeta conserva su calendario.
 
 ## El color en tus notas
 

@@ -8,14 +8,14 @@ import { useUi } from '../state/ui'
 import { Button, ErrorNote, Spinner } from '../ui/primitives'
 import { Command, CopyButton } from '../settings/Command'
 import { promptFor } from '../settings/prompt'
-import { shellPath } from '../lib/shell'
-import { LANGS, currentLang, t, tp } from '../i18n'
+import { plainWords, shellPath } from '../lib/shell'
+import { LanguageField } from './LanguageField'
+import { t, tp } from '../i18n'
 import type { PreparedFolder } from '../../shared/types'
 
 type Writer = 'claude' | 'assistant' | 'chat'
 const REQUEST = 'Make the MDlearn course from the files in sources/, following AGENTS.md.'
-const courseLanguage = () => (currentLang() === 'en' ? undefined : LANGS.find((l) => l.code === currentLang())?.english)
-const request = () => (courseLanguage() ? `${REQUEST} Write it in ${courseLanguage()}.` : REQUEST)
+const request = (language: string) => (plainWords(language) ? `${REQUEST} Write it in ${plainWords(language)}.` : REQUEST)
 const TOOLS: { id: string; name: string; run: (ask: string) => string }[] = [
   { id: 'claude', name: 'Claude Code', run: (ask) => `claude "${ask}"` },
   { id: 'codex', name: 'Codex', run: (ask) => `codex "${ask}"` },
@@ -34,7 +34,7 @@ function Option({ icon: Icon, title, hint, chosen, onChoose }: { icon: LucideIco
   )
 }
 
-function FromHere({ ws, name }: { ws: string; name: string }) {
+function FromHere({ ws, name, language }: { ws: string; name: string; language: string }) {
   const [, navigate] = useLocation()
   const [wishes, setWishes] = useState('')
   const [busy, setBusy] = useState(false)
@@ -42,7 +42,7 @@ function FromHere({ ws, name }: { ws: string; name: string }) {
   const start = async () => {
     setBusy(true); setError(null)
     try {
-      const job = await jobsApi.start(ws, { recipe: 'course.class', name, language: courseLanguage(), ...(wishes.trim() ? { request: wishes.trim() } : {}) })
+      const job = await jobsApi.start(ws, { recipe: 'course.class', name, language: language.trim() || undefined, ...(wishes.trim() ? { request: wishes.trim() } : {}) })
       navigate(`/w/${ws}/studio?job=${job.id}`)
     } catch (e) { setError(e); setBusy(false) }
   }
@@ -59,7 +59,7 @@ function FromHere({ ws, name }: { ws: string; name: string }) {
   )
 }
 
-function WithAssistant({ ws, root }: { ws: string; root: string }) {
+function WithAssistant({ ws, root, language }: { ws: string; root: string; language: string }) {
   const [tool, setTool] = useState(TOOLS[0])
   const [ready, setReady] = useState<PreparedFolder | null>(null)
   const [busy, setBusy] = useState(false)
@@ -81,20 +81,20 @@ function WithAssistant({ ws, root }: { ws: string; root: string }) {
         {TOOLS.map((x) => <button key={x.id} role="tab" aria-selected={x.id === tool.id} onClick={() => setTool(x)} className={`rounded-[6px] px-2.5 py-1 text-[13px] cursor-pointer ${x.id === tool.id ? 'bg-hover font-medium' : 'text-muted hover:text-text'}`}>{x.name}</button>)}
       </div>
       <p className="text-[13.5px]">{t('Run this in a terminal:')}</p>
-      <Command text={`cd ${shellPath(root)}\n${tool.run(request())}`} />
+      <Command text={`cd ${shellPath(root)}\n${tool.run(request(language))}`} />
       {!!ready.kept.length && <p className="text-[13px] text-warn">{t('Your own {file} was kept. Add a line to it: follow .agents/skills/mdlearn-course/SKILL.md.', { file: ready.kept[0] })}</p>}
     </div>
   )
 }
 
-function InAChat({ ws }: { ws: string }) {
+function InAChat({ ws, language }: { ws: string; language: string }) {
   const info = useIntegrations()
   const setImportOpen = useUi((u) => u.setImportOpen)
   const [, navigate] = useLocation()
   return (
     <ol className="flex list-decimal flex-col gap-2 pl-5 text-[13.5px] leading-relaxed">
       <li>{t('Open ChatGPT, Claude.ai or Gemini and attach your files. Chats read PDF, PowerPoint and Word themselves.')}</li>
-      <li className="flex flex-col items-start gap-1.5">{t('Paste the MDlearn prompt, then ask for a course from the attached files.')}
+      <li className="flex flex-col items-start gap-1.5">{language.trim() ? t('Paste the MDlearn prompt, then ask for a course in {language} from the attached files.', { language: language.trim() }) : t('Paste the MDlearn prompt, then ask for a course from the attached files.')}
         {info.data ? <CopyButton text={promptFor(info.data.prompt).text} label={t('Copy the prompt')} /> : <Spinner />}
       </li>
       <li className="flex flex-col items-start gap-1.5">{t('Copy its whole answer and bring it here.')}
@@ -124,6 +124,7 @@ export function WriterStep({ ws }: { ws: string }) {
   const engines = useEngines()
   const claude = engines.data?.claude?.available
   const [picked, setPicked] = useState<Writer | null>(null)
+  const [language, setLanguage] = useState('')
   const writer = picked ?? (claude ? 'claude' : 'assistant')
   if (!tree.data) return <div className="mt-6"><Spinner /></div>
   return (
@@ -134,10 +135,11 @@ export function WriterStep({ ws }: { ws: string }) {
         <Option icon={TerminalSquare} title={t('My coding assistant')} hint={t('Claude Code, Codex, OpenCode or Pi')} chosen={writer === 'assistant'} onChoose={() => setPicked('assistant')} />
         <Option icon={MessageSquareText} title={t('A chat')} hint={t('ChatGPT, Claude.ai or Gemini')} chosen={writer === 'chat'} onChoose={() => setPicked('chat')} />
       </div>
+      <div className="mt-4"><LanguageField value={language} onChange={setLanguage} label={t('Language of the course')} placeholder={t('Same as my files')} /></div>
       <div className="mt-4">
-        {writer === 'claude' && <FromHere ws={ws} name={tree.data.name} />}
-        {writer === 'assistant' && <WithAssistant ws={ws} root={tree.data.root} />}
-        {writer === 'chat' && <InAChat ws={ws} />}
+        {writer === 'claude' && <FromHere ws={ws} name={tree.data.name} language={language} />}
+        {writer === 'assistant' && <WithAssistant ws={ws} root={tree.data.root} language={language} />}
+        {writer === 'chat' && <InAChat ws={ws} language={language} />}
       </div>
       <div className="mt-6 border-t border-border pt-4"><Arriving ws={ws} /></div>
     </section>

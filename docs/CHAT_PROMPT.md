@@ -92,6 +92,7 @@ Explain why a positive result can still mean the person is probably healthy.
 
 ## Checklist
 - Frontmatter has `title`, `level`, `lang`, `goals`; every card starts with `## `; no `---` in the body.
+- Written in the language the student asks for, or else the language of their material; `lang` matches it.
 - Every widget opens with `:::type` and closes with its own `:::` line; widgets never nest; they come after the first `##`.
 - Math only as `$…$` and `$$…$$`; money as `\$5`; no `<script>` or `<style>`.
 - Every key recomputed; options of equal length; the right option is not the longest.

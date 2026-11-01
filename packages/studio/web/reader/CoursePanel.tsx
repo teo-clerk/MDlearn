@@ -2,10 +2,11 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'wouter'
 import { useQueryClient } from '@tanstack/react-query'
-import { ArrowDown, ArrowUp, FilePlus2, Pause, Play, Sparkles, TriangleAlert, type LucideIcon } from 'lucide-react'
-import { courseApi, jobsApi, useCourse, useEngines } from '../api/queries'
+import { ArrowDown, ArrowUp, FilePlus2, Languages, Pause, Play, Sparkles, TriangleAlert, type LucideIcon } from 'lucide-react'
+import { courseApi, jobsApi, useCourse, useEngines, type JobRequest } from '../api/queries'
 import { lessonRoute } from '../lib/paths'
 import { Button, ErrorNote } from '../ui/primitives'
+import { LanguageField } from '../start/LanguageField'
 import type { CourseLesson, LostCardInfo } from '../../shared/types'
 import { t, tp } from '../i18n'
 
@@ -83,16 +84,34 @@ function LostCards({ ws, lost, canWrite, canStudy, run }: { ws: string; lost: Lo
   )
 }
 
-function ChangeForm({ ws, doc, onClose }: { ws: string; doc: string; onClose: () => void }) {
+/** Start a job on this course and go and watch it. */
+function useCourseJob(ws: string) {
   const [, navigate] = useLocation()
-  const [request, setRequest] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<unknown>(null)
-  const start = async () => {
+  const start = async (job: JobRequest) => {
     setBusy(true); setError(null)
-    try { const job = await jobsApi.start(ws, { recipe: 'course.change', doc, request: request.trim() }); navigate(`/w/${ws}/studio?job=${job.id}`) }
-    catch (e) { setError(e); setBusy(false) }
+    try { navigate(`/w/${ws}/studio?job=${(await jobsApi.start(ws, job)).id}`) } catch (e) { setError(e); setBusy(false) }
   }
+  return { busy, error, start }
+}
+
+function TranslateForm({ ws, doc, onClose }: { ws: string; doc: string; onClose: () => void }) {
+  const [language, setLanguage] = useState('')
+  const { busy, error, start } = useCourseJob(ws)
+  return (
+    <div className="mt-3 flex flex-col gap-2">
+      <LanguageField autoFocus value={language} onChange={setLanguage} label={t('Translate into')} placeholder={t('e.g. Spanish')} />
+      <p className="text-[12.5px] text-muted">{t('Every card keeps its history. Your notes stay, but apart from the translated text. You can undo the whole translation.')}</p>
+      {!!error && <ErrorNote error={error} />}
+      <div className="flex gap-2"><Button variant="primary" size="sm" icon={Languages} busy={busy} disabled={language.trim().length < 2} onClick={() => void start({ recipe: 'course.translate', doc, language: language.trim() })}>{t('Translate the course')}</Button><Button size="sm" variant="ghost" onClick={onClose}>{t('Cancel')}</Button></div>
+    </div>
+  )
+}
+
+function ChangeForm({ ws, doc, onClose }: { ws: string; doc: string; onClose: () => void }) {
+  const [request, setRequest] = useState('')
+  const { busy, error, start } = useCourseJob(ws)
   return (
     <div className="mt-3 flex flex-col gap-2">
       <label className="block text-[13px] font-medium">{t('What should change?')}
@@ -101,7 +120,7 @@ function ChangeForm({ ws, doc, onClose }: { ws: string; doc: string; onClose: ()
       </label>
       <p className="text-[12.5px] text-muted">{t('Cards keep their history, even with new titles or better questions. You can undo the whole change.')}</p>
       {!!error && <ErrorNote error={error} />}
-      <div className="flex gap-2"><Button variant="primary" size="sm" icon={Sparkles} busy={busy} disabled={request.trim().length < 2} onClick={() => void start()}>{t('Change the course')}</Button><Button size="sm" variant="ghost" onClick={onClose}>{t('Cancel')}</Button></div>
+      <div className="flex gap-2"><Button variant="primary" size="sm" icon={Sparkles} busy={busy} disabled={request.trim().length < 2} onClick={() => void start({ recipe: 'course.change', doc, request: request.trim() })}>{t('Change the course')}</Button><Button size="sm" variant="ghost" onClick={onClose}>{t('Cancel')}</Button></div>
     </div>
   )
 }
@@ -110,7 +129,7 @@ export function CoursePanel({ ws, doc, caps }: { ws: string; doc: string; caps: 
   const info = useCourse(ws, doc)
   const engines = useEngines()
   const { error, run } = useRun(ws)
-  const [changing, setChanging] = useState(false)
+  const [changing, setChanging] = useState<'change' | 'translate' | null>(null)
   const canWrite = caps.includes('write'), canStudy = caps.includes('study')
   const claude = caps.includes('ai') && engines.data?.claude?.available
   if (!info.data?.lessons.length) return null
@@ -121,12 +140,14 @@ export function CoursePanel({ ws, doc, caps }: { ws: string; doc: string; caps: 
       {!!info.data.lost.length && <LostCards ws={ws} lost={info.data.lost} canWrite={canWrite} canStudy={canStudy} run={run} />}
       {canWrite && !changing && (
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          {claude && <Button size="sm" variant="secondary" icon={Sparkles} onClick={() => setChanging(true)}>{t('Change this course')}</Button>}
+          {claude && <Button size="sm" variant="secondary" icon={Sparkles} onClick={() => setChanging('change')}>{t('Change this course')}</Button>}
+          {claude && <Button size="sm" variant="secondary" icon={Languages} onClick={() => setChanging('translate')}>{t('Translate this course')}</Button>}
           <Link href={`/start?ws=${ws}&add=1`} className="inline-flex h-8 items-center gap-1.5 rounded-[6px] px-2.5 text-[13px] text-muted hover:bg-hover hover:text-text"><FilePlus2 className="size-4" strokeWidth={1.7} aria-hidden />{t('Add class files')}</Link>
         </div>
       )}
       {canWrite && !claude && <p className="mt-2 text-[12.5px] text-muted">{t('To change it, ask your coding assistant in this folder. AGENTS.md tells it how to keep your progress.')}</p>}
-      {changing && <ChangeForm ws={ws} doc={doc} onClose={() => setChanging(false)} />}
+      {changing === 'change' && <ChangeForm ws={ws} doc={doc} onClose={() => setChanging(null)} />}
+      {changing === 'translate' && <TranslateForm ws={ws} doc={doc} onClose={() => setChanging(null)} />}
     </section>
   )
 }

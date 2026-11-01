@@ -152,6 +152,7 @@ export type JobRequest =
   | { recipe: 'lesson.improve'; lesson: string; focus: 'questions' | 'clarity' | 'lint' | 'marks' | 'all' | 'leech'; note?: string; card?: { key: string; title: string; wrong: string[] } }
   | { recipe: 'custom'; request: string; scope?: string }
   | { recipe: 'course.change'; doc: string; request: string }
+  | { recipe: 'course.translate'; doc: string; language: string }
   | { recipe: 'course.class'; name: string; level?: 'beginner' | 'intermediate' | 'advanced'; language?: string; request?: string }
   | { recipe: 'course.topic'; topic: string; level?: 'beginner' | 'intermediate' | 'advanced'; language?: string; minutes?: number; notes?: string }
 export const jobsApi = {

@@ -24,7 +24,7 @@ choose who writes the lessons:
 
 Lessons appear as they are written. In the editor, paste or drop a screenshot to add a picture. Click any picture to see it larger. A picture from the web waits until you allow its site, because a document could use one to send information out.
 
-To change a course after you've started, open its overview page. You can move or pause a lesson, add class files, or ask for a change. Cards keep their schedule, even with new titles.
+To change a course after you've started, open its overview page. You can move or pause a lesson, add class files, or ask for a change. Cards keep their schedule, even with new titles. To move a course to another language, use *Translate this course*: every card keeps its schedule.
 
 ## Colour in your notes
 

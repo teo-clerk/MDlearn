@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import { shellPath } from '../web/lib/shell'
+import { plainWords, shellPath } from '../web/lib/shell'
+
+describe('a language in a pasted command', () => {
+  for (const name of ['Español', 'Português do Brasil', 'العربية', 'हिन्दी', '日本語']) it(`keeps ${name}`, () => expect(plainWords(name)).toBe(name))
+  it('keeps nothing a shell could read', () => {
+    expect(plainWords('Greek"; x $(y) `z` !\\')).toBe('Greek x y z')
+  })
+})
 
 describe('a folder in a pasted command', () => {
   it('stays readable when the name is ordinary', () => {

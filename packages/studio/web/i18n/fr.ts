@@ -1345,4 +1345,12 @@ export default {
   'Open-source notices': 'Mentions open source',
   'Ask something, e.g. why can no engine beat the Carnot limit?': 'Posez une question, par ex. pourquoi aucun moteur ne peut dépasser la limite de Carnot ?',
   'e.g. Add a lesson of ten questions on the first law, or: make every quiz in chapter 4 harder.': 'par ex. Ajoute une leçon de dix questions sur le premier principe, ou : rends plus difficiles les quiz du chapitre 4.',
+  'Language of the course': 'Langue du cours',
+  'Same as my files': 'Comme mes fichiers',
+  'Paste the MDlearn prompt, then ask for a course in {language} from the attached files.': 'Collez le prompt MDlearn, puis demandez un cours en {language} à partir des fichiers joints.',
+  'Translate this course': 'Traduire ce cours',
+  'Translate into': 'Traduire en',
+  'e.g. Spanish': 'ex. espagnol',
+  'Every card keeps its history. Your notes stay, but apart from the translated text. You can undo the whole translation.': 'Chaque carte garde son historique. Vos notes restent, mais séparées du texte traduit. Vous pouvez annuler toute la traduction.',
+  'Translate the course': 'Traduire le cours',
 } satisfies Dict

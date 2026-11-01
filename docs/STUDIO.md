@@ -443,7 +443,8 @@ page shows `web/reader/CoursePanel.tsx`: each lesson's standing, move up and dow
 lesson ids ignore, and updates links in `course.md` and the notes file), pause (the cards go to `goals.suspended`), add class files, and
 *Change this course*. That `course.change` job pins every studied card in `preWrite`, so undo covers it, tells the AI each lesson's
 recall and hardest cards, and ends with `JobSummary.changes`: "28 cards kept their progress · 4 new · 1 removed". Outside AIs get the
-same rules in `AGENTS.md`, `lint.mjs --pin` before editing, and a report from `save_lesson` with `overwrite`. When a studied card is gone anyway,
+same rules in `AGENTS.md`, `lint.mjs --pin` before editing, and a report from `save_lesson` with `overwrite`. *Translate this course* is the
+same job (`course.translate`) with every card pinned, studied or not, because a translation renames them all. When a studied card is gone anyway,
 the panel offers *Reconnect to…* or *Let go*. Reconnecting appends copies of the card's reviews under the new key (ids `moved:…`, left out
 of daily counts by `isOriginalReview`) and pins the new card; both choices add the old key to `goals.settled`. The log keeps every event.
 

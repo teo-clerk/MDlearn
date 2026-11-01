@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.5.0 — 2026-11-01
+
+**Courses in any language.** The first step of a course now asks for the language it should be written in, for every
+way of writing one: Claude from here, a coding assistant, or a chat. Leave it empty and the course follows your files,
+so the language of the app no longer decides it. An English app can ask for Spanish, and an Italian app can keep an
+English course.
+
+**Translate a course you have started.** *Translate this course* on the overview page moves the whole course to another
+language. Every card's id is written down first, so nothing starts over, and you can undo the whole translation. Your
+notes stay, in the list of notes whose passage changed.
+
 ## 1.4.1 — 2026-11-01
 
 **PDFs need nothing installed.** The quick PDF reader now uses pdf.js, which comes with the app, so it works the same on

@@ -46,6 +46,9 @@ test('a first-time user gets a course from a coding assistant, and studies it', 
   await expect(command).toBeVisible()
   await page.getByRole('tab', { name: 'Pi' }).click()
   await expect(page.getByText(/pi "Make the MDlearn course/)).toBeVisible()
+  await page.getByLabel('Language of the course').fill('Greek"; $(x)')
+  await expect(page.getByText(/following AGENTS\.md\. Write it in Greek x\."/)).toBeVisible()
+  await page.getByLabel('Language of the course').clear()
   const root = /cd "([^"]+)"/.exec(await page.locator('code').first().innerText())![1]
 
   // the assistant works in the folder: what it wrote there shows up by itself
@@ -136,6 +139,13 @@ test('a week in: change the course, reorder it, and keep what you studied', asyn
   await page.getByLabel('What should change?').fill('Add a card on heat pumps')
   await page.getByRole('button', { name: 'Change the course' }).click()
   await expect(page.getByRole('region', { name: 'What happened to your cards' })).toContainText('2 cards kept their progress', { timeout: 10_000 })
+
+  // and it can move to another language the same way
+  await page.goto(`/w/${ws}/doc?path=course.md`)
+  await page.getByRole('button', { name: 'Translate this course' }).click()
+  await page.getByLabel('Translate into').fill('Spanish')
+  await page.getByRole('button', { name: 'Translate the course' }).click()
+  await expect(page.getByRole('region', { name: 'What happened to your cards' })).toContainText('kept their progress', { timeout: 10_000 })
 })
 
 test('colour means something, and can be turned off', async ({ page }) => {

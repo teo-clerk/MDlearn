@@ -1,6 +1,6 @@
 {
   "name": "@mdlearn/mcp",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "description": "MCP server: curriculum outlines, exact source sections, lesson linting and FSRS tutoring for Claude.",
   "license": "MIT",
   "author": "Teo Clerk",
@@ -25,7 +25,7 @@
     "build": "tsc -p ."
   },
   "dependencies": {
-    "@mdlearn/core": "1.4.1",
+    "@mdlearn/core": "1.5.0",
     "@modelcontextprotocol/sdk": "1.32.1",
     "zod": "^4.6.7"
   }

@@ -84,4 +84,10 @@ describe('course prompt', () => {
     expect(notes).toMatch(/lint_lesson/)
     expect(notes).toMatch(/Italian/)
   })
+  it('holds a course to the language asked for, and to the language of its material otherwise', () => {
+    expect(coursePrompt({ topic: 'Tides', classFiles: 'sources', language: 'Spanish' })).toContain('Write everything in Spanish, whatever language the sources are in')
+    expect(coursePrompt({ topic: 'Tides', language: 'Spanish' })).toContain('Write everything in Spanish')
+    expect(coursePrompt({ topic: 'Tides', classFiles: 'sources' })).toContain('Write in the language of the files')
+    expect(coursePrompt({ topic: 'Tides' })).toContain('Write in the language of this request')
+  })
 })
