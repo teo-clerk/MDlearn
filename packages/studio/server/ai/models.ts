@@ -122,6 +122,7 @@ const ollamaInstalled = () => {
 
 /** Everything the Local AI settings show, except Claude (the caller adds it). */
 export async function localAi(cfg: OllamaConfig, downloads: ModelDownloads, hw: Hardware): Promise<Omit<LocalAiInfo, 'claude'>> {
+  const download = downloads.state() // before the list, so a download reported as done is always in it
   let models: InstalledModel[] | null = null
   try { models = await ollamaModels(cfg) } catch { /* not running */ }
   const running = models !== null
@@ -135,7 +136,7 @@ export async function localAi(cfg: OllamaConfig, downloads: ModelDownloads, hw: 
     embedModel: cfg.embedModel ?? 'embeddinggemma',
     models: (models ?? []).map((m) => ({ name: m.name, sizeGb: round1(m.size / GB), ...(m.parameters ? { parameters: m.parameters } : {}), embedding: isEmbedding(m), fit: fit(memoryFor(m.size), hw) })),
     catalog: CATALOG.map((c) => ({ ...c, installed: hasModel(names, c.name), fit: fit(c.memoryGb, hw) })),
-    download: downloads.state(),
+    download,
   }
 }
 

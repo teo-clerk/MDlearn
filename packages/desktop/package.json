@@ -1,6 +1,6 @@
 {
   "name": "@mdlearn/desktop",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "private": true,
   "description": "MDlearn Studio as a desktop app: the same Studio in its own window, no terminal needed.",
   "license": "MIT",

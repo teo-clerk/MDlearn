@@ -42,7 +42,7 @@ Run from the curriculum root (or anywhere below a folder containing `learn/`, or
 
 | Command | Purpose |
 |---|---|
-| `mdlearn studio [folder] [--port 4747] [--lan] [--lan-full] [--no-open] [--fake-ai]` | Start MDlearn Studio (local web app) on the folder; `--lan` adds a private link + QR code for other devices (read, study, notes, local AI only unless `--lan-full`); `--fake-ai` runs AI jobs with a scripted demo engine. Optional helpers: Ollama (local answers; `embeddinggemma` is downloaded on demand for meaning search), poppler (`pdftohtml`) for quick PDF import. See STUDIO.md |
+| `mdlearn studio [folder] [--port 4747] [--lan] [--lan-full] [--no-open] [--fake-ai]` | Start MDlearn Studio (local web app) on the folder; `--lan` adds a private link + QR code for other devices (read, study, notes, local AI only unless `--lan-full`); `--fake-ai` runs AI jobs with a scripted demo engine. Optional helpers: Ollama (local answers; `embeddinggemma` is downloaded on demand for meaning search). See STUDIO.md |
 | `mdlearn review [--scope f04] [--limit 10] [--new-cards 5] [--due]` | Study session: opening plan, one card at a time, confidence before feedback, verdicts in words, the answer always shown, missed cards revisited, closing summary with sections to reread. `?` hint · `s` show answer · `q` finish |
 | `mdlearn queue` / `mdlearn report` | What a session would contain; cards seen, **your** first-try accuracy (today, 7 days), what is due, next review, study streak, and per-lesson "memory" (the model's predicted recall, labelled as such) |
 | `mdlearn status [filter] [--all]` | Every source document: done / in progress / to do / has errors, lessons, cards (`--all` adds READMEs and reference files) |

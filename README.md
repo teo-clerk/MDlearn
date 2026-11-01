@@ -74,7 +74,6 @@ your computer, use a local model through [Ollama](https://ollama.com) for asking
 |---|---|
 | [Claude Code](https://claude.com/claude-code), signed in once | writing lessons from inside MDlearn, and the terminal tutor |
 | [Ollama](https://ollama.com), then a model from *Settings → Local AI* | asking about a passage, explaining it, and searching your folder by meaning |
-| poppler (`pdftohtml`) | quick PDF import |
 | [SciNet](https://github.com/teo-clerk/SciNet) running on this computer | importing papers from your library |
 
 MDlearn runs the Claude Code you installed, under your own login, and never sees or stores that login. Your use of it
@@ -209,7 +208,7 @@ real paths; Studio shows them under **Settings → Use MDlearn in other apps**.
 | **Claude.ai** | Upload `packages/studio/dist/integrations/mdlearn-skill.zip` under Settings → Capabilities → Skills; ask "Make an MDlearn course on …". |
 | **ChatGPT, Gemini, any chat** | Paste the output of `mdlearn prompt` into the chat (or a Custom GPT's or Project's instructions; `mdlearn prompt --full` is the whole guide, to attach as a file). Then paste the chat's answer into Studio → *Import* → **From a chat**, or run `mdlearn import-chat answer.md`: every file is checked, the good ones are saved in a new course folder, and errors become a message to paste back into the chat. |
 
-A whole course has been tested from start to finish with Claude Code. Codex, OpenCode and Pi use the same folder
+A whole course has been tested from start to finish with Claude Code and with OpenCode. Codex and Pi use the same folder
 instructions, but no finished course has been confirmed with them yet.
 
 The prompt lives in [docs/CHAT_PROMPT.md](docs/CHAT_PROMPT.md); `npm run build` regenerates the plugin,
@@ -329,7 +328,6 @@ If your notes are in git, add `.mdlearn/` to their `.gitignore`.
 | `mdlearn plan` prints nothing | the document has no `##` sections: write the lesson with Claude or by hand |
 | AI Studio says Claude Code is not installed | install Claude Code and run `claude` once to log in |
 | Ask / Explain / Visualise are unavailable | start Ollama and `ollama pull qwen3:8b` (the model is set in `studio.json`) |
-| Quick PDF import fails | install poppler: `brew install poppler`, `sudo apt install poppler-utils` or `sudo pacman -S poppler` |
 
 ## Documentation
 

@@ -235,7 +235,7 @@ export interface ClassFile {
   name: string; path: string; kind: 'word' | 'slides' | 'pdf' | 'picture' | 'text' | 'other'
   /** The Markdown made from it. */ text?: string
   slides?: number; pictures?: number; skipped?: number; equations?: number
-  problem?: 'old-format' | 'unknown-type' | 'no-reader' | 'no-text' | 'unreadable'
+  problem?: 'old-format' | 'unknown-type' | 'no-text' | 'unreadable'
 }
 export interface ClassUpload { id: string; name: string; root: string; files: ClassFile[] }
 /** What getting a folder ready for coding assistants wrote, and which of the person's own files it left alone. */

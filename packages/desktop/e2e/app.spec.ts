@@ -1,6 +1,6 @@
 import { test, expect, _electron as electron, type ElectronApplication } from '@playwright/test'
 import { spawn } from 'node:child_process'
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { tmpdir } from 'node:os'
 import { createConnection } from 'node:net'
@@ -56,6 +56,24 @@ test('the capture window saves one thought into the folder and closes', async ()
   await Promise.all([closed, box.press('Enter').catch(() => {})]) // Enter closes the window, sometimes before the press has returned
   await win.goto(new URL(today, win.url()).href)
   await expect(win.getByText('A thought from anywhere')).toBeVisible()
+})
+
+test('a PDF is read with nothing else installed', async () => {
+  app = await launch()
+  const win = await app.firstWindow()
+  await expect(win.getByRole('heading', { name: 'MDlearn Studio' })).toBeVisible({ timeout: 30_000 })
+  await win.getByText('New here? Open the tutorial').click()
+  await expect(win).toHaveURL(/\/w\/[^/]+/)
+  const ws = new URL(win.url()).pathname.split('/')[2]
+  const pdf = readFileSync(resolve(__dirname, '../../studio/test/fixtures/sample.pdf')).toString('base64')
+  const summary = await win.evaluate(async ({ ws, pdf }) => {
+    const form = new FormData()
+    form.append('kind', 'pdf-fast')
+    form.append('file', new File([Uint8Array.from(atob(pdf), (c) => c.charCodeAt(0))], 'sample.pdf'))
+    const r = await fetch(`/api/w/${ws}/import/file`, { method: 'POST', body: form, headers: { 'x-mdl': '1' } })
+    return ((await r.json()) as { summary: string }).summary
+  }, { ws, pdf })
+  expect(summary).toMatch(/2 pages/)
 })
 
 test('web links open in the browser, Studio\'s own pages in an app window, other schemes nowhere', async () => {

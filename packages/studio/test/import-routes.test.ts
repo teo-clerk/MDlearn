@@ -2,7 +2,6 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { mkdtempSync, readFileSync, existsSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { tmpdir } from 'node:os'
-import { spawnSync } from 'node:child_process'
 import { createServer, type Server } from 'node:http'
 import { DatabaseSync } from 'node:sqlite'
 import { zipSync, strToU8 } from 'fflate'
@@ -42,8 +41,6 @@ function setup() {
   return { root, json, upload, app, h }
 }
 
-const poppler = !spawnSync('pdftohtml', ['-v']).error
-
 describe('import routes', () => {
   it('imports a web page', async () => {
     const { json, root } = setup()
@@ -53,7 +50,7 @@ describe('import routes', () => {
     expect((await json('/import/web', { url: 'file:///etc/passwd' })).status).toBe(400)
     expect((await json('/import/web', { url: 'x' })).status).toBe(400)
   })
-  it.skipIf(!poppler)('imports a PDF read locally', async () => {
+  it('imports a PDF read locally', async () => {
     const { upload } = setup()
     const pdf = await upload('pdf-fast', 'sample.pdf', readFileSync(resolve(__dirname, 'fixtures/sample.pdf')))
     expect(pdf.status).toBe(200); expect(((await pdf.json()) as ImportResult).summary).toMatch(/2 pages/)
@@ -90,7 +87,7 @@ describe('import routes', () => {
     expect(res.jobId).toMatch(/^[0-9a-f-]{36}$/)
     let job: JobSummary & { prompt: string } = { status: 'queued', prompt: '' } as never
     for (let i = 0; i < 100 && ['queued', 'running'].includes(job.status); i++) { job = await (await app.request(`/api/w/${h.id}/ai/jobs/${res.jobId}`, { headers: { host: 'localhost:1' } })).json() as never; await new Promise((x) => setTimeout(x, 20)) }
-    expect(job.prompt).toMatch(/imports\/source\/my-paper\.pdf[\s\S]*imports\/my-paper\.md/); if (poppler) expect(job.prompt).toMatch(/2 pages/)
+    expect(job.prompt).toMatch(/imports\/source\/my-paper\.pdf[\s\S]*imports\/my-paper\.md/); expect(job.prompt).toMatch(/2 pages/)
     expect(job.status).toBe('done')
     expect(existsSync(join(root, 'imports/my-paper.md'))).toBe(true)
   })

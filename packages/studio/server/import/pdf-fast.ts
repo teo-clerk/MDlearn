@@ -1,42 +1,14 @@
-// PDF → Markdown without a model, from poppler's text positions: headings by font size, paragraphs by
+// PDF → Markdown without a model, from the positions of its text: headings by font size, paragraphs by
 // line spacing, lists by indentation, running headers and page numbers removed. Formulas arrive as plain
 // text (a PDF holds glyphs, not TeX): the high-quality import reads the page images instead.
-import { execFile } from 'node:child_process'
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
-import { promisify } from 'node:util'
 import type { Handle } from '../workspaces.js'
 import { UserError } from '../workspaces.js'
 import { IMPORT_DIR, freePath, result, slugify, writeNew } from './common.js'
+import { pdfPages } from './pdf-text.js'
 import type { ImportResult } from '../../shared/types.js'
 
-const run = promisify(execFile)
 export interface Line { page: number; top: number; left: number; width: number; height: number; size: number; bold: boolean; italic: boolean; text: string }
 export interface Page { number: number; width: number; height: number; lines: Line[] }
-
-const entities: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' }
-const decode = (s: string) => s.replace(/&(#x?[0-9a-f]+|[a-z]+);/gi, (m, e: string) => (e[0] === '#' ? String.fromCodePoint(e[1].toLowerCase() === 'x' ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10)) : entities[e.toLowerCase()] ?? m))
-
-/** poppler's `pdftohtml -xml` output → positioned lines. */
-export function parseXml(xml: string): Page[] {
-  const pages: Page[] = []
-  const fonts = new Map<string, number>()
-  for (const pm of xml.matchAll(/<page number="(\d+)"[^>]*?height="(\d+)"[^>]*?width="(\d+)"[^>]*>([\s\S]*?)<\/page>/g)) {
-    const page: Page = { number: Number(pm[1]), height: Number(pm[2]), width: Number(pm[3]), lines: [] }
-    for (const f of pm[4].matchAll(/<fontspec id="(\d+)" size="(\d+)"/g)) fonts.set(f[1], Number(f[2]))
-    for (const t of pm[4].matchAll(/<text top="(-?\d+)" left="(-?\d+)" width="(\d+)" height="(\d+)" font="(\d+)">([\s\S]*?)<\/text>/g)) {
-      const inner = t[6]
-      const text = decode(inner.replace(/<[^>]+>/g, '')).replace(/\s+/g, ' ').trim()
-      if (!text) continue
-      const plain = inner.replace(/<[^>]+>/g, '').trim()
-      const wrapped = (tag: string) => new RegExp(`^<${tag}>[\\s\\S]*</${tag}>$`).test(inner.trim()) && inner.replace(new RegExp(`</?${tag}>`, 'g'), '').trim() === plain
-      page.lines.push({ page: page.number, top: Number(t[1]), left: Number(t[2]), width: Number(t[3]), height: Number(t[4]), size: fonts.get(t[5]) ?? 12, bold: wrapped('b'), italic: wrapped('i'), text })
-    }
-    pages.push(page)
-  }
-  return pages
-}
 
 const median = (xs: number[]) => { const s = [...xs].sort((a, b) => a - b); return s.length ? s[Math.floor(s.length / 2)] : 0 }
 const norm = (s: string) => s.toLowerCase().replace(/\d+/g, '#').replace(/\s+/g, ' ').trim()
@@ -120,23 +92,10 @@ export function pagesToMarkdown(pages: Page[]): PdfMarkdown {
   return { markdown, title, formulaLines, columns, words: markdown.split(/\s+/).length }
 }
 
-async function pdfXml(bytes: Uint8Array): Promise<string> {
-  const dir = mkdtempSync(join(tmpdir(), 'mdl-pdf-'))
-  try {
-    const file = join(dir, 'in.pdf'); writeFileSync(file, bytes)
-    const { stdout } = await run('pdftohtml', ['-xml', '-i', '-q', '-stdout', '-enc', 'UTF-8', file], { maxBuffer: 256 * 1024 * 1024, timeout: 120_000 })
-    return stdout
-  } catch (e) {
-    const err = e as NodeJS.ErrnoException & { stderr?: string }
-    if (err.code === 'ENOENT') throw new UserError('missing-tool', 'Reading PDFs needs poppler (the pdftohtml program). Install it with a package manager, or use the high-quality import.')
-    throw new UserError('pdf', `This PDF could not be read${err.stderr ? `: ${err.stderr.slice(0, 160)}` : '.'}`)
-  } finally { rmSync(dir, { recursive: true, force: true }) }
-}
-
 /** A PDF's text as Markdown, from its text layer. Throws for a file that is not a PDF or holds no text (a scan). */
 export async function pdfToMarkdown(bytes: Uint8Array): Promise<PdfMarkdown & { pages: Page[] }> {
   if (Buffer.from(bytes.subarray(0, 5)).toString('latin1') !== '%PDF-') throw new UserError('invalid', 'This file is not a PDF.')
-  const pages = parseXml(await pdfXml(bytes))
+  const pages = await pdfPages(bytes)
   const md = pagesToMarkdown(pages)
   if (md.words < 30) throw new UserError('empty', 'No text could be read from this PDF. It may be scanned pictures; the high-quality import can read those.')
   return { ...md, pages }
@@ -153,15 +112,4 @@ export async function importPdfFast(h: Handle, fileName: string, bytes: Uint8Arr
   if (md.formulaLines) warnings.push(`About ${md.formulaLines} lines look like formulas. A PDF stores glyphs, not LaTeX, so they came out as plain text; the high-quality import writes them as TeX.`)
   if (md.columns) warnings.push('This PDF seems to use two columns; paragraphs may be out of order.')
   return result([{ path: rel, kind: 'document' }], warnings, `${pages.length} pages, ${md.words.toLocaleString()} words.`)
-}
-
-/** Pages in a PDF (poppler's pdfinfo), or null when it cannot be told. */
-export async function pdfPageCount(bytes: Uint8Array): Promise<number | null> {
-  const dir = mkdtempSync(join(tmpdir(), 'mdl-pdf-'))
-  try {
-    const file = join(dir, 'in.pdf'); writeFileSync(file, bytes)
-    const { stdout } = await run('pdfinfo', [file], { timeout: 20_000 })
-    const n = Number(/^Pages:\s+(\d+)/m.exec(stdout)?.[1])
-    return Number.isFinite(n) && n > 0 ? n : null
-  } catch { return null } finally { rmSync(dir, { recursive: true, force: true }) }
 }

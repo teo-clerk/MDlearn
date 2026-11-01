@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.4.1 — 2026-11-01
+
+**PDFs need nothing installed.** The quick PDF reader now uses pdf.js, which comes with the app, so it works the same on
+Windows, macOS and Linux and poppler is no longer needed. Across the manuals and papers compared it read the same text,
+joined broken lines better and stopped turning stray letters into headings. A bold label at the start of a line is no
+longer taken for a heading.
+
+**OpenCode has finished a whole course,** with a remote GLM model: the instructions in the folder were enough, the
+lessons passed lint and the class files were left alone. Codex and Pi are still unconfirmed.
+
+**Ready for npm.** The command line package is now called `mdlearn`, and every package carries its licence, a short guide
+and the Node.js version it needs.
+
 ## 1.4.0 — 2026-10-31
 
 **MDlearn is now open source,** under the MIT License. The README, contribution guide and security policy are written
