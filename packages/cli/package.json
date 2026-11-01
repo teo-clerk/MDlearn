@@ -1,6 +1,6 @@
 {
   "name": "mdlearn",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "Turn your class files into short lessons, and study them a few minutes a day.",
   "license": "MIT",
   "author": "Teo Clerk",
@@ -16,7 +16,7 @@
   },
   "type": "module",
   "bin": {
-    "mdlearn": "./dist/index.js"
+    "mdlearn": "dist/index.js"
   },
   "files": [
     "dist"
@@ -25,7 +25,7 @@
     "build": "tsc -p ."
   },
   "dependencies": {
-    "@mdlearn/core": "1.5.0",
-    "@mdlearn/studio": "1.5.0"
+    "@mdlearn/core": "1.5.1",
+    "@mdlearn/studio": "1.5.1"
   }
 }

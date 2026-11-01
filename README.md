@@ -26,6 +26,13 @@ no Node.js, no terminal.
 The builds are not code-signed yet, so Windows and macOS warn you the first time. [DESKTOP.md](docs/DESKTOP.md) shows
 how to open them, and each release has a `SHA256SUMS.txt` to check your download against.
 
+If you already have Node.js 22.15 or newer, you can install it from npm instead and use it in your browser:
+
+```bash
+npm install -g mdlearn
+mdlearn studio
+```
+
 ## Your first course
 
 1. **Add your files.** Open MDlearn, choose *Make a course from my class files*, and drop in your PDFs, PowerPoint
