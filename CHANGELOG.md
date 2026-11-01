@@ -11,6 +11,9 @@ English course.
 language. Every card's id is written down first, so nothing starts over, and you can undo the whole translation. Your
 notes stay, in the list of notes whose passage changed.
 
+**Saving progress on Windows.** When Studio and the command line or MCP server saved at the same moment, a save could
+stop with a permission error. It now waits its turn, as it already did on macOS and Linux.
+
 ## 1.4.1 — 2026-11-01
 
 **PDFs need nothing installed.** The quick PDF reader now uses pdf.js, which comes with the app, so it works the same on

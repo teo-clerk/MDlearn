@@ -3,7 +3,7 @@ import { resolve, join, relative } from 'node:path'
 import { mkdtempSync, cpSync, writeFileSync, mkdirSync, utimesSync, readFileSync, symlinkSync, existsSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { spawn } from 'node:child_process'
-import { workspace, loadProgress, saveProgress, appendProgress, progressPath, loadCourse, loadDoc, IGNORED_DIRS, walk, inRoot, searchCurriculum, scaffoldLessons, findDoc } from '../src/node'
+import { workspace, loadProgress, saveProgress, appendProgress, lockBusy, progressPath, loadCourse, loadDoc, IGNORED_DIRS, walk, inRoot, searchCurriculum, scaffoldLessons, findDoc } from '../src/node'
 import { normText } from '../src/checkers'
 
 const sandbox = () => mkdtempSync(join(tmpdir(), 'mdl-progress-'))
@@ -13,14 +13,21 @@ const run = (args: string[]) => new Promise<number>((done, fail) => {
 })
 
 describe('progress file is safe for several writers', () => {
-  it('two processes appending 200 events each keep all 400', async () => {
+  it('four processes appending 100 events each keep all 400', async () => {
     const ws = workspace(sandbox())
-    const codes = await Promise.all([run([ws.root, 'a', '200']), run([ws.root, 'b', '200'])])
-    expect(codes).toEqual([0, 0])
+    const codes = await Promise.all(['a', 'b', 'c', 'd'].map((name) => run([ws.root, name, '100'])))
+    expect(codes).toEqual([0, 0, 0, 0])
     const p = loadProgress(ws)
     expect(p.reviews).toHaveLength(400)
     expect(new Set(p.reviews.map((r) => r.id)).size).toBe(400)
   }, 60_000)
+
+  it('waits for a lock Windows reports as refused, and still fails on a folder it cannot write to elsewhere', () => {
+    expect(['EPERM', 'EACCES', 'EBUSY', 'EEXIST'].map((code) => lockBusy(code, 'win32'))).toEqual([true, true, true, true])
+    expect(['EPERM', 'EACCES', 'EBUSY'].map((code) => lockBusy(code, 'linux'))).toEqual([false, false, false])
+    expect(lockBusy('EEXIST', 'linux')).toBe(true)
+    expect(lockBusy('ENOSPC', 'win32')).toBe(false)
+  })
 
   it('saveProgress merges with what another writer saved in the meantime', () => {
     const ws = workspace(sandbox())
