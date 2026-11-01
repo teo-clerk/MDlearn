@@ -44,7 +44,6 @@ export async function addClassFile(h: Handle, rawName: string, bytes: Uint8Array
   try {
     return { ...file, ...await convert(h, stem, slugify(stem, 60) || 'file', kind, bytes) }
   } catch (e) {
-    if (e instanceof UserError && e.code === 'missing-tool') return { ...file, problem: 'no-reader' }
     if (e instanceof UserError && e.code === 'empty') return { ...file, problem: 'no-text' }
     return { ...file, problem: 'unreadable' }
   }

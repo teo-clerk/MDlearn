@@ -2,12 +2,11 @@ import { describe, it, expect } from 'vitest'
 import { mkdtempSync, readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { tmpdir } from 'node:os'
-import { spawnSync } from 'node:child_process'
 import { settingsStore } from '../server/settings'
 import { Workspaces } from '../server/workspaces'
-import { importPdfFast, pagesToMarkdown, parseXml, type Page } from '../server/import/pdf-fast'
+import { importPdfFast, pagesToMarkdown, type Page } from '../server/import/pdf-fast'
+import { pdfPageCount, toLines, type Run } from '../server/import/pdf-text'
 
-const poppler = !spawnSync('pdftohtml', ['-v']).error
 const open = () => new Workspaces(settingsStore(join(mkdtempSync(join(tmpdir(), 'mdl-cfg-')), 's.json'))).open(mkdtempSync(join(tmpdir(), 'mdl-pdf-')))
 const line = (page: number, top: number, text: string, o: Partial<{ left: number; size: number; bold: boolean; width: number }> = {}) => ({ page, top, left: o.left ?? 90, width: o.width ?? 600, height: 18, size: o.size ?? 16, bold: o.bold ?? false, italic: false, text })
 
@@ -48,13 +47,32 @@ describe('PDF layout to Markdown', () => {
     const r = pagesToMarkdown([{ number: 1, width: 900, height: 1260, lines: [...many, line(1, 1000, 'σ⁰ ≈ β⁰ sin θ ≤ γ⁰ √L', { size: 16 })] }])
     expect(r.columns).toBe(true); expect(r.formulaLines).toBe(1)
   })
-  it('parses the XML with entities, bold and fonts', () => {
-    const [p] = parseXml('<pdf2xml><page number="1" position="absolute" top="0" left="0" height="1000" width="800">\n<fontspec id="0" size="20" family="X" color="#000"/>\n<text top="10" left="20" width="100" height="20" font="0"><b>R&amp;D &lt;notes&gt;</b></text>\n</page></pdf2xml>')
-    expect(p.lines[0]).toMatchObject({ text: 'R&D <notes>', size: 20, bold: true, left: 20, top: 10 })
+})
+
+describe('lines from positioned text', () => {
+  const run = (text: string, left: number, base: number, o: Partial<Run> = {}): Run => ({ text, left, right: left + text.length * 6, base, size: 12, font: 'body', ...o })
+  const styleOf = (font: string) => ({ bold: font === 'heavy', italic: false })
+  it('joins the pieces of a line, with a bold word inside it', () => {
+    const lines = toLines([run('The ', 10, 100), run('Moon', 34, 100, { font: 'heavy' }), run(' pulls the sea', 58, 100)], 1, styleOf)
+    expect(lines.map((l) => l.text)).toEqual(['The Moon pulls the sea'])
+    expect(lines[0].bold).toBe(false)
+  })
+  it('adds the space a PDF leaves out between two pieces', () => {
+    expect(toLines([run('near', 10, 100), run('side', 38, 100)], 1, styleOf)[0].text).toBe('near side')
+  })
+  it('keeps two columns apart, though they share a baseline', () => {
+    expect(toLines([run('left column', 10, 100), run('right column', 300, 100)], 1, styleOf).map((l) => l.text)).toEqual(['left column', 'right column'])
+  })
+  it('starts a new line when the baseline moves', () => {
+    expect(toLines([run('first', 10, 100), run('second', 10, 116)], 1, styleOf).length).toBe(2)
   })
 })
 
-describe.skipIf(!poppler)('PDF import (poppler)', () => {
+describe('PDF import', () => {
+  it('counts the pages, and returns nothing for what is not a PDF', async () => {
+    expect(await pdfPageCount(new Uint8Array(readFileSync(resolve(__dirname, 'fixtures/sample.pdf'))))).toBe(2)
+    expect(await pdfPageCount(new TextEncoder().encode('not a pdf'))).toBeNull()
+  })
   it('imports a real PDF: title, sections, lists, no running header or page numbers', async () => {
     const h = open()
     const bytes = readFileSync(resolve(__dirname, 'fixtures/sample.pdf'))

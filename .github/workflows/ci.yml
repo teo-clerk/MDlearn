@@ -1,5 +1,5 @@
 # Every push to master and every pull request: unit tests on all three systems, type checks and the documents'
-# examples once, and the browser tests on Linux. Windows has no poppler here, so the quick PDF reader's tests skip there.
+# examples once, and the browser tests on Linux.
 name: CI
 
 on:
@@ -26,10 +26,6 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      - run: sudo apt-get update && sudo apt-get install -y poppler-utils
-        if: runner.os == 'Linux'
-      - run: brew install poppler
-        if: runner.os == 'macOS'
       - run: npm ci
       - run: npm run build
       - run: npm test
@@ -49,7 +45,6 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      - run: sudo apt-get update && sudo apt-get install -y poppler-utils
       - run: npm ci
       - run: npm run build
       - run: npx playwright install --with-deps chromium

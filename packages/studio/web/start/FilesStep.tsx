@@ -65,7 +65,6 @@ function fileNote(f: ClassFile): string {
   switch (f.problem) {
     case 'old-format': return t('Kept, but this old format can’t be read here. Save it as .pptx or .docx, or attach it in a chat.')
     case 'unknown-type': return t('Kept, but this kind of file can’t be read here.')
-    case 'no-reader': return t('Kept. Reading PDFs here needs poppler, so your AI will read this one itself.')
     case 'no-text': return t('Kept. It holds no text (perhaps a scan), so your AI will read the pages itself.')
     case 'unreadable': return t('Kept, but it could not be opened. It may be damaged.')
   }
