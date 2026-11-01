@@ -2,8 +2,8 @@
 
 ## 1.5.1 — 2026-11-01
 
-**MDlearn is on npm.** With Node.js 22.15 or newer, `npm install -g mdlearn` and then `mdlearn studio` opens the app in
-your browser. The desktop app still needs nothing installed.
+**MDlearn is on npm.** With Node.js 22.15 or newer, `npx mdlearn studio` opens the app in your browser, and
+`npm install -g mdlearn` keeps the command. The desktop app still needs nothing installed.
 
 **A smaller npm download.** The Studio package no longer carries source maps, so it takes about 30 MB on disk instead of
 80 MB. The app itself hasn't changed.
