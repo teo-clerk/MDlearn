@@ -260,6 +260,9 @@ const LOCK_STALE_MS = 10_000
 const LOCK_TIMEOUT_MS = 15_000
 const pause = (ms: number) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms)
 const errno = (e: unknown) => (e as NodeJS.ErrnoException).code
+/** Someone else has the lock. Windows refuses a file while it is being deleted, where other systems already see it gone. */
+export const lockBusy = (code: string | undefined, platform: string = process.platform) =>
+  code === 'EEXIST' || (platform === 'win32' && (code === 'EPERM' || code === 'EACCES' || code === 'EBUSY'))
 function withLock<T>(file: string, fn: () => T): T {
   const lock = `${file}.lock`
   const token = `${process.pid}:${randomUUID()}`
@@ -271,14 +274,14 @@ function withLock<T>(file: string, fn: () => T): T {
       try { writeSync(fd, token) } finally { closeSync(fd) }
       break
     } catch (e) {
-      if (errno(e) !== 'EEXIST') throw e
+      if (!lockBusy(errno(e))) throw e
       breakIfStale(lock)
       pause(2 + Math.random() * 8)
     }
   }
   try { return fn() } finally {
     // release only our own lock: if we stalled and someone broke it as stale, theirs stays
-    try { if (readFileSync(lock, 'utf8') === token) unlinkSync(lock) } catch (e) { if (errno(e) !== 'ENOENT') throw e }
+    try { if (readFileSync(lock, 'utf8') === token) unlinkSync(lock) } catch (e) { if (errno(e) !== 'ENOENT' && !lockBusy(errno(e))) throw e }
   }
 }
 /** Remove a lock left by a crashed writer — only if it is still the same stale file we looked at. */
@@ -288,7 +291,7 @@ function breakIfStale(lock: string): void {
     if (Date.now() - st.mtimeMs <= LOCK_STALE_MS) return
     const again = statSync(lock)
     if (again.ino === st.ino && again.mtimeMs === st.mtimeMs) unlinkSync(lock)
-  } catch (e) { if (errno(e) !== 'ENOENT') throw e } // released meanwhile: just retry
+  } catch (e) { if (errno(e) !== 'ENOENT' && !lockBusy(errno(e))) throw e } // released meanwhile: just retry
 }
 function writeMerged(ws: Workspace, add: Pick<Progress, 'reviews' | 'attempts'>, keepExisting = false): Progress {
   const p = progressPath(ws)
