@@ -134,6 +134,8 @@ export const FrontmatterSchema = z.strictObject({
   goals: z.array(z.string()).max(6).default([]),
   time: z.union([z.number(), z.string()]).transform((v) => (typeof v === 'number' ? v : parseFloat(v))).pipe(z.number().positive()).optional(),
   source: z.string().optional(),
+  /** A note in a plain `.md` file whose exercises are studied too: it reads as a document, not as cards. */
+  study: z.boolean().optional(),
   macros: z.record(z.string().regex(/^\\[A-Za-z]+$/), z.string().refine((s) => !/[\u0000-\u001f]/.test(s), 'control character (use single quotes for TeX)')).default({}),
 })
 

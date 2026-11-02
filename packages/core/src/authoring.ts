@@ -1,6 +1,7 @@
 // Lessons written outside MDlearn: a chat answer that holds several lesson files (a "bundle"), the message
 // that asks the chat to fix its own lint errors, and the fixed prompts that start a course in any assistant.
 import { CODES, format, type Diagnostic } from './registry.js'
+import { isStudyNote } from './compile.js'
 
 export interface BundleFile { path: string; content: string }
 
@@ -21,16 +22,16 @@ const slug = (s: string) => s.normalize('NFKD').replace(/\p{M}/gu, '').toLowerCa
 
 /**
  * A safe, folder-relative path for a file named in a bundle: no `..`, no absolute paths, plain characters,
- * and always a lesson (`.learn.md`) or a `course.md`. Null when nothing usable is left.
+ * and always a lesson (`.learn.md`), a `course.md`, or with `note` a studied `.md`. Null when nothing usable is left.
  */
-export function safeBundlePath(raw: string): string | null {
+export function safeBundlePath(raw: string, note = false): string | null {
   const parts = raw.trim().replace(/^[`'"]+|[`'"]+$/g, '').replace(/\\/g, '/').split('/').filter((p) => p && p !== '.')
   if (!parts.length || parts.includes('..') || parts.length > 4) return null
   const clean = parts.map((p) => p.replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^[.-]+/, '')).filter(Boolean)
   if (!clean.length) return null
   const last = clean[clean.length - 1]
   if (last.toLowerCase() === 'course.md') clean[clean.length - 1] = 'course.md'
-  else if (!/\.learn\.md$/i.test(last)) clean[clean.length - 1] = `${last.replace(/\.(md|markdown|txt)$/i, '') || 'lesson'}.learn.md`
+  else if (!/\.learn\.md$/i.test(last)) clean[clean.length - 1] = `${last.replace(/\.(md|markdown|txt)$/i, '') || 'lesson'}${note ? '.md' : '.learn.md'}`
   return clean.join('/')
 }
 
@@ -81,7 +82,8 @@ export function splitBundle(text: string): BundleFile[] {
     const inner = unfence(body)
     const content = trimBlank(inner ?? body).join('\n')
     if (!content.trim()) continue
-    let path = (c.name && safeBundlePath(c.name)) || `${slug(titleOf(content))}.learn.md`
+    const note = isStudyNote(content)
+    let path = (c.name && safeBundlePath(c.name, note)) || `${slug(titleOf(content))}${note ? '.md' : '.learn.md'}`
     if (seen.has(path)) { // at most MAX_BUNDLE_FILES names, so this search is short
       const [, base, ext] = /^(.*?)(\.learn\.md|\.md)$/.exec(path)!
       let n = 2

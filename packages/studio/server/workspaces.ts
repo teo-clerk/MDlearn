@@ -85,11 +85,13 @@ export class Workspaces {
       cards: l.lesson?.cards.length ?? 0, errors: l.diagnostics.filter((d) => d.code.startsWith('E')).length, warnings: l.diagnostics.filter((d) => d.code.startsWith('W')).length,
     })
     const used = new Set<string>()
+    const lessonFiles = loaded.filter((l) => l.path.endsWith('.learn.md')) // a studied note is listed once, as the document it is
     const docs: TreeDoc[] = sourceDocs(h.ws).map((abs) => {
       const { outline } = loadDoc(abs, h.root)
-      const mine = loaded.filter((l) => lessonOfDoc(h.ws, abs, l.path))
+      const mine = lessonFiles.filter((l) => lessonOfDoc(h.ws, abs, l.path))
       mine.forEach((l) => used.add(l.path))
-      const stats = mine.map((l) => (l.lesson ? perLesson.get(l.lesson.id) : undefined)).filter((r) => !!r)
+      const studied = [...mine, ...loaded.filter((l) => l.path === abs)]
+      const stats = studied.map((l) => (l.lesson ? perLesson.get(l.lesson.id) : undefined)).filter((r) => !!r)
       const seen = stats.reduce((n, r) => n + r.seen, 0)
       const recalls = stats.filter((r) => r.predictedRecall !== null)
       return {
@@ -98,7 +100,7 @@ export class Workspaces {
         memory: recalls.length ? Math.round((recalls.reduce((n, r) => n + r.predictedRecall! * r.seen, 0) / Math.max(1, seen)) * 100) / 100 : null,
       }
     })
-    const orphanLessons = loaded.filter((l) => !used.has(l.path)).map(lessonRow)
+    const orphanLessons = lessonFiles.filter((l) => !used.has(l.path)).map(lessonRow)
     return { root: h.root, name: h.name, docs, orphanLessons, duplicateLessons: duplicates(loaded, h.root), latex: texDocs(h.root),
       totals: { docs: docs.length, lessons: loaded.length, cards: rep.totals.cards, due: rep.totals.due, seen: rep.totals.seen } }
   }

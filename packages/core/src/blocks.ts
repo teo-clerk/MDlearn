@@ -12,7 +12,7 @@ import { type Blank, type Block, type MdNode, type VideoBlock, type Widget } fro
 import { parseTime, parseVideoUrl } from './video.js'
 import { mathKeyEvaluable, parseNumber } from './checkers.js'
 import { processor } from './parser.js'
-import { CONTAINER_TAGS, cleanAttrs, groupFlowHtml, pairInline, parseTag, summaryMarkdown, unsafeHtml, type HtmlContainerNode, type HtmlPairNode } from './html.js'
+import { CONTAINER_TAGS, cleanAttrs, groupFlowHtml, isMarkTone, pairInline, parseTag, summaryMarkdown, unsafeHtml, type HtmlContainerNode, type HtmlPairNode } from './html.js'
 
 /** Resolves `::read` references. `doc` is the lesson's `source` (or the path in the label), as written. */
 export type SourceResolver = (doc: string, section: string) => { title: string; words: number } | 'no-document' | null
@@ -82,6 +82,7 @@ const clean = (n: Nodes, inWidget: string | null): MdNode[] => {
   if ((n.type as string) === 'htmlPair') {
     const { tag, children } = n as unknown as HtmlPairNode
     if (Object.keys(tag.attrs).some((k) => k.startsWith('on'))) diag('E107', n, 'on… handler is removed')
+    if (tag.name === 'mark' && 'data-tone' in tag.attrs && !isMarkTone(tag.attrs['data-tone'])) diag('W612', n, tag.attrs['data-tone'])
     const kids = cleanAll(children, inWidget)
     if (tag.name === 'a') return [{ type: 'link', url: safeUrl(tag.attrs.href ?? '', false), ...(tag.attrs.title ? { title: tag.attrs.title } : {}), children: kids }]
     return [{ type: 'htmlInline', tag: tag.name === 'font' ? 'span' : tag.name, attrs: cleanAttrs(tag), children: kids }]

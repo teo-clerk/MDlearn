@@ -1372,4 +1372,11 @@ export default {
   'See why in Settings': 'Mira per què a Configuració',
   'found, but it did not start.': 'trobat, però no ha arrencat.',
   'Open the course': 'Obre el curs',
+  'Key idea': 'Idea clau',
+  'Definition': 'Definició',
+  'Example': 'Exemple',
+  'Common mistake': 'Error habitual',
+  'Rule or formula': 'Regla o fórmula',
+  'What the highlights mean': 'Què signifiquen els ressaltats',
+  'Read this in your notes': 'Llegeix-ho als teus apunts',
 } satisfies Dict

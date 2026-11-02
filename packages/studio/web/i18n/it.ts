@@ -1372,4 +1372,11 @@ export default {
   'See why in Settings': 'Scopri perché nelle impostazioni',
   'found, but it did not start.': 'trovato, ma non si è avviato.',
   'Open the course': 'Apri il corso',
+  'Key idea': 'Idea chiave',
+  'Definition': 'Definizione',
+  'Example': 'Esempio',
+  'Common mistake': 'Errore comune',
+  'Rule or formula': 'Regola o formula',
+  'What the highlights mean': 'Cosa significano gli evidenziatori',
+  'Read this in your notes': 'Leggi questo nei tuoi appunti',
 } satisfies Dict

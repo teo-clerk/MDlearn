@@ -16,6 +16,7 @@ import type { NoteAnchor } from '../../shared/types'
 import { assetUrl, linkTarget } from '../lib/paths'
 import { anchorForMoment } from '../lib/anchor'
 import { DocBlocks, type BlockEnv } from './DocBlocks'
+import { MarkLegend } from '../prose/MarkLegend'
 import { Outline } from './Outline'
 import { CoursePanel } from './CoursePanel'
 import { markLabel } from '../notes/marks'
@@ -170,6 +171,7 @@ export default function Reader({ ws }: { ws: string }) {
           </header>
           {/(^|\/)course\.md$/i.test(path) && <CoursePanel ws={ws} doc={path} caps={session.data?.caps ?? []} />}
           <div className="read" ref={setArticle}>
+            <MarkLegend blocks={doc.data.blocks} />
             <DocBlocks blocks={doc.data.blocks.filter((b, i) => !(i < 3 && b.type === 'heading' && b.depth === 1))} env={env} />
           </div>
         </article>

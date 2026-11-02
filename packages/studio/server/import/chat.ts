@@ -2,7 +2,7 @@
 // files, check each one where it will live, save the ones without errors in a new course folder, and write
 // the message that asks the chat to fix the rest.
 import { existsSync } from 'node:fs'
-import { splitBundle, planBundle, fixMessage, formatDiagnostic, type BundlePlan } from '@mdlearn/core'
+import { splitBundle, planBundle, fixMessage, formatDiagnostic, isStudyNote, type BundlePlan } from '@mdlearn/core'
 import { compileSource, inRoot } from '@mdlearn/core/node'
 import type { Handle } from '../workspaces.js'
 import { UserError } from '../workspaces.js'
@@ -27,7 +27,7 @@ export function checkChat(h: Handle, text: string, folder?: string): ChatCheck {
   const checked = p.files.map((f) => {
     const abs = inRoot(h.root, f.target)
     if (!abs) throw new UserError('path', 'That location is outside this folder.')
-    if (!f.target.endsWith('.learn.md')) return { path: f.target, kind: 'document' as const, cards: 0, errors: 0, warnings: 0, lines: [], exists: existsSync(abs), diagnostics: [] }
+    if (!f.target.endsWith('.learn.md') && !isStudyNote(f.content)) return { path: f.target, kind: 'document' as const, cards: 0, errors: 0, warnings: 0, lines: [], exists: existsSync(abs), diagnostics: [] }
     const r = compileSource(f.content, abs)
     const notable = r.diagnostics.filter((d) => !d.code.startsWith('I'))
     return {

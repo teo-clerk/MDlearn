@@ -9,7 +9,7 @@ import { stage0 } from './stage0.js'
 import { processor } from './parser.js'
 import { blockBuilder, type SourceResolver } from './blocks.js'
 import { CONTAINER_TAGS, groupFlowHtml, summaryMarkdown } from './html.js'
-import { outlineDoc, type DocOutline } from './importer.js'
+import { CARD_ID, outlineDoc, type DocOutline } from './importer.js'
 import type { Code, Diagnostic } from './registry.js'
 import type { DocBlock, MdNode } from './ast.js'
 
@@ -23,6 +23,12 @@ export interface DocModel {
   diagnostics: Diagnostic[]
 }
 export interface ParseDocumentOptions { path?: string; resolveSource?: SourceResolver; checkJs?: (code: string) => string | null; fileExists?: (path: string) => boolean }
+
+/** A heading without the `{#id}` it may end in, which is for Study and not for reading. */
+function withoutId(children: PhrasingContent[]): PhrasingContent[] {
+  const last = children.at(-1)
+  return last?.type === 'text' ? [...children.slice(0, -1), { ...last, value: last.value.replace(CARD_ID, '').trimEnd() }] : children
+}
 
 export function parseDocument(source: string, opts: ParseDocumentOptions = {}): DocModel {
   const path = opts.path ?? 'document.md'
@@ -61,7 +67,7 @@ export function parseDocument(source: string, opts: ParseDocumentOptions = {}): 
         const s = byLine.get(line)
         const anchor = s?.anchor ?? slugger.slug(toString(n))
         section = anchor
-        out.push({ type: 'heading', depth: n.depth, anchor, num: s?.num ?? null, text: cleanAll(n.children, null), line })
+        out.push({ type: 'heading', depth: n.depth, anchor, num: s?.num ?? null, text: cleanAll(withoutId(n.children), null), line })
         continue
       }
       if (n.type === 'html' && /^\s*<details[\s>]/i.test(n.value)) {

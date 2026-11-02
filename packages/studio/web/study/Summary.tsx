@@ -39,6 +39,7 @@ export function Summary({ ws, state, onAgain }: { ws: string; state: SessionStat
                   return (
                     <li key={x.cardKey}>
                       {prettyTitle(x.title)}
+                      {x.noteSection && <> — <Link href={`${docRoute(ws, x.lessonPath)}&section=${encodeURIComponent(x.noteSection)}`} className="underline decoration-border-strong underline-offset-2">{t('Read this in your notes')}</Link></>}
                       {d && x.reads[0] && <> — <Link href={`${docRoute(ws, d.path)}&section=${encodeURIComponent(x.reads[0].section)}`} className="underline decoration-border-strong underline-offset-2 hover:decoration-text">§{x.reads[0].section} of {d.title || d.path}</Link></>}
                     </li>
                   )

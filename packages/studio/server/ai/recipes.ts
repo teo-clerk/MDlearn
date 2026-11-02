@@ -3,7 +3,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { dirname, join, relative, sep } from 'node:path'
 import { coursePrompt, pinIds } from '@mdlearn/core'
-import { findDoc, lessonDirFor, scaffoldLessons, loadDoc, inRoot } from '@mdlearn/core/node'
+import { findDoc, isStudyFile, lessonDirFor, scaffoldLessons, loadDoc, inRoot } from '@mdlearn/core/node'
 import { slugify } from '../import/common.js'
 import { SOURCES } from '../import/class-files.js'
 import { changesSince, courseDoc, studiedState } from '../course.js'
@@ -60,7 +60,7 @@ const FOCUS: Record<string, string> = {
 export interface LeechContext { cardKey: string; title: string; wrong: string[] }
 export function improveLesson(h: Handle, lessonRel: string, focus: keyof typeof FOCUS | 'leech' = 'all', extra = '', leech?: LeechContext): Recipe {
   const abs = inRoot(h.root, lessonRel)
-  if (!abs || !lessonRel.endsWith('.learn.md') || !existsSync(abs)) throw new UserError('not-found', `No lesson ${lessonRel}.`)
+  if (!abs || !existsSync(abs) || !isStudyFile(abs)) throw new UserError('not-found', `No lesson ${lessonRel}.`)
   const task = focus === 'leech' && leech
     ? `The learner keeps failing one card: "${leech.title}" (card key ${leech.cardKey}; the card's heading in the file is the title). Their wrong answers: ${leech.wrong.length ? leech.wrong.map((w) => `"${w}"`).join(', ') : 'none recorded'}.
 Fix that card so it is learnable: find the misconception behind the wrong answers and address it directly. Options, in order of preference: add a worked example or a hint before the question; split it into two simpler cards (keep the original card's heading so its history stays); rewrite the stem so it tests one idea; make wrong options plausible and give each feedback naming the misconception. Read the linked source section with get_section first. Change only this card (and a new card if you split it).`

@@ -54,7 +54,7 @@ describe('mdlearn MCP server', () => {
     expect(bad.isError).toBe(true); expect(bad.text).toMatch(/not saved.*\n.*E202/)
     expect(existsSync(resolve(root, 'tides/02-bad.learn.md'))).toBe(false)
     expect((await call('save_lesson', { path: '../outside.learn.md', content: GOOD })).isError).toBe(true)
-    expect((await call('save_lesson', { path: '00_FOUNDATIONS/04_radar.md', content: 'x', overwrite: true })).text).toMatch(/Only lesson files/)
+    expect((await call('save_lesson', { path: '00_FOUNDATIONS/04_radar.md', content: 'x', overwrite: true })).text).toMatch(/Only notes with `study: true`/)
     expect((await call('save_lesson', { path: 'tides/course.md', content: '# Tides\n\n1. Why tides\n' })).text).toMatch(/✓ saved tides\/course\.md/)
     expect((await call('save_lesson', { path: 'tides/course.md', content: '# Mine', overwrite: true })).text).toMatch(/never replaced/)
   })

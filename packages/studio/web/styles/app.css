@@ -184,6 +184,13 @@ details > summary::-webkit-details-marker { display: none; }
 /* ---------------------------------------------------------------- notes */
 ::highlight(mdl-note) { background-color: rgb(214 170 40 / 0.22); }
 ::highlight(mdl-note-active) { background-color: rgb(214 170 40 / 0.45); }
+mark[data-tone="key"] { background: color-mix(in srgb, var(--hue-amber) 20%, transparent); }
+mark[data-tone="definition"] { background: color-mix(in srgb, var(--hue-blue) 18%, transparent); }
+mark[data-tone="example"] { background: color-mix(in srgb, var(--hue-green) 18%, transparent); }
+mark[data-tone="trap"] { background: color-mix(in srgb, var(--hue-rose) 18%, transparent); }
+mark[data-tone="rule"] { background: color-mix(in srgb, var(--hue-violet) 16%, transparent); }
+.tone-legend mark { color: inherit; padding: 1px 6px; border-radius: 3px; }
+:root[data-colour="off"] .tone-legend { display: none; }
 ::highlight(mdl-mark-important) { background-color: color-mix(in srgb, var(--hue-amber) 24%, transparent); }
 ::highlight(mdl-mark-confusing) { background-color: color-mix(in srgb, var(--hue-rose) 18%, transparent); text-decoration: underline wavy var(--hue-rose) 1px; }
 ::highlight(mdl-mark-exam) { background-color: color-mix(in srgb, var(--hue-blue) 16%, transparent); text-decoration: underline var(--hue-blue) 1.5px; }

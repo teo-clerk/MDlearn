@@ -2,7 +2,8 @@
 import { resolveRel } from '@mdlearn/core/paths'
 export { resolveRel }
 export const docRoute = (ws: string, path: string, anchor?: string) => `/w/${ws}/doc?path=${encodeURIComponent(path)}${anchor ? `#${anchor}` : ''}`
-export const lessonRoute = (ws: string, path: string) => `/w/${ws}/lesson?path=${encodeURIComponent(path)}`
+/** Where something studied opens: a lesson on its page, a studied note in the reader. */
+export const lessonRoute = (ws: string, path: string) => (path.endsWith('.learn.md') ? `/w/${ws}/lesson?path=${encodeURIComponent(path)}` : docRoute(ws, path))
 export const latexRoute = (ws: string, path: string) => `/w/${ws}/latex?path=${encodeURIComponent(path)}`
 /** The map: the graph (default) or the layered view, of the whole folder or around one document. */
 export const mapRoute = (ws: string, doc?: string, view?: 'layers') => {

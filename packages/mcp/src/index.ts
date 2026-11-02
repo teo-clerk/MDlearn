@@ -14,6 +14,7 @@ import { fileURLToPath } from 'node:url'
 import {
   formatDiagnostic, sectionText, outlineDoc, studyQueue, locate, pose, check, hint, ratingFor, ratingWords, scheduleAfter, whenText, report, coursePrompt, courseChanges,
   type Lesson,
+  isStudyNote,
 } from '@mdlearn/core'
 import {
   workspace, relativePosix, curriculumStatus, findDoc, loadDoc, planFor, loadLessons, loadProgress, loadGoals, appendProgress, compileSource, compileFile, searchCurriculum, inRoot as insideRoot,
@@ -144,8 +145,9 @@ if (!readOnly) server.registerTool('save_lesson', {
   },
   annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
 }, async ({ path, content, overwrite }) => {
-  const lesson = /\.learn\.md$/i.test(path), overview = basename(path).toLowerCase() === 'course.md'
-  if (!lesson && !overview) return error('Only lesson files (*.learn.md) and course.md overviews can be saved.')
+  const overview = basename(path).toLowerCase() === 'course.md'
+  const lesson = /\.learn\.md$/i.test(path) || (!overview && /\.md$/i.test(path) && isStudyNote(content))
+  if (!lesson && !overview) return error('Only notes with `study: true` in their frontmatter, lesson files (*.learn.md) and course.md overviews can be saved.')
   const abs = inRoot(path)
   if (!abs) return error('Path must be inside this folder.')
   if (existsSync(abs) && (!overwrite || overview)) return error(overview ? `${path} already exists; edit it instead (an overview is never replaced, it may be the user's own file).` : `${path} already exists; pass overwrite: true to replace it.`)

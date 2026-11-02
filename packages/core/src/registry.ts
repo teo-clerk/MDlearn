@@ -64,7 +64,9 @@ export const CODES = {
   I607: { rule: 'time-drift', summary: 'Declared `time` differs >50% from the compiler estimate (the player shows the estimate).' },
   W608: { rule: 'heading-promoted', summary: 'No `##` cards; `###` headings promoted to cards.' },
   W609: { rule: 'widget-in-intro', summary: 'Widgets belong in cards; a widget before the first `##` is locked.' },
-  W610: { rule: 'too-much-marked', summary: 'A card with more than three `<mark>`s, or with over a sixth of its words marked: mark the key term, not the sentence.' },
+  W611: { rule: 'note-without-practice', summary: 'A note with `study: true` has no exercise, so there is nothing to study.' },
+  W612: { rule: 'mark-tone-unknown', summary: 'A `<mark>` with a `data-tone` that does not exist: use key, definition, example, trap or rule.' },
+  W610: { rule: 'too-much-marked', summary: 'A card with more than three `<mark>`s (in a note, a mark over 12 words), or with over a sixth of its words marked: mark the key term, not the sentence.' },
   // W7xx math
   E701: { rule: 'katex-error', summary: 'KaTeX cannot render this TeX.' },
   W702: { rule: 'double-backslash', summary: '`\\\\name` in math (JSON-escaping habit?).' },
