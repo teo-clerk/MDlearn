@@ -69,6 +69,8 @@ describe.skipIf(!ip)('sharing on the network (--lan)', () => {
     expect(local.hardware).toBeNull()
     expect(local.install.command).toBeNull()
     expect(Object.keys(local.claude)).toEqual(['available'])
+    const engines = await (await fetch(`${base()}/api/engines`, { headers })).json() as { claude: Record<string, unknown> }
+    expect(Object.keys(engines.claude)).toEqual(['available'])
     expect((await fetch(`${base()}/api/w/${ws}/export/anki`, { headers })).status).toBe(403)
     expect((await fetch(`${base()}/api/w/${ws}/formulas`, { headers })).status).toBe(200)
     expect((await fetch(`${base()}/api/w/${ws}/ask/status`, { headers })).status).toBe(200)

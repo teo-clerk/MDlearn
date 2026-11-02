@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.6.1 — 2026-11-02
+
+**Courses from the app work in an installed copy.** The desktop app and the npm packages looked for the MDlearn skills
+in the wrong folder, so every AI job failed as soon as it started. It only ever worked from a copy of the source code.
+The desktop tests now check for them on all three systems.
+
+**Claude Code on Windows.** A Claude Code installed with npm is now found, and Claude keeps the variables that say where
+your user folders are, which is where it looks for its login. A real npm install is now tested on Windows, without a login.
+
+**It says what went wrong.** If Claude Code isn't logged in, the job tells you what to do, in your language. *Settings →
+Local AI* shows where Claude Code was found, why it didn't start, and has *Check again*. Class files say why Claude can't
+write from here instead of leaving the choice out.
+
+**A new course shows up.** The lessons sat under a closed row of the sidebar. A course now starts open, under its own
+title, and files that arrive while you are here, even from an assistant in a terminal, open the way to themselves and
+carry a small mark. A finished course job has *Open the course*.
+
+**The copied command works from cmd on another drive.** On Windows it now starts with `pushd`.
+
 ## 1.6.0 — 2026-11-01
 
 **Ask the companion anything about your course.** The companion is now on by default, as a small pixel creature at the

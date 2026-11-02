@@ -103,7 +103,7 @@ export interface NoteAnchor { section: string | null; quote: { exact: string; pr
 export interface NoteMessage { id: string; role: 'user' | 'ai'; text: string; engine?: string; at: number; error?: string; done: boolean }
 export type NoteColor = 'important' | 'confusing' | 'exam'
 export interface Note { id: string; doc: string; anchor: NoteAnchor; body: string; thread: NoteMessage[]; created: number; updated: number; color?: NoteColor }
-export interface EnginesInfo { local: { available: boolean; model: string; models: string[]; error?: string; busy: number }; claude: { available: boolean; version?: string; error?: string } }
+export interface EnginesInfo { local: { available: boolean; model: string; models: string[]; error?: string; busy: number }; claude: { available: boolean; version?: string; path?: string; error?: string } }
 
 // ---- local AI models (Ollama)
 export type ModelFit = 'good' | 'slow' | 'too-big'
@@ -122,7 +122,7 @@ export interface LocalAiInfo {
   models: LocalModel[]
   catalog: CatalogModel[]
   download: ModelDownload | null
-  claude: { available: boolean; version?: string; error?: string }
+  claude: { available: boolean; version?: string; path?: string; error?: string }
 }
 
 // ---- AI jobs

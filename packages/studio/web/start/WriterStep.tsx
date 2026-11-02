@@ -8,7 +8,7 @@ import { useUi } from '../state/ui'
 import { Button, ErrorNote, Spinner } from '../ui/primitives'
 import { Command, CopyButton } from '../settings/Command'
 import { promptFor } from '../settings/prompt'
-import { plainWords, shellPath } from '../lib/shell'
+import { goTo, plainWords } from '../lib/shell'
 import { LanguageField } from './LanguageField'
 import { t, tp } from '../i18n'
 import type { PreparedFolder } from '../../shared/types'
@@ -81,7 +81,7 @@ function WithAssistant({ ws, root, language }: { ws: string; root: string; langu
         {TOOLS.map((x) => <button key={x.id} role="tab" aria-selected={x.id === tool.id} onClick={() => setTool(x)} className={`rounded-[6px] px-2.5 py-1 text-[13px] cursor-pointer ${x.id === tool.id ? 'bg-hover font-medium' : 'text-muted hover:text-text'}`}>{x.name}</button>)}
       </div>
       <p className="text-[13.5px]">{t('Run this in a terminal:')}</p>
-      <Command text={`cd ${shellPath(root)}\n${tool.run(request(language))}`} />
+      <Command text={`${goTo(root)}\n${tool.run(request(language))}`} />
       {!!ready.kept.length && <p className="text-[13px] text-warn">{t('Your own {file} was kept. Add a line to it: follow .agents/skills/mdlearn-course/SKILL.md.', { file: ready.kept[0] })}</p>}
     </div>
   )
@@ -135,6 +135,9 @@ export function WriterStep({ ws }: { ws: string }) {
         <Option icon={TerminalSquare} title={t('My coding assistant')} hint={t('Claude Code, Codex, OpenCode or Pi')} chosen={writer === 'assistant'} onChoose={() => setPicked('assistant')} />
         <Option icon={MessageSquareText} title={t('A chat')} hint={t('ChatGPT, Claude.ai or Gemini')} chosen={writer === 'chat'} onChoose={() => setPicked('chat')} />
       </div>
+      {engines.data && !claude && (
+        <p className="mt-2 text-[13px] text-muted">{t('Claude can also write it from here, but Claude Code was not found on this computer, or it did not start.')} <Link href={`/w/${ws}/settings#local-ai`} className="underline underline-offset-2 hover:text-text">{t('See why in Settings')}</Link></p>
+      )}
       <div className="mt-4"><LanguageField value={language} onChange={setLanguage} label={t('Language of the course')} placeholder={t('Same as my files')} /></div>
       <div className="mt-4">
         {writer === 'claude' && <FromHere ws={ws} name={tree.data.name} language={language} />}

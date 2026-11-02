@@ -1367,4 +1367,9 @@ export default {
   'Meaning search covers part of this folder so far; the rest is found by words.': 'De moment la cerca per significat cobreix només una part d’aquesta carpeta; la resta es troba per paraules.',
   'The search model did not answer; this result uses words only.': 'El model de cerca no ha respost; aquest resultat només fa servir les paraules.',
   'Nothing in this folder matches that question. Try other words, or check that the folder has documents.': 'Res d’aquesta carpeta coincideix amb la pregunta. Prova amb altres paraules o comprova que la carpeta tingui documents.',
+  'Claude Code is not logged in on this computer. Open a terminal, run `claude`, log in once, then try again.': 'Claude Code no ha iniciat la sessió en aquest ordinador. Obre un terminal, executa `claude`, inicia la sessió una vegada i torna-ho a provar.',
+  'Claude can also write it from here, but Claude Code was not found on this computer, or it did not start.': 'Claude també ho pot escriure des d’aquí, però no s’ha trobat Claude Code en aquest ordinador, o no ha arrencat.',
+  'See why in Settings': 'Mira per què a Configuració',
+  'found, but it did not start.': 'trobat, però no ha arrencat.',
+  'Open the course': 'Obre el curs',
 } satisfies Dict

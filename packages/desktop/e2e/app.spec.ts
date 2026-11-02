@@ -39,6 +39,14 @@ test('opens Studio in a locked-down window, and the tutorial works in it', async
   await expect(win.getByRole('link', { name: 'Today' })).toBeVisible()
 })
 
+test('a built app carries what an AI job needs', async () => {
+  app = await launch()
+  const win = await app.firstWindow()
+  await expect(win.getByRole('heading', { name: 'MDlearn Studio' })).toBeVisible({ timeout: 30_000 })
+  const claude = await win.evaluate(async () => (await (await fetch('/api/engines')).json() as { claude: { error?: string } }).claude)
+  expect(claude.error ?? '').not.toMatch(/skills plugin/) // Claude Code itself may be missing here; the app's own part may not
+})
+
 test('the capture window saves one thought into the folder and closes', async () => {
   app = await launch()
   const win = await app.firstWindow()

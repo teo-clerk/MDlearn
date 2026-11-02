@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { plainWords, shellPath } from '../web/lib/shell'
+import { goTo, plainWords, shellPath } from '../web/lib/shell'
 
 describe('a language in a pasted command', () => {
   for (const name of ['Español', 'Português do Brasil', 'العربية', 'हिन्दी', '日本語']) it(`keeps ${name}`, () => expect(plainWords(name)).toBe(name))
@@ -23,5 +23,14 @@ describe('a folder in a pasted command', () => {
   })
   it('keeps a quote inside a name that needs quoting', () => {
     expect(shellPath(`/tmp/it's $HOME`)).toBe(`'/tmp/it'\\''s $HOME'`)
+  })
+})
+
+describe('entering the folder', () => {
+  it('works in PowerShell and in cmd, even on another drive', () => {
+    expect(goTo('D:\\Cursos\\Marketing')).toBe('pushd "D:\\Cursos\\Marketing"')
+  })
+  it('stays cd everywhere else', () => {
+    expect(goTo('/home/me/Marketing')).toBe('cd "/home/me/Marketing"')
   })
 })

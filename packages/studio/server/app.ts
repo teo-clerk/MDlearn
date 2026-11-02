@@ -72,7 +72,7 @@ export interface Deps {
   /** The network for web pictures (tests pass a stand-in). */
   pictureFetch?: PictureFetch
   /** Claude Code availability (set by the server; absent in tests). */
-  claudeStatus?: () => Promise<{ available: boolean; version?: string; error?: string }>
+  claudeStatus?: (fresh?: boolean) => Promise<{ available: boolean; version?: string; path?: string; error?: string }>
   knowledge?: Knowledge
   ask?: AskService
   /** Model downloads through Ollama (shared by Settings and Ask's search model). */
@@ -726,14 +726,16 @@ export function createApp(deps: Deps): Hono {
   })
   app.get('/api/engines', need('read', o), async (c) => {
     const local = await ollamaStatus(deps.settings.get().ollama)
-    return c.json({ local: { ...local, busy: ollamaBusy() }, claude: deps.claudeStatus ? await deps.claudeStatus() : { available: false, error: 'Not configured.' } })
+    const claude = deps.claudeStatus ? await deps.claudeStatus() : { available: false, error: 'Not configured.' }
+    return c.json({ local: { ...local, busy: ollamaBusy() }, claude: capsOf(c, o).includes('ai') ? claude : { available: claude.available } }) // a phone doesn't learn where programs are
   })
 
   // ---- local AI models: what is installed, what this computer can run, downloads (changes only from this computer)
   app.get('/api/ai/local', need('read', o), async (c) => {
     const info = await localAi(deps.settings.get().ollama, downloads, await (deps.hardware ?? hardware)())
-    const claude = deps.claudeStatus ? await deps.claudeStatus() : { available: false, error: 'Not configured.' }
-    if (capsOf(c, o).includes('ai')) return c.json<LocalAiInfo>({ ...info, claude })
+    const mine = capsOf(c, o).includes('ai')
+    const claude = deps.claudeStatus ? await deps.claudeStatus(mine && c.req.query('fresh') === '1') : { available: false, error: 'Not configured.' }
+    if (mine) return c.json<LocalAiInfo>({ ...info, claude })
     // a phone sees which models there are, not this computer's hardware, system or where its programs are
     return c.json<LocalAiInfo>({ ...info, hardware: null, install: { command: null, then: null, url: 'https://ollama.com/download' }, claude: { available: claude.available } })
   })

@@ -30,7 +30,7 @@ export function LocalAi() {
   const qc = useQueryClient()
   const session = useSession()
   const canChange = session.data?.caps.includes('ai') ?? false
-  const info = useQuery({ queryKey: keys.localAi, queryFn: localAiApi.info, refetchInterval: (q) => (downloading(q.state.data?.download) ? 1000 : false) })
+  const info = useQuery({ queryKey: keys.localAi, queryFn: () => localAiApi.info(), refetchInterval: (q) => (downloading(q.state.data?.download) ? 1000 : false) })
   const refresh = () => { void qc.invalidateQueries({ queryKey: keys.localAi }); void qc.invalidateQueries({ queryKey: keys.engines }) }
   const act = useMutation({ mutationFn: (fn: () => Promise<unknown>) => fn(), onSettled: refresh })
   // the choice shows at once, and goes back if the server refuses it
@@ -213,10 +213,21 @@ function OtherModel({ disabled, onDownload }: { disabled: boolean; onDownload(m:
 }
 
 function ClaudeLine({ claude }: { claude: LocalAiInfo['claude'] }) {
+  const qc = useQueryClient()
+  const [checking, setChecking] = useState(false)
+  const check = async () => {
+    setChecking(true)
+    try { qc.setQueryData(keys.localAi, await localAiApi.info(true)); void qc.invalidateQueries({ queryKey: keys.engines }) } finally { setChecking(false) }
+  }
   return (
-    <p className="text-[13px] text-muted">
+    <div className="text-[13px] text-muted">
+      <p>
       <span className="font-medium text-text">Claude Code</span>{' · '}
-      {claude.available ? t('ready, for AI courses and lesson improvements{version}', { version: claude.version ? ` (${claude.version})` : '' }) : t('not found. AI courses use Claude Code: install it and log in once with `claude`.')}
+      {claude.available ? t('ready, for AI courses and lesson improvements{version}', { version: claude.version ? ` (${claude.version})` : '' }) : claude.path ? t('found, but it did not start.') : t('not found. AI courses use Claude Code: install it and log in once with `claude`.')}
     </p>
+      {claude.path && <p className="mt-0.5 break-all font-mono text-[12px]">{claude.path}</p>}
+      {claude.error && <p className="mt-0.5 text-[12.5px]">{claude.error}</p>}
+      <Button size="sm" variant="ghost" className="mt-1" busy={checking} onClick={() => void check()}>{t('Check again')}</Button>
+    </div>
   )
 }

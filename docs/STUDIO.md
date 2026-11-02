@@ -384,6 +384,10 @@ tab that regains focus notices outside changes. Every save keeps the previous te
 creates a file anywhere in the folder (never replacing one). All of it needs the `write` capability: the computer
 running MDlearn, not a phone on `--lan`.
 
+**The file tree.** A `course.md` is shown by its title; it and the folders around it start open, and what you close stays
+closed. A file that arrives while you are here, from a job or from an assistant in a terminal, opens the way to itself and
+keeps a small mark until you open it (`web/layout/useTreeRows.ts`); what lands in `sources/` doesn't count.
+
 **LaTeX** (`/w/:ws/latex?path=`). `.tex` files are listed under *LaTeX* in the sidebar (by their `\title`), in the
 command palette, and made by *New note → LaTeX document* (a short article template). The page is the same
 editor with LaTeX highlighting (CodeMirror's stex mode in the quiet style), completion of the usual commands and

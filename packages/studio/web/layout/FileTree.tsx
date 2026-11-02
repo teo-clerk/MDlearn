@@ -1,10 +1,11 @@
 // The folder's Markdown files as a tree (folders → documents → their companion lessons).
-import { useMemo, useState } from 'react'
+import { useContext, useEffect, useMemo, useRef } from 'react'
 import { Link, useLocation, useSearch } from 'wouter'
 import { ChevronRight, FileCode, FileText, Folder, GraduationCap, TriangleAlert } from 'lucide-react'
 import type { TexDoc, Tree, TreeDoc } from '../../shared/types'
 import { docRoute, latexRoute, lessonRoute } from '../lib/paths'
 import { Spinner } from '../ui/primitives'
+import { ArrivalsContext, isCourse, useTreeRows } from './useTreeRows'
 import { t } from '../i18n'
 
 interface Dir { name: string; path: string; dirs: Map<string, Dir>; docs: TreeDoc[] }
@@ -21,22 +22,25 @@ function build(docs: TreeDoc[]): Dir {
   }
   return root
 }
-const label = (d: TreeDoc) => d.path.split('/').pop()!.replace(/\.(md|markdown)$/i, '').replace(/[_-]+/g, ' ')
-const loadOpen = (): Set<string> => { try { return new Set(JSON.parse(sessionStorage.getItem('mdl-tree') ?? '[]') as string[]) } catch { return new Set() } }
+const label = (d: TreeDoc) => (isCourse(d.path) && d.title) || d.path.split('/').pop()!.replace(/\.(md|markdown)$/i, '').replace(/[_-]+/g, ' ')
+/** A quiet mark on a file that arrived while you were here, until you open it. */
+function useArrived(path: string, active: boolean) {
+  const { fresh, seen } = useContext(ArrivalsContext)
+  useEffect(() => { if (active) seen(path) }, [active, path, seen])
+  return fresh.has(path)
+}
+const NewMark = () => <span role="img" aria-label={t('New')} title={t('New')} className="ml-auto size-1.5 shrink-0 rounded-full bg-accent" />
 
 export function FileTree({ ws, tree, loading, error }: { ws: string; tree?: Tree; loading: boolean; error: unknown }) {
   const root = useMemo(() => build(tree?.docs ?? []), [tree])
-  const [open, setOpen] = useState<Set<string>>(loadOpen)
-  const toggle = (p: string) => setOpen((s) => {
-    const n = new Set(s); if (n.has(p)) n.delete(p); else n.add(p)
-    try { sessionStorage.setItem('mdl-tree', JSON.stringify([...n])) } catch { /* ignore */ }
-    return n
-  })
+  const box = useRef<HTMLDivElement>(null)
+  const { open, toggle, arrivals } = useTreeRows(tree, box)
   if (loading) return <div className="px-2 py-2"><Spinner label={t('Reading folder')} /></div>
   if (error) return <p className="px-2 py-2 text-[13px] text-bad">{(error as Error).message}</p>
   if (!tree?.docs.length && !tree?.orphanLessons.length && !tree?.latex.length) return <p className="px-2 py-2 text-[13px] text-muted">{t('No Markdown files in this folder.')}</p>
   return (
-    <div role="tree" aria-label={t('Files')} className="text-[13.5px]">
+    <ArrivalsContext.Provider value={arrivals}>
+    <div ref={box} role="tree" aria-label={t('Files')} className="text-[13.5px]">
       <p className="px-2 pb-1 pt-3 text-[11.5px] font-medium text-muted">{t('Files')}</p>
       <DirView ws={ws} dir={root} depth={0} open={open} toggle={toggle} />
       {!!tree?.orphanLessons.length && (
@@ -57,6 +61,7 @@ export function FileTree({ ws, tree, loading, error }: { ws: string; tree?: Tree
         </>
       )}
     </div>
+    </ArrivalsContext.Provider>
   )
 }
 
@@ -90,8 +95,9 @@ function DocRow({ ws, doc, depth, open, toggle }: { ws: string; doc: TreeDoc; de
   const active = location.endsWith('/doc') && new URLSearchParams(search).get('path') === doc.path
   const isOpen = open.has(doc.path)
   const hasLessons = doc.lessons.length > 0
+  const arrived = useArrived(doc.path, active)
   return (
-    <div role="treeitem" aria-expanded={hasLessons ? isOpen : undefined}>
+    <div role="treeitem" aria-expanded={hasLessons ? isOpen : undefined} data-arrived={arrived || undefined}>
       <div className={`group flex h-7 items-center rounded-[5px] ${active ? 'bg-active' : 'hover:bg-hover'}`} style={{ paddingLeft: 8 + depth * 14 }}>
         {hasLessons
           ? <button onClick={() => toggle(doc.path)} aria-label={isOpen ? t('Hide lessons') : t('Show lessons')} className="flex size-4 shrink-0 items-center justify-center rounded text-subtle hover:text-text cursor-pointer">
@@ -102,6 +108,7 @@ function DocRow({ ws, doc, depth, open, toggle }: { ws: string; doc: TreeDoc; de
           className={`ml-1 flex min-w-0 flex-1 items-center gap-1.5 pr-2 ${active ? 'font-medium text-text' : 'text-text/85'}`}>
           <FileText className="size-[15px] shrink-0 text-muted" strokeWidth={1.7} aria-hidden />
           <span className="truncate">{label(doc)}</span>
+          {arrived && <NewMark />}
           {doc.due > 0 && <span className="ml-auto shrink-0 tabular text-[11.5px] text-muted" title={`${doc.due} cards due`}>{doc.due}</span>}
         </Link>
       </div>
@@ -128,12 +135,14 @@ function LessonRow({ ws, lesson, depth }: { ws: string; lesson: TreeDoc['lessons
   const [location] = useLocation()
   const search = useSearch()
   const active = location.endsWith('/lesson') && new URLSearchParams(search).get('path') === lesson.path
+  const arrived = useArrived(lesson.path, active)
   return (
-    <Link href={lessonRoute(ws, lesson.path)} role="treeitem" title={lesson.title} aria-current={active ? 'page' : undefined}
+    <Link href={lessonRoute(ws, lesson.path)} role="treeitem" title={lesson.title} aria-current={active ? 'page' : undefined} data-arrived={arrived || undefined}
       style={{ paddingLeft: 8 + depth * 14 + 20 }}
       className={`flex h-7 items-center gap-1.5 rounded-[5px] pr-2 ${active ? 'bg-active font-medium text-text' : 'text-text/80 hover:bg-hover'}`}>
       <GraduationCap className="size-[15px] shrink-0 text-subtle" strokeWidth={1.7} aria-hidden />
       <span className="truncate">{lesson.title}</span>
+      {arrived && <NewMark />}
       {lesson.errors > 0 && <TriangleAlert className="ml-auto size-3.5 shrink-0 text-bad" aria-label={`${lesson.errors} errors`} />}
     </Link>
   )

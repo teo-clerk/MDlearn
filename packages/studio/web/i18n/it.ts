@@ -1367,4 +1367,9 @@ export default {
   'Meaning search covers part of this folder so far; the rest is found by words.': 'Per ora la ricerca per significato copre solo una parte della cartella; il resto si trova per parole.',
   'The search model did not answer; this result uses words only.': 'Il modello di ricerca non ha risposto; questo risultato usa solo le parole.',
   'Nothing in this folder matches that question. Try other words, or check that the folder has documents.': 'Nessun contenuto di questa cartella corrisponde alla domanda. Prova con altre parole o controlla che la cartella contenga documenti.',
+  'Claude Code is not logged in on this computer. Open a terminal, run `claude`, log in once, then try again.': 'Claude Code non ha effettuato l’accesso su questo computer. Apri un terminale, esegui `claude`, accedi una volta e riprova.',
+  'Claude can also write it from here, but Claude Code was not found on this computer, or it did not start.': 'Claude può scriverlo anche da qui, ma Claude Code non è stato trovato su questo computer, oppure non si è avviato.',
+  'See why in Settings': 'Scopri perché nelle impostazioni',
+  'found, but it did not start.': 'trovato, ma non si è avviato.',
+  'Open the course': 'Apri il corso',
 } satisfies Dict
