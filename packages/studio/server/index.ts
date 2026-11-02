@@ -61,7 +61,7 @@ export async function startStudio(opts: StudioOptions = {}): Promise<Studio> {
   const jobs = new JobManager(bus)
   const engine = () => (opts.fakeAi ? new FakeEngine() : new ClaudeEngine(settings.get().claude))
   const deps = { version: VERSION, security, settings, workspaces, bus, serverId: randomUUID(), jobs, engine,
-    claudeStatus: () => (opts.fakeAi ? Promise.resolve({ available: true, version: 'demo' }) : claudeStatus(settings.get().claude)),
+    claudeStatus: (fresh?: boolean) => (opts.fakeAi ? Promise.resolve({ available: true, version: 'demo' }) : claudeStatus(settings.get().claude, fresh)),
     claudeOnce: opts.fakeAi ? fakeOnce : (req: { system: string; prompt: string; signal?: AbortSignal }) => claudeOnce(settings.get().claude, req),
     latex: new Latex(opts.fakeTex ? { runner: fakeRunner, engines: fakeEngines } : {}), pictureFetch: opts.pictureFetch }
   const app = createApp(deps)

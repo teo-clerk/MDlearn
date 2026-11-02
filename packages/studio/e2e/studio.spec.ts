@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test'
-import { openFolder } from './helpers'
+import { rmSync } from 'node:fs'
+import { join } from 'node:path'
+import { openFolder, testRoot } from './helpers'
 
 test('an AI job (demo engine) writes a lesson that passes the checks, and can be undone', async ({ page }) => {
   const ws = await openFolder(page)
@@ -13,4 +15,17 @@ test('an AI job (demo engine) writes a lesson that passes the checks, and can be
   await expect(page.getByText(/^Undone:/)).toBeVisible()
   const r = await page.request.get(`/api/w/${ws}/lesson?path=${encodeURIComponent(file)}`)
   expect(r.status()).toBe(404)
+})
+
+test('a finished course opens from its job', async ({ page }) => {
+  const dir = join(testRoot(), 'tides')
+  try {
+    const ws = await openFolder(page)
+    await page.goto(`/w/${ws}/studio`)
+    await page.getByRole('textbox', { name: 'What do you want to learn?' }).fill('Tides')
+    await page.getByRole('button', { name: 'Start' }).click()
+    await expect(page.getByText('checks pass')).toBeVisible({ timeout: 20_000 })
+    await page.getByRole('button', { name: 'Open the course' }).click()
+    await expect(page).toHaveURL(/\/lesson\?path=tides/)
+  } finally { rmSync(dir, { recursive: true, force: true }) }
 })

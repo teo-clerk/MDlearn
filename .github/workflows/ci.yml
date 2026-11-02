@@ -28,7 +28,12 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      - name: Install the real Claude Code the way most Windows users do
+        if: runner.os == 'Windows'
+        run: npm install --global @anthropic-ai/claude-code@2.1.303
       - run: npm test
+        env:
+          MDLEARN_REAL_CLAUDE: ${{ runner.os == 'Windows' && '1' || '' }}
       - run: npm run typecheck
         if: runner.os == 'Linux'
       - run: npm run check-docs

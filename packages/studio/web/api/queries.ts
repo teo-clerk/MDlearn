@@ -84,7 +84,7 @@ export const sheetApi = { ideas: (ws: string, path: string, regenerate = false) 
 
 // ---- editor
 export const localAiApi = {
-  info: () => api.get<LocalAiInfo>('/api/ai/local'),
+  info: (fresh = false) => api.get<LocalAiInfo>(`/api/ai/local${fresh ? '?fresh=1' : ''}`),
   pull: (model: string) => api.post<ModelDownload>('/api/ai/local/pull', { model }),
   cancel: () => api.post<{ ok: true }>('/api/ai/local/cancel', {}),
   choose: (model: string) => api.post<{ chosen: string }>('/api/ai/local/choose', { model }),

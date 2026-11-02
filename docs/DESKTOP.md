@@ -53,7 +53,10 @@ The packaged server is prepared by `scripts/stage-desktop.ts`: it copies, from t
 packages the server needs at run time and nothing else — the exact versions in `package-lock.json`, with no
 download. Packages used only by the web page are `devDependencies` of Studio (Vite has already bundled them into
 `dist/web`), and the Agent SDK's own `claude` binary (234 MB) is left out: the user's Claude Code is found as in
-the web app (settings, mise, Claude Code's installer in `~/.local/bin`, the PATH — launcher scripts are skipped).
+the web app (settings, mise, Claude Code's installer in `~/.local/bin`, the PATH — launcher scripts are skipped, and on
+Windows the program behind npm's `claude.cmd` is used). Claude runs with a short list of environment variables, which on
+Windows includes the ones it needs to find its login and reach the network. *Settings → Local AI* shows what was found,
+why it did not start if so, and *Check again*.
 electron-builder leaves `node_modules` out of extra resources, so `after-pack.cjs` copies the staged server into
 `resources/server` before the installers are made and before macOS signs the app.
 

@@ -1,13 +1,15 @@
 // One AI job: live log, files it changed (with their lint result), stop / undo / follow-up.
 import { useEffect, useRef, useState } from 'react'
-import { Link } from 'wouter'
-import { ArrowLeft, CircleCheck, CircleX, FilePlus2, FilePen, Loader2, OctagonX, RotateCcw, ShieldAlert, TriangleAlert } from 'lucide-react'
+import { Link, useLocation } from 'wouter'
+import { ArrowLeft, BookOpen, CircleCheck, CircleX, FilePlus2, FilePen, Loader2, OctagonX, RotateCcw, ShieldAlert, TriangleAlert } from 'lucide-react'
 import { jobsApi, useJob } from '../api/queries'
 import { docRoute, lessonRoute } from '../lib/paths'
 import { Button, ErrorNote, Spinner } from '../ui/primitives'
 import { MiniMarkdown } from '../prose/MiniMarkdown'
 import type { JobEvent, JobStatus } from '../../shared/types'
 import { t, tp } from '../i18n'
+
+const routeOf = (ws: string, path: string) => (path.endsWith('.learn.md') ? lessonRoute(ws, path) : docRoute(ws, path))
 
 export function StatusChip({ status, undone }: { status: JobStatus; undone?: boolean }) {
   const label = undone ? t('undone') : { queued: t('queued'), running: t('running'), done: t('done'), failed: t('failed'), cancelled: t('cancelled') }[status]
@@ -26,11 +28,13 @@ export function JobView({ ws, id, onBack }: { ws: string; id: string; onBack(): 
   const [follow, setFollow] = useState('')
   const [busy, setBusy] = useState<string | null>(null)
   const log = useRef<HTMLOListElement>(null)
+  const [, navigate] = useLocation()
   useEffect(() => { log.current?.lastElementChild?.scrollIntoView({ block: 'nearest' }) }, [job.data?.events.length])
   if (job.isLoading) return <Spinner />
   if (job.error) return <ErrorNote error={job.error} />
   const j = job.data!
   const live = j.status === 'running' || j.status === 'queued'
+  const course = j.recipe.startsWith('course.') && j.status === 'done' && !j.undone ? (j.files.find((f) => /(^|\/)course\.md$/i.test(f.path)) ?? j.files.find((f) => f.change === 'created')) : undefined
   const act = async (name: string, fn: () => Promise<string | null>) => { setBusy(name); setMsg(null); try { setMsg(await fn()) } catch (e) { setMsg((e as Error).message) } finally { setBusy(null) } }
   return (
     <div>
@@ -41,6 +45,7 @@ export function JobView({ ws, id, onBack }: { ws: string; id: string; onBack(): 
           <p className="mt-1 flex items-center gap-3 text-[12.5px] text-muted"><StatusChip status={j.status} undone={j.undone} /><span>{j.engine}</span>{j.finished && <span className="tabular">{Math.max(1, Math.round((j.finished - j.created) / 1000))} s</span>}</p>
         </div>
         <div className="flex shrink-0 gap-2">
+          {course && <Button variant="primary" icon={BookOpen} onClick={() => navigate(routeOf(ws, course.path))}>{t('Open the course')}</Button>}
           {live && <Button variant="danger" icon={OctagonX} busy={busy === 'stop'} onClick={() => act('stop', async () => ((await jobsApi.cancel(ws, id)).stopped ? t('Stopping…') : t('It had already finished.')))}>{t('Stop')}</Button>}
           {!live && !j.undone && j.files.length > 0 && (
             <Button icon={RotateCcw} busy={busy === 'undo'} onClick={() => act('undo', async () => {
@@ -52,7 +57,7 @@ export function JobView({ ws, id, onBack }: { ws: string; id: string; onBack(): 
         </div>
       </div>
       {msg && <p role="status" className="mt-3 rounded-[6px] bg-hover px-3 py-2 text-[13px]">{msg}</p>}
-      {j.error && <p role="alert" className="mt-3 rounded-[6px] bg-bad-soft px-3 py-2 text-[13px]">{j.error}</p>}
+      {j.error && <p role="alert" className="mt-3 rounded-[6px] bg-bad-soft px-3 py-2 text-[13px]">{t(j.error)}</p>}
 
       {j.files.length > 0 && (
         <section className="mt-6" aria-labelledby="files">
@@ -64,7 +69,7 @@ export function JobView({ ws, id, onBack }: { ws: string; id: string; onBack(): 
               return (
                 <li key={f.path} className="flex items-center gap-2.5 px-3 py-2 text-[13.5px]">
                   <Icon className="size-4 shrink-0 text-muted" strokeWidth={1.7} aria-label={f.change} />
-                  <Link href={f.path.endsWith('.learn.md') ? lessonRoute(ws, f.path) : docRoute(ws, f.path)} className="min-w-0 flex-1 truncate underline decoration-border-strong underline-offset-2 hover:decoration-text">{f.path}</Link>
+                  <Link href={routeOf(ws, f.path)} className="min-w-0 flex-1 truncate underline decoration-border-strong underline-offset-2 hover:decoration-text">{f.path}</Link>
                   {lint && (lint.errors || lint.warnings
                     ? <span className="inline-flex shrink-0 items-center gap-1 text-[12px] text-warn"><TriangleAlert className="size-3.5" aria-hidden />{tp(lint.errors, '{n} error', '{n} errors')} · {tp(lint.warnings, '{n} warning', '{n} warnings')}</span>
                     : <span className="inline-flex shrink-0 items-center gap-1 text-[12px] text-good"><CircleCheck className="size-3.5" aria-hidden />{t('checks pass')}</span>)}
