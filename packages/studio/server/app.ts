@@ -200,23 +200,23 @@ export function createApp(deps: Deps): Hono {
   })
 
   // ---- a course from a class's files: a new folder, or more files for one that exists
-  const classFiles = async (c: Context, h: Handle): Promise<ClassUpload> => {
+  const classFiles = async (c: Context, folder: () => Handle): Promise<ClassUpload> => {
     const body = await c.req.parseBody({ all: true })
     const raw = body['files'] ?? body['files[]']
     const files = (Array.isArray(raw) ? raw : raw ? [raw] : []).filter((f): f is File => typeof f === 'object' && 'arrayBuffer' in f)
     if (files.length > MAX_CLASS_FILES) throw new UserError('too-many', 'At most 100 files at a time.')
     if (files.some((f) => f.size > MAX_IMPORT_BYTES)) throw new UserError('too-large', 'That file is larger than 100 MB.')
-    const saved: ClassFile[] = []
+    const h = folder(), saved: ClassFile[] = []
     for (const f of files) saved.push(await addClassFile(h, f.name, new Uint8Array(await f.arrayBuffer())))
     return { id: h.id, name: h.name, root: h.root, files: saved }
   }
   const classLimit = bodyLimit({ maxSize: MAX_CLASS_UPLOAD, onError: (c) => c.json({ error: { code: 'too-large', message: 'At most 400 MB at a time.' } }, 413) })
   app.post('/api/courses', need('fs', o), classLimit, async (c) => {
     const name = z.string().trim().min(1).max(100).parse(c.req.query('name'))
-    return c.json(await classFiles(c, deps.workspaces.course(name)))
+    return c.json(await classFiles(c, () => deps.workspaces.course(name)))
   })
   app.post('/api/w/:ws/sources', need('write', o), classLimit, async (c) => {
-    const saved = await classFiles(c, ws(c))
+    const saved = await classFiles(c, () => ws(c))
     if (!saved.files.length) throw new UserError('empty', 'No files were received.')
     return c.json(saved)
   })
@@ -829,7 +829,8 @@ export function createApp(deps: Deps): Hono {
     const prev = jm.get(h, c.req.param('id'))
     if (!prev) throw new UserError('not-found', 'No such job.')
     if (!prev.sessionId) throw new UserError('session', 'This job cannot be continued; start a new one.')
-    const scope = prev.files.length ? [...new Set(prev.files.map((f) => f.path.split('/').slice(0, -1).join('/')))] : ['learn']
+    const oneFile = prev.recipe === 'lesson.improve' || prev.recipe === 'leech.fix' // a note can sit at the top of the folder: its folder is not its scope
+    const scope = prev.files.length ? [...new Set(prev.files.map((f) => (oneFile ? f.path : f.path.split('/').slice(0, -1).join('/'))))] : ['learn']
     const r = customJob(h, request, scope[0])
     return c.json(jm.start(h, engine, { ...r.spec, recipe: 'followup', title: request.slice(0, 80), writeScope: scope.map((s) => `${h.root}/${s}`), keepOut: keptOut(h.root), resume: prev.sessionId }, { parent: prev.id }))
   })

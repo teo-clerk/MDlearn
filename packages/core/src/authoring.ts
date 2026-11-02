@@ -3,6 +3,10 @@
 import { CODES, format, type Diagnostic } from './registry.js'
 import { isStudyNote } from './compile.js'
 
+/** Instructions for coding assistants: what a chat writes must never become one, in any folder or capitalisation. */
+export const ASSISTANT_FILES: ReadonlySet<string> = new Set(['AGENTS.md', 'CLAUDE.md', 'GEMINI.md'])
+export const isAssistantFile = (name: string) => ASSISTANT_FILES.has(name.toUpperCase().replace(/\.MD$/, '.md'))
+
 export interface BundleFile { path: string; content: string }
 
 // Pasted answers are untrusted and can be huge: every line test below is linear (string checks, or a regex
@@ -31,7 +35,10 @@ export function safeBundlePath(raw: string, note = false): string | null {
   if (!clean.length) return null
   const last = clean[clean.length - 1]
   if (last.toLowerCase() === 'course.md') clean[clean.length - 1] = 'course.md'
-  else if (!/\.learn\.md$/i.test(last)) clean[clean.length - 1] = `${last.replace(/\.(md|markdown|txt)$/i, '') || 'lesson'}${note ? '.md' : '.learn.md'}`
+  else if (!/\.learn\.md$/i.test(last)) {
+    const base = last.replace(/\.(md|markdown|txt)$/i, '') || 'lesson'
+    clean[clean.length - 1] = `${base}${note && !isAssistantFile(`${base}.md`) ? '.md' : '.learn.md'}`
+  }
   return clean.join('/')
 }
 
@@ -83,7 +90,7 @@ export function splitBundle(text: string): BundleFile[] {
     const content = trimBlank(inner ?? body).join('\n')
     if (!content.trim()) continue
     const note = isStudyNote(content)
-    let path = (c.name && safeBundlePath(c.name, note)) || `${slug(titleOf(content))}${note ? '.md' : '.learn.md'}`
+    let path = (c.name && safeBundlePath(c.name, note)) || safeBundlePath(slug(titleOf(content)) || 'lesson', note)!
     if (seen.has(path)) { // at most MAX_BUNDLE_FILES names, so this search is short
       const [, base, ext] = /^(.*?)(\.learn\.md|\.md)$/.exec(path)!
       let n = 2

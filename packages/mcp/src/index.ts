@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url'
 import {
   formatDiagnostic, sectionText, outlineDoc, studyQueue, locate, pose, check, hint, ratingFor, ratingWords, scheduleAfter, whenText, report, coursePrompt, courseChanges,
   type Lesson,
-  isStudyNote,
+  isAssistantFile, isStudyNote,
 } from '@mdlearn/core'
 import {
   isStudyFile, workspace, relativePosix, curriculumStatus, findDoc, loadDoc, planFor, loadLessons, loadProgress, loadGoals, appendProgress, compileSource, compileFile, searchCurriculum, inRoot as insideRoot,
@@ -145,6 +145,7 @@ if (!readOnly) server.registerTool('save_lesson', {
   },
   annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
 }, async ({ path, content, overwrite }) => {
+  if (isAssistantFile(basename(path))) return error(`${basename(path)} gives instructions to coding assistants, so it can't hold a note. Choose another name.`)
   const overview = basename(path).toLowerCase() === 'course.md'
   const lesson = /\.learn\.md$/i.test(path) || (!overview && /\.md$/i.test(path) && isStudyNote(content))
   if (!lesson && !overview) return error('Only notes with `study: true` in their frontmatter, lesson files (*.learn.md) and course.md overviews can be saved.')

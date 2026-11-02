@@ -115,6 +115,8 @@ describe('notes in an answer from a chat', () => {
   it('keeps .md for a studied note', () => {
     expect(safeBundlePath('marketing/01-precio.md', true)).toBe('marketing/01-precio.md')
     expect(safeBundlePath('marketing/01-precio.md')).toBe('marketing/01-precio.learn.md')
+    for (const name of ['CLAUDE.md', 'sub/AGENTS.md', 'GEMINI.md', 'claude.md', 'sub/Agents.markdown']) expect(safeBundlePath(name, true)).toMatch(/\.learn\.md$/)
+    expect(splitBundle('---\nstudy: true\n---\n\n# Claude\n')[0].path).toBe('claude.learn.md')
   })
   it('names the files by what they hold', () => {
     const files = splitBundle(`<!-- file: curso/01-precio.md -->\n~~~~markdown\n${note(`## Una\n\n${quiz}`)}\n~~~~\n`)

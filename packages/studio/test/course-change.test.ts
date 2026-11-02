@@ -202,6 +202,14 @@ describe('changing a started course with an AI', () => {
     const next = await (await s.post(`/ai/jobs/${started.id}/followup`, { request: 'One more card' })).json() as JobSummary
     expect((s.jobs as unknown as { jobs: Map<string, { spec: { keepOut?: string[] } }> }).jobs.get(next.id)!.spec.keepOut).toContain(join(s.root, 'sources'))
   })
+  it('keeps a follow-up to the one note it was improving, even at the top of the folder', async () => {
+    const s = setup()
+    writeFileSync(join(s.root, 'note.md'), '---\nstudy: true\n---\n\n# Note\n\n## One\n\n:::cloze\nA {{word}}.\n:::\n')
+    const started = await (await s.post('/ai/jobs', { recipe: 'lesson.improve', lesson: 'note.md' })).json() as JobSummary
+    await finished(s, started.id)
+    const next = await (await s.post(`/ai/jobs/${started.id}/followup`, { request: 'Shorter' })).json() as JobSummary
+    expect((s.jobs as unknown as { jobs: Map<string, { spec: { writeScope: string[] } }> }).jobs.get(next.id)!.spec.writeScope).toEqual([join(s.root, 'note.md')])
+  })
 })
 
 describe('translating a course', () => {

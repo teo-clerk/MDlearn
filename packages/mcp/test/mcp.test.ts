@@ -58,6 +58,10 @@ describe('mdlearn MCP server', () => {
     const note = '---\nid: radar\nstudy: true\n---\n\n# Radar\n\n## One\n\n:::cloze\nA radar sends {{pulses}}.\n:::\n'
     const own = await call('save_lesson', { path: '00_FOUNDATIONS/04_radar.md', content: note, overwrite: true })
     expect(own.text).toMatch(/own document/)
+    for (const path of ['CLAUDE.md', 'sub/AGENTS.md', 'sub/gemini.md']) {
+      expect((await call('save_lesson', { path, content: note })).text).toMatch(/coding assistants/)
+      expect(existsSync(resolve(root, path))).toBe(false)
+    }
     expect((await call('save_lesson', { path: 'notes/01-radar.md', content: note })).text).toMatch(/saved/)
     expect((await call('save_lesson', { path: 'notes/01-radar.md', content: note })).text).toMatch(/already exists/)
     expect((await call('save_lesson', { path: 'notes/01-radar.md', content: note, overwrite: true })).text).toMatch(/saved/)

@@ -6,13 +6,12 @@ import vm from 'node:vm'
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import { z } from 'zod'
 import { compile, isStudyNote, isWidget, type CompileResult, type SourceResolver } from './compile.js'
+import { ASSISTANT_FILES } from './authoring.js'
 import { outlineDoc, findSection, planLessons, scaffoldLesson, type DocOutline, type LessonPlan } from './importer.js'
 import type { Lesson } from './ast.js'
 import { mergeLogs, type ReviewEvent } from './learn/srs.js'
 
 /** Folders never treated as curriculum content (shared with file watchers). */
-/** Instructions for coding assistants at the top of a folder: not notes. */
-const ASSISTANT_FILES: ReadonlySet<string> = new Set(['AGENTS.md', 'CLAUDE.md', 'GEMINI.md'])
 export const IGNORED_DIRS: ReadonlySet<string> = new Set(['node_modules', '.git', '.venv', 'venv', '.claude', '.pytest_cache', '.ruff_cache', '__pycache__', 'dist', '.mdlearn', 'learn'])
 
 /** Outline cache keyed by absolute path + mtime, so long sessions re-read only changed documents. */

@@ -136,6 +136,13 @@ describe('a course from class files', () => {
     expect(writeAllowed(join(root, 'sources/text/lecture-3.md'), scope, keepOut)).toMatch(/not change/)
     expect(writeAllowed(join(root, 'AGENTS.md'), scope, keepOut)).toMatch(/not change/)
   })
+  it('leaves no empty folder behind when it refuses the files', async () => {
+    const { send, workspaces } = setup()
+    const before = workspaces.list().length
+    const many = Array.from({ length: 101 }, (_, i): [string, Uint8Array] => [`f${i}.md`, strToU8('# x')])
+    expect((await send('/api/courses?name=TooMany', many)).ok).toBe(false)
+    expect(workspaces.list().length).toBe(before)
+  })
   it('makes a course from a name alone, but adding nothing to a folder is a mistake', async () => {
     const { send } = setup()
     const r = await (await send('/api/courses?name=Marketing', [])).json() as ClassUpload
