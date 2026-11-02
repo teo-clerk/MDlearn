@@ -44,12 +44,12 @@ describe('Claude Code on Windows', () => {
     mkdirSync(bin, { recursive: true })
     writeFileSync(join(dir, 'claude.cmd'), '@ECHO off\r\nnode %*\r\n')
     writeFileSync(join(bin, 'claude.exe'), Buffer.from([0x4d, 0x5a, 0, 0])); chmodSync(join(bin, 'claude.exe'), 0o755)
-    expect(resolveClaude({ model: 'sonnet' }, { platform: 'win32', env: { PATH: dir, HOME: dir } })).toBe(join(bin, 'claude.exe'))
+    expect(resolveClaude({ model: 'sonnet' }, { platform: 'win32', env: { PATH: dir, HOME: dir }, bundled: false })).toBe(join(bin, 'claude.exe'))
   })
   it('never takes the launcher itself', () => {
     const dir = mkdtempSync(join(tmpdir(), 'mdl-npm-'))
     writeFileSync(join(dir, 'claude.cmd'), '@ECHO off\r\n')
-    expect(resolveClaude({ model: 'sonnet' }, { platform: 'win32', env: { PATH: dir, HOME: dir } })).toBeNull()
+    expect(resolveClaude({ model: 'sonnet' }, { platform: 'win32', env: { PATH: dir, HOME: dir }, bundled: false })).toBeNull()
   })
 })
 
@@ -99,8 +99,6 @@ describe.runIf(process.env.MDLEARN_REAL_CLAUDE)('the real Claude Code, installed
     expect(bin).toMatch(/claude-code[\\/]bin[\\/]claude\.exe$/)
     expect(await claudeStatus({ model: 'sonnet' })).toMatchObject({ available: true })
     const reply = spawnSync(bin!, ['-p', 'say ok', '--output-format', 'json'], { encoding: 'utf8', timeout: 60_000, env: cleanEnv() })
-    const without = spawnSync(bin!, ['-p', 'say ok', '--output-format', 'json'], { encoding: 'utf8', timeout: 60_000, env: { PATH: process.env.PATH! } })
-    console.log('[real claude] clean:', reply.status, reply.stdout.slice(-400), reply.stderr.slice(0, 300), '\n[real claude] only PATH:', without.status, without.error?.message, without.stdout.slice(-400), without.stderr.slice(0, 300))
     expect(loginFailed(JSON.parse(reply.stdout).result)).toBe(true)
   }, 120_000)
 })
