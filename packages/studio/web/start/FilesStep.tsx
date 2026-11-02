@@ -1,4 +1,4 @@
-// First step of a course from class files: choose them, and see what MDlearn could read in each.
+// First step of a course: what it is about, and any files you have, and what MDlearn could read in each.
 import { useRef, useState } from 'react'
 import { FileText, Upload, X } from 'lucide-react'
 import { classApi } from '../api/queries'
@@ -31,8 +31,8 @@ export function FilesStep({ ws, onDone }: { ws?: string; onDone: (u: ClassUpload
   return (
     <div className="mt-6 flex flex-col gap-4">
       {!ws && (
-        <label className="block text-[13px] font-medium">{t('What is the course called?')}
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('e.g. Thermodynamics 2')} maxLength={100} className={field} />
+        <label className="block text-[13px] font-medium">{t('What do you want to learn?')}
+          <input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('e.g. Marketing for a small business')} maxLength={100} className={field} />
         </label>
       )}
       <div role="group" aria-label={t('Your class files')}
@@ -40,7 +40,7 @@ export function FilesStep({ ws, onDone }: { ws?: string; onDone: (u: ClassUpload
         onDrop={async (e) => { e.preventDefault(); setDragging(false); add((await fromDrop(e.dataTransfer, CLASS_ACCEPT)).map((p) => p.file)) }}
         className={`rounded-[8px] border border-dashed p-5 text-center ${dragging ? 'border-accent bg-accent-soft' : 'border-border-strong'}`}>
         <Upload className="mx-auto size-5 text-muted" strokeWidth={1.6} aria-hidden />
-        <p className="mt-2 text-[14px] font-medium">{t('Drop your class files here')}</p>
+        <p className="mt-2 text-[14px] font-medium">{ws ? t('Drop your class files here') : t('Drop any files you have here (optional)')}</p>
         <p className="mt-0.5 text-[13px] text-muted">{t('PDF, PowerPoint, Word, pictures or text.')} <button onClick={() => input.current?.click()} className="underline underline-offset-2 hover:text-text cursor-pointer">{t('Choose files')}</button></p>
         <input ref={input} type="file" multiple accept={CLASS_INPUT} hidden aria-label={t('Choose files')} onChange={(e) => add(fromInput(e.target.files, CLASS_ACCEPT).map((p) => p.file))} />
       </div>
@@ -56,7 +56,7 @@ export function FilesStep({ ws, onDone }: { ws?: string; onDone: (u: ClassUpload
         </ul>
       )}
       {!!error && <ErrorNote error={error} />}
-      <div><Button variant="primary" busy={busy} disabled={!files.length || (!ws && !name.trim())} onClick={() => void send()}>{ws ? t('Add these files') : t('Continue')}</Button></div>
+      <div><Button variant="primary" busy={busy} disabled={ws ? !files.length : !name.trim()} onClick={() => void send()}>{ws ? t('Add these files') : t('Continue')}</Button></div>
     </div>
   )
 }

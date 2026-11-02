@@ -17,6 +17,8 @@ export interface JobSpec {
   resume?: string
   /** Claude model alias for this job (defaults to the one in settings). */
   model?: string
+  /** The learner allowed web searches for this job. Never WebFetch: a page's address could carry their notes out. */
+  webSearch?: boolean
 }
 export interface RunContext {
   emit(e: JobEvent): void

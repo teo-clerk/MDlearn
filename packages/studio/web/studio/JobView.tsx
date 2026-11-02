@@ -3,13 +3,11 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'wouter'
 import { ArrowLeft, BookOpen, CircleCheck, CircleX, FilePlus2, FilePen, Loader2, OctagonX, RotateCcw, ShieldAlert, TriangleAlert } from 'lucide-react'
 import { jobsApi, useJob } from '../api/queries'
-import { docRoute, lessonRoute } from '../lib/paths'
+import { lessonRoute } from '../lib/paths'
 import { Button, ErrorNote, Spinner } from '../ui/primitives'
 import { MiniMarkdown } from '../prose/MiniMarkdown'
 import type { JobEvent, JobStatus } from '../../shared/types'
 import { t, tp } from '../i18n'
-
-const routeOf = (ws: string, path: string) => (path.endsWith('.learn.md') ? lessonRoute(ws, path) : docRoute(ws, path))
 
 export function StatusChip({ status, undone }: { status: JobStatus; undone?: boolean }) {
   const label = undone ? t('undone') : { queued: t('queued'), running: t('running'), done: t('done'), failed: t('failed'), cancelled: t('cancelled') }[status]
@@ -45,7 +43,7 @@ export function JobView({ ws, id, onBack }: { ws: string; id: string; onBack(): 
           <p className="mt-1 flex items-center gap-3 text-[12.5px] text-muted"><StatusChip status={j.status} undone={j.undone} /><span>{j.engine}</span>{j.finished && <span className="tabular">{Math.max(1, Math.round((j.finished - j.created) / 1000))} s</span>}</p>
         </div>
         <div className="flex shrink-0 gap-2">
-          {course && <Button variant="primary" icon={BookOpen} onClick={() => navigate(routeOf(ws, course.path))}>{t('Open the course')}</Button>}
+          {course && <Button variant="primary" icon={BookOpen} onClick={() => navigate(lessonRoute(ws, course.path))}>{t('Open the course')}</Button>}
           {live && <Button variant="danger" icon={OctagonX} busy={busy === 'stop'} onClick={() => act('stop', async () => ((await jobsApi.cancel(ws, id)).stopped ? t('Stopping…') : t('It had already finished.')))}>{t('Stop')}</Button>}
           {!live && !j.undone && j.files.length > 0 && (
             <Button icon={RotateCcw} busy={busy === 'undo'} onClick={() => act('undo', async () => {
@@ -69,7 +67,7 @@ export function JobView({ ws, id, onBack }: { ws: string; id: string; onBack(): 
               return (
                 <li key={f.path} className="flex items-center gap-2.5 px-3 py-2 text-[13.5px]">
                   <Icon className="size-4 shrink-0 text-muted" strokeWidth={1.7} aria-label={f.change} />
-                  <Link href={routeOf(ws, f.path)} className="min-w-0 flex-1 truncate underline decoration-border-strong underline-offset-2 hover:decoration-text">{f.path}</Link>
+                  <Link href={lessonRoute(ws, f.path)} className="min-w-0 flex-1 truncate underline decoration-border-strong underline-offset-2 hover:decoration-text">{f.path}</Link>
                   {lint && (lint.errors || lint.warnings
                     ? <span className="inline-flex shrink-0 items-center gap-1 text-[12px] text-warn"><TriangleAlert className="size-3.5" aria-hidden />{tp(lint.errors, '{n} error', '{n} errors')} · {tp(lint.warnings, '{n} warning', '{n} warnings')}</span>
                     : <span className="inline-flex shrink-0 items-center gap-1 text-[12px] text-good"><CircleCheck className="size-3.5" aria-hidden />{t('checks pass')}</span>)}

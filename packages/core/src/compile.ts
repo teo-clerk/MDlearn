@@ -4,16 +4,16 @@ import GithubSlugger from 'github-slugger'
 import YAML from 'yaml'
 import type { Root, RootContent, Nodes } from 'mdast'
 import { stage0, type Stage0Result } from './stage0.js'
+import { CARD_ID } from './importer.js'
 import { blockBuilder, safeUrl, type SourceResolver } from './blocks.js'
-import { VISUAL_MINUTES } from './visuals.js'
+import { VISUAL_MINUTES, VISUAL_TYPES } from './visuals.js'
 import { type Code, type Diagnostic } from './registry.js'
-import { FrontmatterSchema, FRONTMATTER_SYNONYMS, LessonSchema, type Block, type Card, type Lesson, isWidget } from './ast.js'
+import { FrontmatterSchema, FRONTMATTER_SYNONYMS, LessonSchema, WIDGET_TYPES, type Block, type Card, type Lesson, isWidget } from './ast.js'
 
 import { processor } from './parser.js'
 export { processor, remarkBlockDirectives } from './parser.js'
 
-/** `## Title {#id}`. An id holds what a slug can, so that a card with an Italian or French title can keep the id it was given. */
-export const CARD_ID = /\{#([\p{L}\p{M}\p{N}_-]+)\}\s*$/u
+export { CARD_ID }
 
 export interface CompileResult {
   lesson: Lesson | null; diagnostics: Diagnostic[]; stage0: Stage0Result
@@ -56,7 +56,7 @@ export function compile(source: string, opts: CompileOptions = {}): CompileResul
     parsedFm = FrontmatterSchema.safeParse(fm)
   }
   const meta = parsedFm.success ? parsedFm.data : FrontmatterSchema.parse({})
-  const lang = meta.lang
+  const lang = meta.lang, notes = meta.study === true
 
   // ---- parse
   const tree = processor.parse(s0.text) as Root
@@ -100,20 +100,29 @@ export function compile(source: string, opts: CompileOptions = {}): CompileResul
     cardLint(blocks, children.slice(i + 1, j), h)
     i = j
   }
-  // retrieval gap & lesson length (heuristics)
-  let gap = 0
-  for (const [ci, c] of cards.entries()) {
-    gap = c.blocks.some((b) => isWidget(b)) ? 0 : gap + 1
-    if (gap === 4) diag('W602', 1, `cards ending at "${cards[ci].title}"`)
+  // retrieval gap & lesson length (heuristics): a note explains as long as it needs, and only must have something to practise
+  const practised = (c: Card) => c.blocks.some((b) => isWidget(b))
+  if (notes) {
+    if (!cards.some(practised)) diag('W611', 1)
+    const all = wordsIn(tree), asked = tree.children.reduce((n, c) => n + (isExercise(c) ? wordsIn(c) : 0), 0)
+    if (all >= MIN_NOTE_WORDS && asked / all > MAX_EXERCISE_SHARE) diag('W613', 1, `${Math.round((100 * asked) / all)}% of ${all} words`)
+    if (all >= MIN_NOTE_WORDS && !showsSomething(tree)) diag('W614', 1, `${all} words`)
+  } else {
+    let gap = 0
+    for (const [ci, c] of cards.entries()) {
+      gap = practised(c) ? 0 : gap + 1
+      if (gap === 4) diag('W602', 1, `cards ending at "${cards[ci].title}"`)
+    }
+    if (cards.length > 15) diag('W603', 1, `${cards.length} cards`)
   }
-  if (cards.length > 15) diag('W603', 1, `${cards.length} cards`)
 
   function cardLint(blocks: Block[], raw: RootContent[], heading: RootContent) {
     const prose = raw.filter((n) => n.type !== 'containerDirective')
     const words = toString({ type: 'root', children: prose }).split(/\s+/).filter(Boolean).length
-    if (words > 150) diag('W601', heading, `${words} words`)
-    const marked = markedPhrases(prose), markedWords = marked.join(' ').split(/\s+/).filter(Boolean).length
-    if (marked.length > MAX_MARKS || markedWords > Math.max(MIN_MARKED_WORDS, words / 6)) diag('W610', heading, `${marked.length} marks, ${markedWords} of ${words} words`)
+    if (!notes && words > 150) diag('W601', heading, `${words} words`)
+    const marked = markedPhrases(prose), wordsOf = (t: string) => t.split(/\s+/).filter(Boolean).length, markedWords = wordsOf(marked.join(' '))
+    const tooMany = notes ? marked.some((m) => wordsOf(m) > MAX_MARK_WORDS) : marked.length > MAX_MARKS
+    if (tooMany || markedWords > Math.max(MIN_MARKED_WORDS, words / 6)) diag('W610', heading, `${marked.length} marks, ${markedWords} of ${words} words`)
     const expo = toString({ type: 'root', children: prose }).toLowerCase()
     for (const b of blocks) {
       const keys = b.type === 'cloze' || b.type === 'steps' ? b.blanks.filter((x) => x.kind === 'text').flatMap((x) => x.answers) : []
@@ -143,7 +152,29 @@ function blockMinutes(b: Block): number {
   return b.end !== undefined ? (b.end - (b.start ?? 0)) / 60 : 2
 }
 
-const MAX_MARKS = 3, MIN_MARKED_WORDS = 6
+const MAX_MARKS = 3, MIN_MARKED_WORDS = 6, MAX_MARK_WORDS = 12
+const MIN_NOTE_WORDS = 300, MAX_EXERCISE_SHARE = 0.3
+type Tree = RootContent | Root
+const wordsIn = (n: Tree) => toString(n).split(/\s+/).filter(Boolean).length
+const isDirective = (n: Tree): n is Extract<RootContent, { name: string }> => n.type === 'containerDirective' || n.type === 'leafDirective'
+const isExercise = (n: Tree) => isDirective(n) && (WIDGET_TYPES as readonly string[]).includes(n.name)
+/** A picture, a diagram or anything that moves, anywhere in a note. A table is still text. */
+function showsSomething(n: Tree): boolean {
+  if (n.type === 'image' || (n.type === 'code' && n.lang === 'mermaid')) return true
+  if (n.type === 'html' && /<(img|svg)\b/i.test(n.value)) return true
+  if (isDirective(n) && ((VISUAL_TYPES as readonly string[]).includes(n.name) || n.name === 'video')) return true
+  return 'children' in n && (n.children as RootContent[]).some(showsSomething)
+}
+/** Whether a `.md` file asks to be studied: `study: true` in its frontmatter. A cheap look, for files that may never be compiled. */
+export function isStudyNote(source: string): boolean {
+  const lines = source.replace(/^\uFEFF/, '').split(/\r?\n/, 60)
+  if (lines[0].trim() !== '---') return false
+  for (const line of lines.slice(1)) {
+    if (line.trim() === '---') return false
+    if (/^study:\s*true\s*(#.*)?$/i.test(line)) return true
+  }
+  return false
+}
 /** The text inside each `<mark>…</mark>`: Markdown parses the tags as separate nodes around it. */
 function markedPhrases(nodes: RootContent[]): string[] {
   const out: string[] = []

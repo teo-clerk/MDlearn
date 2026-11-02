@@ -101,6 +101,7 @@ function Card({ ws, s }: { ws: string; s: ReturnType<typeof useStudySession> }) 
           <span className="mr-2 rounded-[4px] bg-hover px-1.5 py-px text-[12px] font-medium text-muted">{st.revisit ? t('Practice') : item.item.reason === 'due' ? t('Review') : t('New')}</span>
           {prettyTitle(item.item.cardTitle)}
         </h2>
+        {item.noteSection && <Link href={`${docRoute(ws, item.lessonPath)}&section=${encodeURIComponent(item.noteSection)}`} className="text-[12px] text-muted underline decoration-border-strong underline-offset-2 hover:text-text">{t('Read this in your notes')}</Link>}
         {sourceDoc && item.reads.length > 0 && (
           <Link href={`${docRoute(ws, sourceDoc.path)}&section=${encodeURIComponent(item.reads[0].section)}`} className="text-[12px] text-muted underline decoration-border-strong underline-offset-2 hover:text-text">§{item.reads.map((r) => r.section).join(', §')}</Link>
         )}

@@ -41,7 +41,7 @@ export function sanitizeHtml(html: string, cx: ProseContext, prefix: string): st
       else if (!url.startsWith('#')) { el.setAttribute('target', '_blank'); el.setAttribute('rel', 'noopener noreferrer') }
     }
   })
-  return purify.sanitize(html, { USE_PROFILES: { html: true, svg: true, svgFilters: true }, FORBID_TAGS, FORBID_ATTR, ALLOW_DATA_ATTR: false, ADD_ATTR: ['target'] })
+  return purify.sanitize(html, { USE_PROFILES: { html: true, svg: true, svgFilters: true }, FORBID_TAGS, FORBID_ATTR, ALLOW_DATA_ATTR: false, ADD_ATTR: ['target', 'data-tone'] })
 }
 
 export function SafeHtml({ html, cx, inline }: { html: string; cx: ProseContext; inline?: boolean }) {

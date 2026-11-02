@@ -16,6 +16,8 @@ export interface BrowseResult { path: string; parent: string | null; entries: Br
 export interface TreeDoc {
   path: string; title: string; kind: DocOutline['kind']; words: number; timeMin?: number
   lessons: { path: string; id: string; title: string; cards: number; errors: number; warnings: number }[]
+  /** Studied notes this stands for: 1 for a note with `study: true`, all of them for the `course.md` beside them. */
+  notes: number
   cards: number; seen: number; due: number
   /** Mean predicted recall of seen cards (FSRS), null when nothing has been studied. */
   memory: number | null
@@ -48,7 +50,7 @@ export interface SearchHit { doc: string; section: string; title: string; snippe
 // ---- study
 export interface StudyPlan { items: QueueItem[]; due: number; fresh: number; minutes: number }
 /** `video`: the video this question pauses at in the lesson (its title, the time, a link that starts there when online). */
-export interface StudyItem { item: QueueItem; title: string; widget: PosedWidget; exposition: MdNode[]; reads: ReadRef[]; lessonPath: string; video?: { title: string; at: string; link?: string } }
+export interface StudyItem { item: QueueItem; title: string; widget: PosedWidget; exposition: MdNode[]; reads: ReadRef[]; lessonPath: string; /** A question in a note: the section of the note it comes from. */ noteSection?: string; video?: { title: string; at: string; link?: string } }
 export interface CheckResponse { checked: Checked }
 /** Cards for a device with no connection to this computer: their lessons (trimmed to these cards, answers included,
  *  so the device can mark them), the study order, and their review history (to know when each is due). */

@@ -8,7 +8,7 @@ import type { StudyPlan, StudyItem, RecordResponse } from '../../shared/types'
 import { t } from '../i18n'
 
 export type Phase = 'loading' | 'empty' | 'answer' | 'sure' | 'self' | 'feedback' | 'summary' | 'error'
-export interface CardResult { widgetId: string; cardKey: string; title: string; rating: 1 | 2 | 3; reads: ReadRef[]; reason: 'due' | 'new'; lessonPath: string }
+export interface CardResult { widgetId: string; cardKey: string; title: string; rating: 1 | 2 | 3; reads: ReadRef[]; reason: 'due' | 'new'; lessonPath: string; noteSection?: string }
 export interface SessionState {
   phase: Phase
   plan: StudyPlan | null
@@ -111,7 +111,7 @@ export function useStudySession(ws: string) {
     const outcome: Outcome = { correct: correct && !revealed, partial, revealed, help: stateRef.current.hints.length ? 'author-hint' : 'none', ...(sure.current !== undefined ? { sure: sure.current } : {}) }
     try {
       const recorded = await studyApi.record(ws, item.item.cardKey, outcome)
-      dispatch({ type: 'recorded', recorded, result: { widgetId: item.widget.id, cardKey: item.item.cardKey, title: item.item.cardTitle, rating: recorded.rating, reads: item.reads, reason: item.item.reason, lessonPath: item.lessonPath } })
+      dispatch({ type: 'recorded', recorded, result: { widgetId: item.widget.id, cardKey: item.item.cardKey, title: item.item.cardTitle, rating: recorded.rating, reads: item.reads, reason: item.item.reason, lessonPath: item.lessonPath, ...(item.noteSection ? { noteSection: item.noteSection } : {}) } })
     } catch (e) { fail(e) }
   }
   const stateRef = useRef(state)

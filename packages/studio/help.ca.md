@@ -10,11 +10,11 @@ Els teus apunts continuen sent fitxers Markdown normals. Les **lliçons** (`lear
 **Estudia** et torna a mostrar cada targeta just abans que l'oblidis. De cinc a deu minuts al dia a
 **Avui**: aquest és l'hàbit que dona fruits.
 
-## Com es fan les lliçons
+## Com es fan els cursos
 
-Comença a la primera pàgina amb **Crea un curs amb els meus fitxers de classe**. Dona-li els teus PDF, PowerPoint, Word i
-imatges. Els originals es queden a `sources/`, i el que es pot llegir es converteix en text i imatges que qualsevol IA pot
-fer servir. Després tria qui escriu les lliçons:
+Comença a la primera pàgina amb **Crea un curs**. Digues què vols aprendre i afegeix els PDF, PowerPoint, Word i imatges
+que tinguis. Els originals es queden a `sources/`, i el que es pot llegir es converteix en text i imatges que qualsevol IA
+pot fer servir. Després tria qui escriu el curs:
 
 | Qui | Com |
 |---|---|
@@ -22,7 +22,9 @@ fer servir. Després tria qui escriu les lliçons:
 | **El teu assistent de programació** | Claude Code, Codex, OpenCode o Pi: MDlearn prepara la carpeta i et dona una sola ordre. |
 | **Un xat** | ChatGPT, Claude.ai o Gemini: adjunta els fitxers, enganxa el prompt d'MDlearn i porta la resposta amb **Importa → Des d'un xat**. |
 
-Les lliçons apareixen a mesura que s'escriuen. A l'editor, enganxa o deixa anar una captura per afegir una imatge. Fes clic en una imatge per veure-la més gran. Una imatge del web espera fins que permetis el seu lloc, perquè un document la podria fer servir per treure informació.
+El resultat són uns apunts millors que els que tenies: un fitxer `.md` per tema, amb explicacions completes, exemples resolts i exercicis a cada secció, i fórmules, animacions, diagrames, imatges i vídeos on ajuden. No es perd res dels teus fitxers, i el que la IA hi afegeix queda en una nota visible. Els seus exercicis tornen a **Avui** i a **Estudia**, on **Llegeix-ho als teus apunts** et porta a la secció. Claude també pot buscar a internet si marques la casella, i el que busca surt del teu ordinador. Si els teus apunts ja són complets, AI Studio pot **Només afegir exercicis** i deixar el teu text com està.
+
+Els apunts apareixen a mesura que s'escriuen. A l'editor, enganxa o deixa anar una captura per afegir una imatge. Fes clic en una imatge per veure-la més gran. Una imatge del web espera fins que permetis el seu lloc, perquè un document la podria fer servir per treure informació.
 
 Per canviar un curs ja començat, obre la seva pàgina de presentació. Pots moure o posar en pausa una lliçó, afegir fitxers o demanar un canvi. Les targetes conserven el calendari, fins i tot amb títols nous. Per passar un curs a una altra llengua, fes servir *Tradueix aquest curs*: cada targeta conserva el calendari.
 
@@ -31,6 +33,8 @@ Per canviar un curs ja començat, obre la seva pàgina de presentació. Pots mou
 Aquí el color té una funció: el tipus de requadre, un terme d'una fórmula i la seva explicació, la paraula clau d'una targeta. Selecciona un
 passatge per ressaltar-lo com a **Important**, **Confús** o **Per a l'examen**, sense escriure res. Els passatges confusos t'esperen a **Avui**, i
 els de l'examen ofereixen **Crea una targeta**. **Configuració → Aparença → Color a les notes** el desactiva.
+
+Els ressaltats d'un curs diuen què marquen, i la pàgina ho explica: ambre per a la idea clau, blau per a una definició, verd per a un exemple, rosa per a un error habitual i violeta per a una regla.
 
 ## Les pàgines
 

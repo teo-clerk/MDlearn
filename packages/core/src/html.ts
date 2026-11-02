@@ -8,6 +8,10 @@ import type { Nodes, RootContent } from 'mdast'
 /** Inline elements rendered as themselves (attributes filtered by `cleanAttrs`). */
 export const INLINE_TAGS = new Set(['mark', 'kbd', 'sub', 'sup', 'u', 'ins', 'small', 'abbr', 'span', 'b', 'i', 's', 'q', 'cite',
   'dfn', 'var', 'samp', 'time', 'strong', 'em', 'del', 'code', 'a', 'font'])
+/** What a highlight can say. Each has a colour of its own, so a colour always means the same thing. */
+export const MARK_TONES = ['key', 'definition', 'example', 'trap', 'rule'] as const
+export type MarkTone = (typeof MARK_TONES)[number]
+export const isMarkTone = (tone: string | undefined): tone is MarkTone => (MARK_TONES as readonly (string | undefined)[]).includes(tone)
 /** Block elements that may wrap Markdown across blank lines. */
 export const CONTAINER_TAGS = new Set(['div', 'section', 'article', 'aside', 'figure', 'figcaption', 'center', 'details'])
 const VOID = new Set(['br', 'wbr', 'img', 'hr'])
@@ -39,6 +43,7 @@ export function cleanAttrs(tag: Tag): Record<string, string> {
   if (a.title) out.title = a.title
   if (a.datetime && tag.name === 'time') out.datetime = a.datetime
   if ('open' in a && tag.name === 'details') out.open = ''
+  if (tag.name === 'mark' && isMarkTone(a['data-tone'])) out['data-tone'] = a['data-tone']
   const style = [a.style ? cleanStyle(a.style) : '', a.align && /^(left|right|center|justify)$/i.test(a.align) ? `text-align: ${a.align.toLowerCase()}` : '',
     tag.name === 'font' && a.color ? cleanStyle(`color: ${a.color}`) : '', tag.name === 'center' ? 'text-align: center' : ''].filter(Boolean).join('; ')
   if (style) out.style = style

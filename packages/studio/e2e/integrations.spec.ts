@@ -10,7 +10,7 @@ test('settings explain how to use MDlearn in Claude Code, Claude.ai and other ch
   await expect(apps.getByText(/claude plugin marketplace add ".*integrations\/claude-plugin"/)).toBeVisible()
   await expect(apps.getByRole('button', { name: 'Copy the prompt' })).toBeVisible()
   await apps.getByText('Show the prompt').click()
-  await expect(apps.getByText(/You write \*\*MDlearn lessons\*\*/)).toBeVisible()
+  await expect(apps.getByText(/You write \*\*MDlearn courses\*\*/)).toBeVisible()
   const zip = await page.request.get('/api/integrations/mdlearn-skill.zip')
   expect(zip.headers()['content-type']).toBe('application/zip')
   expect((await zip.body()).subarray(0, 2).toString()).toBe('PK')

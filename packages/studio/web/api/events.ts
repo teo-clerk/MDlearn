@@ -17,6 +17,7 @@ export function useLiveEvents(ws: string | undefined): void {
           for (const p of e.paths) {
             if (p.kind === 'doc') {
               qc.invalidateQueries({ queryKey: keys.doc(e.ws, p.path) })
+              qc.invalidateQueries({ queryKey: ['course', e.ws] })
               for (const k of ['formulas', 'glossary', 'glossary-compact', 'links', 'knowledge-map', 'doc-summary']) qc.invalidateQueries({ queryKey: [k, e.ws] })
             }
             if (p.kind === 'lesson') { qc.invalidateQueries({ queryKey: keys.lesson(e.ws, p.path) }); qc.invalidateQueries({ queryKey: ['course', e.ws] }) }

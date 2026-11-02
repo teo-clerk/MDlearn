@@ -76,11 +76,11 @@ export function Home() {
           <img src="/favicon.svg" alt="" className="size-7" />
           <h1 className="text-[22px] font-semibold tracking-[-0.015em]">{t('MDlearn Studio')}</h1>
         </div>
-        <p className="mt-2 max-w-[52ch] text-[14.5px] leading-relaxed text-muted">{t('Turn your class files into short lessons, and study them a few minutes a day.')}</p>
+        <p className="mt-2 max-w-[52ch] text-[14.5px] leading-relaxed text-muted">{t('Turn your files, or just a topic, into better notes, and study them a few minutes a day.')}</p>
 
         {canFs && isNew && (
           <ol className="mt-6 flex flex-col gap-2 text-[13.5px] sm:flex-row sm:gap-6">
-            {[t('Add the files from your class'), t('An AI writes the lessons'), t('Study a few minutes a day')].map((step, i) => (
+            {[t('Say what you want to learn'), t('An AI writes better notes'), t('Study a few minutes a day')].map((step, i) => (
               <li key={step} className="flex items-center gap-2">
                 <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-accent-soft text-[12px] font-semibold tabular text-accent-ink" aria-hidden>{i + 1}</span>{step}
               </li>
@@ -93,8 +93,8 @@ export function Home() {
         {canFs && (
           <Link href="/start" className="mt-6 flex items-center gap-3.5 rounded-[10px] bg-accent p-4 text-on-accent transition-[filter] duration-150 hover:brightness-[1.06]">
             <Presentation className="size-6 shrink-0" strokeWidth={1.5} aria-hidden />
-            <span className="min-w-0 flex-1"><span className="block text-[15px] font-semibold">{t('Make a course from my class files')}</span>
-              <span className="block text-[13px]">{t('PDF, PowerPoint, Word or pictures. Your AI writes the lessons, and you study them here.')}</span></span>
+            <span className="min-w-0 flex-1"><span className="block text-[15px] font-semibold">{t('Make a course')}</span>
+              <span className="block text-[13px]">{t('On any topic, from your files if you have them. Your AI writes better notes, and you study them here.')}</span></span>
             <ArrowRight className="size-5 shrink-0" strokeWidth={1.6} aria-hidden />
           </Link>
         )}

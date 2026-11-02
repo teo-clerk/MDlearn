@@ -78,7 +78,7 @@ describe('course prompt', () => {
     const none = coursePrompt({ topic: 'Tides', minutes: 30 })
     expect(none).toMatch(/no notes/)
     expect(none).toMatch(/save_lesson/)
-    expect(none).toContain('tides/01-slug.learn.md')
+    expect(none).toContain('tides/01-slug.md')
     const notes = coursePrompt({ topic: 'Tides', notes: 'notes/tides.md', save: 'write', language: 'Italian' })
     expect(notes).toMatch(/notes\/tides\.md/)
     expect(notes).toMatch(/lint_lesson/)
@@ -89,5 +89,38 @@ describe('course prompt', () => {
     expect(coursePrompt({ topic: 'Tides', language: 'Spanish' })).toContain('Write everything in Spanish')
     expect(coursePrompt({ topic: 'Tides', classFiles: 'sources' })).toContain('Write in the language of the files')
     expect(coursePrompt({ topic: 'Tides' })).toContain('Write in the language of this request')
+  })
+})
+
+describe('what a course is, for the AI', () => {
+  it('is notes that are studied, not a deck of cards', () => {
+    const p = coursePrompt({ topic: 'Marketing' })
+    expect(p).toContain('marketing/01-slug.md')
+    expect(p).toContain('`study: true`')
+    expect(p).toContain('Not a deck of cards')
+    expect(p).not.toContain('.learn.md')
+    expect(p).not.toContain('cards each')
+  })
+  it('says the same from class files', () => {
+    const p = coursePrompt({ topic: 'Marketing', classFiles: 'sources' })
+    expect(p).toContain('`01-slug.md`')
+    expect(p).toContain('`study: true`')
+    expect(p).not.toContain('.learn.md')
+  })
+  it('stays in the folder when asked to', () => {
+    const p = coursePrompt({ topic: 'Marketing', here: true, folder: '.' })
+    expect(p).toContain('`course.md`')
+    expect(p).toContain('`01-slug.md`')
+    expect(p).toContain('id: marketing-slug')
+  })
+  it('takes as long as the subject needs, unless a length is given', () => {
+    expect(coursePrompt({ topic: 'Marketing' })).toContain('as long as the subject needs')
+    expect(coursePrompt({ topic: 'Marketing', minutes: 60 })).toContain('about 60 minutes')
+  })
+  it('mentions the web only when the learner allowed it', () => {
+    expect(coursePrompt({ topic: 'Marketing' })).not.toContain('WebSearch')
+    expect(coursePrompt({ topic: 'Marketing', classFiles: 'sources' })).not.toContain('WebSearch')
+    expect(coursePrompt({ topic: 'Marketing', web: true })).toContain('never one you remember or guess')
+    expect(coursePrompt({ topic: 'Marketing', classFiles: 'sources', web: true })).toContain('`WebSearch`')
   })
 })

@@ -200,23 +200,26 @@ export function createApp(deps: Deps): Hono {
   })
 
   // ---- a course from a class's files: a new folder, or more files for one that exists
-  const classFiles = async (c: Context, h: Handle): Promise<ClassUpload> => {
+  const classFiles = async (c: Context, folder: () => Handle): Promise<ClassUpload> => {
     const body = await c.req.parseBody({ all: true })
     const raw = body['files'] ?? body['files[]']
     const files = (Array.isArray(raw) ? raw : raw ? [raw] : []).filter((f): f is File => typeof f === 'object' && 'arrayBuffer' in f)
-    if (!files.length) throw new UserError('empty', 'No files were received.')
     if (files.length > MAX_CLASS_FILES) throw new UserError('too-many', 'At most 100 files at a time.')
     if (files.some((f) => f.size > MAX_IMPORT_BYTES)) throw new UserError('too-large', 'That file is larger than 100 MB.')
-    const saved: ClassFile[] = []
+    const h = folder(), saved: ClassFile[] = []
     for (const f of files) saved.push(await addClassFile(h, f.name, new Uint8Array(await f.arrayBuffer())))
     return { id: h.id, name: h.name, root: h.root, files: saved }
   }
   const classLimit = bodyLimit({ maxSize: MAX_CLASS_UPLOAD, onError: (c) => c.json({ error: { code: 'too-large', message: 'At most 400 MB at a time.' } }, 413) })
   app.post('/api/courses', need('fs', o), classLimit, async (c) => {
     const name = z.string().trim().min(1).max(100).parse(c.req.query('name'))
-    return c.json(await classFiles(c, deps.workspaces.course(name)))
+    return c.json(await classFiles(c, () => deps.workspaces.course(name)))
   })
-  app.post('/api/w/:ws/sources', need('write', o), classLimit, async (c) => c.json(await classFiles(c, ws(c))))
+  app.post('/api/w/:ws/sources', need('write', o), classLimit, async (c) => {
+    const saved = await classFiles(c, () => ws(c))
+    if (!saved.files.length) throw new UserError('empty', 'No files were received.')
+    return c.json(saved)
+  })
 
   // ---- a course you have started
   const docPath = z.string().min(1).max(1024)
@@ -784,9 +787,9 @@ export function createApp(deps: Deps): Hono {
         card: z.object({ key: z.string().max(300), title: z.string().max(200), wrong: z.array(z.string().max(300)).max(5).default([]) }).optional() }),
       z.object({ recipe: z.literal('course.change'), doc: z.string().min(1).max(1024), request: z.string().trim().min(2).max(2000) }),
       z.object({ recipe: z.literal('course.translate'), doc: z.string().min(1).max(1024), language: z.string().trim().min(2).max(40) }),
-      z.object({ recipe: z.literal('course.class'), name: z.string().trim().min(1).max(200), level: z.enum(['beginner', 'intermediate', 'advanced']).default('beginner'), language: z.string().max(40).optional(), request: z.string().max(2000).optional() }),
+      z.object({ recipe: z.literal('course.class'), web: z.boolean().default(false), name: z.string().trim().min(1).max(200), level: z.enum(['beginner', 'intermediate', 'advanced']).default('beginner'), language: z.string().max(40).optional(), request: z.string().max(2000).optional() }),
       z.object({ recipe: z.literal('custom'), request: z.string().min(3).max(4000), scope: z.string().max(512).default('learn') }),
-      z.object({ recipe: z.literal('course.topic'), topic: z.string().trim().min(2).max(300), level: z.enum(['beginner', 'intermediate', 'advanced']).default('beginner'),
+      z.object({ recipe: z.literal('course.topic'), web: z.boolean().default(false), topic: z.string().trim().min(2).max(300), level: z.enum(['beginner', 'intermediate', 'advanced']).default('beginner'),
         language: z.string().max(40).optional(), minutes: z.number().int().min(5).max(600).default(45), notes: z.string().max(1024).optional() }),
     ]).parse(await c.req.json())
     if (deps.claudeStatus && deps.engine?.().name === 'Claude Code') {
@@ -826,9 +829,10 @@ export function createApp(deps: Deps): Hono {
     const prev = jm.get(h, c.req.param('id'))
     if (!prev) throw new UserError('not-found', 'No such job.')
     if (!prev.sessionId) throw new UserError('session', 'This job cannot be continued; start a new one.')
-    const scope = prev.files.length ? [...new Set(prev.files.map((f) => f.path.split('/').slice(0, -1).join('/')))] : ['learn']
+    const oneFile = prev.recipe === 'lesson.improve' || prev.recipe === 'leech.fix' // a note can sit at the top of the folder: its folder is not its scope
+    const scope = prev.files.length ? [...new Set(prev.files.map((f) => (oneFile ? f.path : f.path.split('/').slice(0, -1).join('/'))))] : ['learn']
     const r = customJob(h, request, scope[0])
-    return c.json(jm.start(h, engine, { ...r.spec, recipe: 'followup', title: request.slice(0, 80), writeScope: scope.map((s) => `${h.root}/${s}`), keepOut: keptOut(h.root), resume: prev.sessionId }, { parent: prev.id }))
+    return c.json(jm.start(h, engine, { ...r.spec, recipe: 'followup', title: request.slice(0, 80), writeScope: scope.map((s) => join(h.root, s)), keepOut: keptOut(h.root), resume: prev.sessionId }, { parent: prev.id }))
   })
 
   // ---- simulation sandbox (its own strict policy: scripts only from here, workers from blobs, no network)

@@ -10,11 +10,11 @@ Tus apuntes siguen siendo archivos Markdown normales. Las **lecciones** (`learn/
 **Estudiar** te vuelve a mostrar cada tarjeta justo antes de que la olvides. De cinco a diez minutos al día en
 **Hoy**: ese es el hábito que da resultado.
 
-## Cómo se crean las lecciones
+## Cómo se crean los cursos
 
-Empieza en la primera página con **Crear un curso con mis archivos de clase**. Dale tus PDF, PowerPoint, Word e imágenes.
-Los originales se quedan en `sources/`, y lo que se puede leer se convierte en texto e imágenes que cualquier IA puede
-usar. Luego elige quién escribe las lecciones:
+Empieza en la primera página con **Crear un curso**. Di qué quieres aprender y añade los PDF, PowerPoint, Word e imágenes
+que tengas. Los originales se quedan en `sources/`, y lo que se puede leer se convierte en texto e imágenes que cualquier IA
+puede usar. Luego elige quién escribe el curso:
 
 | Quién | Cómo |
 |---|---|
@@ -22,7 +22,9 @@ usar. Luego elige quién escribe las lecciones:
 | **Tu asistente de programación** | Claude Code, Codex, OpenCode o Pi: MDlearn prepara la carpeta y te da un solo comando. |
 | **Un chat** | ChatGPT, Claude.ai o Gemini: adjunta tus archivos, pega el prompt de MDlearn y trae la respuesta con **Importar → Desde un chat**. |
 
-Las lecciones aparecen a medida que se escriben. En el editor, pega o suelta una captura para añadir una imagen. Haz clic en una imagen para verla más grande. Una imagen de la web espera hasta que permitas su sitio, porque un documento podría usarla para sacar información.
+Obtienes mejores apuntes de los que tenías: un archivo `.md` por tema, con explicaciones completas, ejemplos resueltos y ejercicios en cada sección, y fórmulas, animaciones, diagramas, imágenes y vídeos donde ayudan. No se pierde nada de tus archivos, y lo que la IA añade aparte queda en una nota visible. Sus ejercicios vuelven en **Hoy** y en **Estudiar**, donde **Léelo en tus apuntes** te lleva a la sección. Claude también puede buscar en internet si marcas la casilla, y lo que busca sale de tu ordenador. Si tus apuntes ya están completos, AI Studio puede **Solo añadir ejercicios** y dejar tu texto como está.
+
+Los apuntes aparecen a medida que se escriben. En el editor, pega o suelta una captura para añadir una imagen. Haz clic en una imagen para verla más grande. Una imagen de la web espera hasta que permitas su sitio, porque un documento podría usarla para sacar información.
 
 Para cambiar un curso ya empezado, abre su página de presentación. Puedes mover o pausar una lección, añadir archivos o pedir un cambio. Las tarjetas conservan su calendario, incluso con títulos nuevos. Para pasar un curso a otro idioma, usa *Traducir este curso*: cada tarjeta conserva su calendario.
 
@@ -31,6 +33,8 @@ Para cambiar un curso ya empezado, abre su página de presentación. Puedes move
 Aquí el color tiene una función: el tipo de recuadro, un término de una fórmula y su explicación, la palabra clave de una tarjeta. Selecciona un
 pasaje para resaltarlo como **Importante**, **Confuso** o **Para el examen**, sin escribir nada. Los pasajes confusos te esperan en **Hoy**, y los
 del examen ofrecen **Crear una tarjeta**. **Ajustes → Apariencia → Color en las notas** lo desactiva.
+
+Los resaltados de un curso dicen qué marcan, y la página lo explica: ámbar para la idea clave, azul para una definición, verde para un ejemplo, rosa para un error habitual y violeta para una regla.
 
 ## Las páginas
 

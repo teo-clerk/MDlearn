@@ -16,6 +16,7 @@ import type { NoteAnchor } from '../../shared/types'
 import { assetUrl, linkTarget } from '../lib/paths'
 import { anchorForMoment } from '../lib/anchor'
 import { DocBlocks, type BlockEnv } from './DocBlocks'
+import { MarkLegend } from '../prose/MarkLegend'
 import { Outline } from './Outline'
 import { CoursePanel } from './CoursePanel'
 import { markLabel } from '../notes/marks'
@@ -82,6 +83,7 @@ export default function Reader({ ws }: { ws: string }) {
   }
   const entry = tree.data?.docs.find((d) => d.path === path)
   const map = useSectionMap(ws, entry?.lessons.length ? path : undefined)
+  const studied = !!entry && (entry.lessons.length > 0 || entry.notes > 0)
 
   useEffect(() => { if (path) try { localStorage.setItem(lastDocKey(ws), path) } catch { /* ignore */ } }, [ws, path])
   useEffect(() => { setSource(false) }, [path])
@@ -118,17 +120,17 @@ export default function Reader({ ws }: { ws: string }) {
         </nav>
       </TopLeft>
       <TopActions>
-        {!!entry?.lessons.length && <Button size="sm" variant="ghost" icon={BookOpenCheck} collapse onClick={() => navigate(`/w/${ws}/study?doc=${encodeURIComponent(path)}`)}>{t('Study')}</Button>}
-        {canAi && entry && !entry.lessons.length && <Button size="sm" variant="ghost" icon={Sparkles} collapse onClick={() => navigate(`/w/${ws}/studio?kind=course&doc=${encodeURIComponent(path)}`)}>{t('Make a course')}</Button>}
+        {studied && <Button size="sm" variant="ghost" icon={BookOpenCheck} collapse onClick={() => navigate(`/w/${ws}/study?doc=${encodeURIComponent(path)}`)}>{t('Study')}</Button>}
+        {canAi && entry && !studied && <Button size="sm" variant="ghost" icon={Sparkles} collapse onClick={() => navigate(`/w/${ws}/studio?kind=course&doc=${encodeURIComponent(path)}`)}>{t('Make a course')}</Button>}
         {canWrite && <Link href={`/w/${ws}/edit?path=${encodeURIComponent(path)}`} aria-label={t('Edit this file')} title={t('Edit this file')} className="inline-flex size-7 items-center justify-center rounded-[6px] text-muted hover:bg-hover hover:text-text"><Pencil className="size-4" strokeWidth={1.8} aria-hidden /></Link>}
         <Menu iconOnly label={t('More')} icon={Ellipsis}>
           {(close) => (
             <>
               <MenuItem hint={t('Formulas and defined terms of this document')} onClick={() => { close(); navigate(`/w/${ws}/sheet?path=${encodeURIComponent(path)}`) }}>{t('Cheat sheet')}</MenuItem>
-              {!!entry?.lessons.length && <MenuItem hint={t('Questions on what you have studied here, marked at the end')} onClick={() => { close(); navigate(`/w/${ws}/exam?doc=${encodeURIComponent(path)}`) }}>{t('Mock exam on this document')}</MenuItem>}
+              {studied && <MenuItem hint={t('Questions on what you have studied here, marked at the end')} onClick={() => { close(); navigate(`/w/${ws}/exam?doc=${encodeURIComponent(path)}`) }}>{t('Mock exam on this document')}</MenuItem>}
               <MenuItem hint={t('Explain a section in your own words; the AI says what is missing')} onClick={() => { close(); navigate(`/w/${ws}/teach?doc=${encodeURIComponent(path)}${section ? `&section=${encodeURIComponent(section)}` : ''}`) }}>{t('Teach it back')}</MenuItem>
               <MenuItem onClick={() => { close(); window.print() }}>{t('Print this document')}</MenuItem>
-              {canWrite && !!entry?.lessons.length && <MenuItem hint={t('Study cards as an .apkg file')} onClick={() => { close(); window.location.assign(`/api/w/${ws}/export/anki?scope=${encodeURIComponent(path)}`) }}>{t('Export the study cards to Anki')}</MenuItem>}
+              {canWrite && studied && <MenuItem hint={t('Study cards as an .apkg file')} onClick={() => { close(); window.location.assign(`/api/w/${ws}/export/anki?scope=${encodeURIComponent(path)}`) }}>{t('Export the study cards to Anki')}</MenuItem>}
               <MenuItem hint={termHints ? t('On: hover a dotted word for its definition') : t('Off')} onClick={() => { close(); setTermHints(!termHints) }}>{termHints ? t('Stop underlining defined terms') : t('Underline defined terms')}</MenuItem>
             </>
           )}
@@ -164,12 +166,14 @@ export default function Reader({ ws }: { ws: string }) {
               {doc.data.outline.timeMin && <span>{duration(doc.data.outline.timeMin)}</span>}
               {doc.data.outline.level && <span className="capitalize">{doc.data.outline.level}</span>}
               <span>{tp(doc.data.outline.words, '{n} word', '{n} words')}</span>
+              {!!entry?.notes && !entry.lessons.length && <span>{tp(entry.cards, '{n} card', '{n} cards')}</span>}
               {!!entry?.lessons.length && <span>{tp(entry.lessons.length, '{n} lesson', '{n} lessons')} · {tp(entry.cards, '{n} card', '{n} cards')}</span>}
               {doc.data.diagnostics.some((d) => d.code.startsWith('E')) && <span title={doc.data.diagnostics.filter((d) => d.code.startsWith('E')).map((d) => `${t('line {n}', { n: d.line })}: ${d.code} ${d.message ?? ''}`).join('\n')}>{tp(errorCount, '{n} formatting problem', '{n} formatting problems')}</span>}
             </p>
           </header>
           {/(^|\/)course\.md$/i.test(path) && <CoursePanel ws={ws} doc={path} caps={session.data?.caps ?? []} />}
           <div className="read" ref={setArticle}>
+            <MarkLegend blocks={doc.data.blocks} />
             <DocBlocks blocks={doc.data.blocks.filter((b, i) => !(i < 3 && b.type === 'heading' && b.depth === 1))} env={env} />
           </div>
         </article>

@@ -66,6 +66,7 @@ export function item(h: Handle, widgetId: string): StudyItem {
   const p = progressOf(h)
   const key = `${loc.lesson.id}/${loc.card.id}`
   const state = deriveCards(p.reviews).get(key)
+  const lessonPath = pathOf.get(loc.lesson.id) ?? ''
   const at = loc.card.blocks.indexOf(loc.widget as Block)
   // what the card says before its question, for "reread the card" after answering
   const exposition = loc.card.blocks.slice(0, at).flatMap((b): MdNode[] => (b.type === 'prose' ? [b.node] : b.type === 'callout' ? [b as unknown as MdNode] : []))
@@ -76,7 +77,8 @@ export function item(h: Handle, widgetId: string): StudyItem {
     widget: redactWidget(loc.widget),
     exposition,
     reads: loc.card.blocks.flatMap((b) => (b.type === 'read' ? b.refs : [])),
-    lessonPath: pathOf.get(loc.lesson.id) ?? '',
+    lessonPath,
+    ...(lessonPath.endsWith('.learn.md') ? {} : { noteSection: loc.card.id }),
     ...(() => { const video = videoMoment(loc.card, widgetId); return video ? { video } : {} })(),
   }
 }

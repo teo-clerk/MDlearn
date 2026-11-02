@@ -9,6 +9,9 @@ import { toString } from 'mdast-util-to-string'
 import GithubSlugger from 'github-slugger'
 import type { Root } from 'mdast'
 
+/** `## Title {#id}`: the id a section keeps when its title changes. It holds what a slug can, so that an Italian or French title can keep its own. */
+export const CARD_ID = /\{#([\p{L}\p{M}\p{N}_-]+)\}\s*$/u
+
 export type DocKind = 'concept' | 'assessment' | 'milestones' | 'readme' | 'brief' | 'reference'
 export type SectionRole = 'content' | 'bridge' | 'worked' | 'exercises' | 'lookup' | 'howto'
 
@@ -132,14 +135,14 @@ export function outlineDoc(md: string, path = 'doc.md'): DocOutline {
   const sections: SectionInfo[] = []
   const hs = headings.filter((h) => h.depth >= 2 && h.depth <= 4)
   for (const [i, h] of hs.entries()) {
-    const t = h.text
+    const t = h.text.replace(CARD_ID, '').trimEnd()
     const next = hs.slice(i + 1).find((x) => x.depth <= h.depth)
     const end = next ? next.line - 1 : lines.length
     const body = lines.slice(h.line - 1, end).join('\n')
     const num = /^(\d+(?:\.\d+)*|[A-Z]\d+)\.?\s/.exec(t)?.[1] ?? null
     sections.push({
       num, title: num ? t.slice(t.indexOf(num) + num.length).replace(/^\.?\s*/, '') : t,
-      anchor: slugger.slug(t), depth: h.depth, role: roleOf(t.replace(/^[\d.]+\s*/, '')),
+      anchor: slugger.slug(CARD_ID.exec(h.text)?.[1] ?? t), depth: h.depth, role: roleOf(t.replace(/^[\d.]+\s*/, '')),
       startLine: h.line, endLine: end, words: wordCount(body),
       displayMath: (body.match(/\$\$/g) ?? []).length >> 1,
       codeBlocks: (body.match(/^\s*(```|~~~)/gm) ?? []).length >> 1,

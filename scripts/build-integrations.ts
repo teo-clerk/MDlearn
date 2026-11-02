@@ -68,13 +68,18 @@ argument-hint: [lesson or topic]
 Run an MDlearn study session on: $ARGUMENTS (everything that is due when this is empty). Use the mdlearn-tutor skill and the mdlearn tools (study_queue → present_item → check_answer → record_review), one card at a time.
 `)
 
+// where the skill says how to check a file: a copy without the CLI gets another way, and a changed sentence must not pass unnoticed
+const CHECK = '`mdlearn lint <file>` (or the `lint_lesson` tool)'
+function skillWith(check: string) {
+  const skill = read('docs/AGENT_SKILL.md')
+  if (!skill.includes(CHECK)) throw new Error('docs/AGENT_SKILL.md no longer says how to check a file')
+  return skill.replace(CHECK, check)
+}
+
 // ---------------------------------------------------------------- Claude.ai skill (zip)
 const zipDir = join(out, 'skill'), skillDir = join(zipDir, 'mdlearn-course')
 mkdirSync(join(skillDir, 'scripts'), { recursive: true })
-writeFileSync(join(skillDir, 'SKILL.md'), read('docs/AGENT_SKILL.md').replace(
-  '6. **Validate.**',
-  '6. **Validate.** If you can run code, run `node scripts/lint.mjs <files>` (next to this file) and fix every `E`/`W` line.',
-))
+writeFileSync(join(skillDir, 'SKILL.md'), skillWith('if you can run code, `node scripts/lint.mjs <file>` (next to this file)'))
 cpSync(join(repo, 'docs/DSL_SPECIFICATION.md'), join(skillDir, 'DSL_SPECIFICATION.md'))
 await bundle('scripts/lint-entry.ts', join(skillDir, 'scripts/lint.mjs'))
 // zipped here, not by a `zip` command (Windows has none); names inside always use /
@@ -90,10 +95,7 @@ const LINT = '.agents/skills/mdlearn-course/scripts/lint.mjs'
 mkdirSync(agentDir, { recursive: true })
 cpSync(join(repo, 'docs/FOLDER_AGENTS.md'), join(agentDir, 'AGENTS.md'))
 cpSync(skillDir, join(agentSkills, 'mdlearn-course'), { recursive: true })
-writeFileSync(join(agentSkills, 'mdlearn-course/SKILL.md'), read('docs/AGENT_SKILL.md').replace(
-  '6. **Validate.** Run `mdlearn lint <file>` (or the `lint_lesson` MCP tool)',
-  `6. **Validate.** Run \`node ${LINT} <file>\` from the course folder (or the \`lint_lesson\` MCP tool)`,
-))
+writeFileSync(join(agentSkills, 'mdlearn-course/SKILL.md'), skillWith(`\`node ${LINT} <file>\` from the course folder (or the \`lint_lesson\` tool)`))
 for (const name of ['mdlearn-curriculum', 'mdlearn-tutor', 'mdlearn-visuals']) cpSync(join(repo, 'skills', name), join(agentSkills, name), { recursive: true, dereference: true })
 // the Agent Skills format the other assistants load: only these two keys, and a description they will accept
 for (const name of readdirSync(agentSkills)) {

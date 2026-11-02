@@ -4,8 +4,8 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync, readdirSy
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parseArgs } from 'node:util'
-import { formatDiagnostic, severityOf, sectionText, studyQueue, report, whenText, displayTitle, leeches, splitBundle, planBundle, fixMessage, type Lesson } from '@mdlearn/core'
-import { compileFile, compileSource, inRoot, workspace, curriculumStatus, findDoc, loadDoc, planFor, loadLessons, lessonPaths, loadProgress, loadGoals, scaffoldLessons, type Workspace } from '@mdlearn/core/node'
+import { formatDiagnostic, isStudyNote, severityOf, sectionText, studyQueue, report, whenText, displayTitle, leeches, splitBundle, planBundle, fixMessage, type Lesson } from '@mdlearn/core'
+import { compileFile, compileSource, inRoot, isStudyFile, workspace, curriculumStatus, findDoc, loadDoc, planFor, loadLessons, lessonPaths, loadProgress, loadGoals, scaffoldLessons, type Workspace } from '@mdlearn/core/node'
 import { outlineText } from './author.js'
 import { reviewSession } from './session.js'
 import { bold, dim, out, fail, plural, closest, wrap } from './ui.js'
@@ -115,7 +115,7 @@ function lessonFiles(p: string): string[] {
   const abs = resolve(p)
   if (!existsSync(abs)) fail(`no such file or folder: ${p}`)
   if (statSync(abs).isFile()) return [abs]
-  return readdirSync(abs, { recursive: true }).map(String).filter((f) => f.endsWith('.learn.md')).map((f) => join(abs, f)).sort()
+  return readdirSync(abs, { recursive: true }).map(String).map((f) => join(abs, f)).filter((f) => f.endsWith('.md') && isStudyFile(f)).sort()
 }
 const lessons = (): Lesson[] => loadLessons(ws).map((l) => l.lesson).filter((l): l is Lesson => !!l)
 
@@ -189,7 +189,7 @@ async function importChat(): Promise<void> {
   try { plan = planBundle(files, { folder: opt.to, exists: (rel) => existsSync(join(root, rel)) }) } catch (e) { return fail((e as Error).message) }
   const checked = plan.files.map((f) => {
     const abs = inRoot(root, f.target) ?? fail(`${f.target} is outside ${root}`)
-    const diagnostics = f.target.endsWith('.learn.md') ? compileSource(f.content, abs).diagnostics : []
+    const diagnostics = f.target.endsWith('.learn.md') || isStudyNote(f.content) ? compileSource(f.content, abs).diagnostics : []
     return { ...f, abs, diagnostics, errors: diagnostics.filter((d) => severityOf(d.code) === 'error').length }
   })
   for (const f of checked) {
@@ -294,7 +294,7 @@ async function main(): Promise<void> {
     }
     case 'lint': {
       const files = args.length ? args.flatMap(lessonFiles) : lessonPaths(ws)
-      if (!files.length) return out('No .learn.md files found.')
+      if (!files.length) return out('No lessons or studied notes found.')
       let errors = 0, warnings = 0, notes = 0
       for (const f of files) {
         for (const d of compileFile(f).diagnostics) {

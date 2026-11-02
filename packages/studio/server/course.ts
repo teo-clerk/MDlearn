@@ -21,7 +21,7 @@ export function courseDoc(h: Handle, doc: string): string {
 /** The lessons of a `course.md`, in file-name order, which is the order of the course. */
 export function courseLessons(h: Handle, doc: string): CourseLesson[] {
   const abs = courseDoc(h, doc)
-  return loadLessons(h.ws).filter((l) => l.lesson && lessonOfDoc(h.ws, abs, l.path))
+  return loadLessons(h.ws).filter((l) => l.lesson && l.path !== abs && lessonOfDoc(h.ws, abs, l.path))
     .map((l) => ({ path: posix(relative(h.root, l.path)), abs: l.path, lesson: l.lesson! })).sort((a, b) => a.path.localeCompare(b.path))
 }
 const allLessons = (h: Handle) => loadLessons(h.ws).flatMap((l) => (l.lesson ? [l.lesson] : []))

@@ -1,18 +1,17 @@
 // Node-only helpers (file system): source resolution, course loading, curriculum status, progress file.
 // Imported as `@mdlearn/core/node`; the rest of the package stays DOM- and fs-free.
-import { readFileSync, readdirSync, statSync, lstatSync, readlinkSync, existsSync, mkdirSync, writeFileSync, renameSync, openSync, writeSync, closeSync, unlinkSync, realpathSync } from 'node:fs'
+import { readFileSync, readdirSync, readSync, statSync, lstatSync, readlinkSync, existsSync, mkdirSync, writeFileSync, renameSync, openSync, writeSync, closeSync, unlinkSync, realpathSync } from 'node:fs'
 import { randomUUID } from 'node:crypto'
 import vm from 'node:vm'
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import { z } from 'zod'
-import { compile, isWidget, type CompileResult, type SourceResolver } from './compile.js'
+import { compile, isStudyNote, isWidget, type CompileResult, type SourceResolver } from './compile.js'
+import { ASSISTANT_FILES } from './authoring.js'
 import { outlineDoc, findSection, planLessons, scaffoldLesson, type DocOutline, type LessonPlan } from './importer.js'
 import type { Lesson } from './ast.js'
 import { mergeLogs, type ReviewEvent } from './learn/srs.js'
 
 /** Folders never treated as curriculum content (shared with file watchers). */
-/** Instructions for coding assistants at the top of a folder: not notes. */
-const ASSISTANT_FILES: ReadonlySet<string> = new Set(['AGENTS.md', 'CLAUDE.md', 'GEMINI.md'])
 export const IGNORED_DIRS: ReadonlySet<string> = new Set(['node_modules', '.git', '.venv', 'venv', '.claude', '.pytest_cache', '.ruff_cache', '__pycache__', 'dist', '.mdlearn', 'learn'])
 
 /** Outline cache keyed by absolute path + mtime, so long sessions re-read only changed documents. */
@@ -103,8 +102,18 @@ export function loadCourse(learnDir: string): LoadedLesson[] {
   if (!existsSync(learnDir)) return []
   return walk(learnDir, (f) => f.endsWith('.learn.md'), false).map(loadLesson)
 }
-/** Every lesson file of a folder: companions in learn/, and courses an assistant wrote anywhere else in it. */
-export const lessonPaths = (ws: Workspace): string[] => walk(ws.root, (f) => f.endsWith('.learn.md'), false)
+const FRONTMATTER_BYTES = 8192
+/** A file whose questions are studied: a lesson, or a note that asks for it in its frontmatter. */
+export function isStudyFile(path: string): boolean {
+  if (path.endsWith('.learn.md')) return true
+  if (!path.endsWith('.md')) return false
+  try {
+    const fd = openSync(path, 'r')
+    try { const head = Buffer.alloc(FRONTMATTER_BYTES); return isStudyNote(head.toString('utf8', 0, readSync(fd, head, 0, FRONTMATTER_BYTES, 0))) } finally { closeSync(fd) }
+  } catch { return false }
+}
+/** Every file studied in a folder: companions in learn/, courses an assistant wrote anywhere else in it, and notes that ask to be. */
+export const lessonPaths = (ws: Workspace): string[] => [...walk(ws.root, (f) => f.endsWith('.learn.md'), false), ...sourceDocs(ws).filter(isStudyFile)]
 export const loadLessons = (ws: Workspace): LoadedLesson[] => lessonPaths(ws).map(loadLesson)
 
 // ---------------------------------------------------------------- curriculum layout
@@ -125,7 +134,7 @@ export function lessonDirFor(ws: Workspace, docAbs: string): string {
 }
 /** A lesson belongs to a document as a companion in learn/<doc>/, or by sitting beside a course.md overview. */
 export function lessonOfDoc(ws: Workspace, docAbs: string, lessonAbs: string): boolean {
-  if (lessonAbs.startsWith(lessonDirFor(ws, docAbs) + sep)) return true
+  if (lessonAbs === docAbs || lessonAbs.startsWith(lessonDirFor(ws, docAbs) + sep)) return true
   return basename(docAbs).toLowerCase() === 'course.md' && dirname(lessonAbs) === dirname(docAbs)
 }
 /** Resolve a document reference: a path relative to the root, or a unique file-name fragment. */

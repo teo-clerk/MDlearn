@@ -3,7 +3,8 @@
 // the only innerHTML is KaTeX's own output and SafeHtml's DOMPurify-cleaned blocks.
 import { Fragment, lazy, Suspense, type CSSProperties, type ReactNode } from 'react'
 import type { MdNode } from '@mdlearn/core'
-import { CONTAINER_TAGS, INLINE_TAGS, cleanStyle } from '@mdlearn/core/html'
+import { CONTAINER_TAGS, INLINE_TAGS, cleanStyle, isMarkTone } from '@mdlearn/core/html'
+import { toneName } from './MarkLegend'
 import { Tex } from './Tex'
 import { SafeHtml } from './SafeHtml'
 import { Picture } from './Picture'
@@ -124,7 +125,8 @@ function Node({ node: n, cx }: { node: MdNode; cx: ProseContext }): ReactNode {
     case 'htmlInline': {
       const tag = String(n.tag), a = attrsOf(n)
       const Tag = (INLINE_TAGS.has(tag) && tag !== 'a' && tag !== 'font' ? tag : 'span') as 'span'
-      return <Tag style={styleOf(a.style)} title={a.title} {...(tag === 'time' && a.datetime ? { dateTime: a.datetime } : {})}>{kids(n, cx)}</Tag>
+      const tone = isMarkTone(a['data-tone']) ? a['data-tone'] : undefined
+      return <Tag style={styleOf(a.style)} title={a.title ?? (tone && toneName(tone))} data-tone={tone} {...(tag === 'time' && a.datetime ? { dateTime: a.datetime } : {})}>{kids(n, cx)}</Tag>
     }
     case 'htmlBlock': {
       const tag = String(n.tag), a = attrsOf(n)

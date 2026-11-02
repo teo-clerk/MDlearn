@@ -10,11 +10,11 @@ Your notes stay plain Markdown files. **Lessons** (`learn/*.learn.md`) hold shor
 **Study** brings each card back just before you would forget it. Five to ten minutes a day on
 **Today** is the habit that pays off.
 
-## How lessons get made
+## How courses get made
 
-Start on the first page with **Make a course from my class files**. Give it your PDFs, PowerPoint and Word files and
-pictures. The originals stay in `sources/`, and what can be read becomes text and pictures that any AI can use. Then
-choose who writes the lessons:
+Start on the first page with **Make a course**. Say what you want to learn, and add any PDFs, PowerPoint and Word files and
+pictures you have. The originals stay in `sources/`, and what can be read becomes text and pictures that any AI can use.
+Then choose who writes the course:
 
 | Who | How |
 |---|---|
@@ -22,7 +22,9 @@ choose who writes the lessons:
 | **Your coding assistant** | Claude Code, Codex, OpenCode or Pi: MDlearn gets the folder ready and gives you one command. |
 | **A chat** | ChatGPT, Claude.ai or Gemini: attach your files, paste the MDlearn prompt, and bring the answer back with **Import → From a chat**. |
 
-Lessons appear as they are written. In the editor, paste or drop a screenshot to add a picture. Click any picture to see it larger. A picture from the web waits until you allow its site, because a document could use one to send information out.
+You get better notes than you had: one `.md` file per topic, with full explanations, worked examples and exercises in every section, and formulas, animations, diagrams, pictures and videos where they help. Nothing from your files is lost, and what the AI adds beyond them is in a note you can see. Their exercises come back on **Today** and in **Study**, where **Read this in your notes** takes you to the section. Claude can also search the web if you tick the box, and what it searches for leaves your computer. If your notes are already complete, AI Studio can **Only add exercises** and leave your text as it is.
+
+Notes appear as they are written. In the editor, paste or drop a screenshot to add a picture. Click any picture to see it larger. A picture from the web waits until you allow its site, because a document could use one to send information out.
 
 To change a course after you've started, open its overview page. You can move or pause a lesson, add class files, or ask for a change. Cards keep their schedule, even with new titles. To move a course to another language, use *Translate this course*: every card keeps its schedule.
 
@@ -31,6 +33,8 @@ To change a course after you've started, open its overview page. You can move or
 Colour has a job here: the kind of a callout, a formula term and its explanation, the key word of a card. Select a passage to highlight it as
 **Important**, **Confusing** or **For the exam**, with no typing. Confusing passages wait on **Today**, and exam passages offer **Make a card**.
 **Settings → Appearance → Colour in notes** turns it off.
+
+The highlights in a course say what they mark, and the page explains them: amber for the key idea, blue for a definition, green for an example, rose for a common mistake and violet for a rule.
 
 ## The pages
 

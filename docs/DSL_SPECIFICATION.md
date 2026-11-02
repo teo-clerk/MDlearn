@@ -87,8 +87,9 @@ GIFT and LiaScript are cheaper only because they drop features this spec require
 | Item | Rule |
 |---|---|
 | Lesson file | One lesson per file: `NN-slug.learn.md` (UTF-8; CRLF and a BOM are accepted and normalised). The `.learn.md` suffix keeps the file a valid Markdown document. |
+| Studied note | A Markdown document with `study: true` in its frontmatter, usually `NN-slug.md`: read as a document, and its exercises reach spaced repetition (§8.16). |
 | Lesson id | Frontmatter `id`, else the file name without `.learn.md` and without the numeric prefix (`02-bayes-theorem.learn.md` → `bayes-theorem`), so renumbering lessons keeps progress. |
-| Course | A folder of lesson files with a `course.md` overview beside them. Lessons are ordered by file name, and their numeric prefix can change without touching progress. A folder may hold several courses: lesson ids must then be unique, so `<course>-<slug>` is the convention. |
+| Course | A folder of studied notes or lesson files with a `course.md` overview beside them. They are ordered by file name, and their numeric prefix can change without touching progress. A folder may hold several courses: lesson ids must then be unique, so `<course>-<slug>` is the convention. |
 | Card id | `## Title {#id}` (letters, digits, `-`, `_`) if given, else the GitHub slug of the title (`base-rate-neglect`), de-duplicated (`-1`, `-2`). |
 | Widget id | `<card id>/<kind>-<fingerprint>`, where the fingerprint is FNV-1a of the normalised stem and answer key. Editing an unrelated widget never re-keys another one; editing a question's key re-keys it (reset beats attaching history to a different question). Identical widgets in one card get `-1`, `-2` suffixes. `:::kind{#id}` pins the id to `<card id>/<id>`. |
 
@@ -113,6 +114,7 @@ ignored, so one bad key never takes the lesson down. Only a missing title (E102)
 | `goals` | list of strings (≤ 6) | `[]` | 2–4 measurable objectives, Bloom verbs ("Compute…", "Explain…"). |
 | `id` | `[a-z0-9][a-z0-9-]*` | from file name | Stable lesson id. |
 | `macros` | map `\name: 'TeX'` | `{}` | KaTeX macros for the lesson. Values in **single quotes**; control characters are rejected. |
+| `study` | boolean | `false` | In a `.md` document: its exercises reach Study, Today and the mock exam (§8.16). |
 | `source` | path | — | Companion lessons: the curated document this lesson accompanies, relative to the lesson file (§8.10). |
 
 Synonyms: `objectives`/`outcomes`/`learning_goals` → `goals`; `prerequisites`/`requires`/`prereqs` →
@@ -647,6 +649,18 @@ Two-way spreading: $R^2$ out and $R^2$ back.
 
 Terminal and chat surfaces show the text inside the HTML.
 
+A highlight can say what it marks, with `data-tone` on `<mark>`. The list is closed, each tone has one colour, and a page
+that uses two or more explains them under its title. Without `data-tone`, `<mark>` is the amber it always was; an unknown
+tone gives W612 and stays a plain highlight.
+
+| Tone | Colour | Marks |
+|---|---|---|
+| `key` | amber | the idea of a section |
+| `definition` | blue | a term, where it is defined |
+| `example` | green | the example that makes it click |
+| `trap` | rose | a common mistake |
+| `rule` | violet | a rule, a law, a formula in words |
+
 ### 8.14 Sandboxed HTML: `:::html` (v1.3)
 
 `:::html[caption]{attrs}` holds a description and one ```` ```html ```` block (≤ 64 KB) with your own HTML,
@@ -706,6 +720,52 @@ Why does a SAR image of a uniform field look grainy?
 | Files | A local file and its `captions=file.vtt` must exist next to the lesson (E929). Captions are suggested for every local video (I933). MP4 (H.264) and WebM play in every browser. |
 | Players | Files play in the browser's own player, streamed so seeking works. YouTube (from `youtube-nocookie.com`) and Vimeo (`dnt=1`) load only when the reader presses Play; until then nothing is fetched from them. |
 | Elsewhere | The terminal and chat tutors say which video and time a checkpoint comes from, with a link that starts there; the Anki export does the same. A video adds its segment to the lesson's time estimate (2 minutes when its length is unknown). Videos are never graded, and never inside a question (W918). |
+
+---
+
+### 8.16 Studied notes: `study: true` (v1.7)
+
+A note is a Markdown document, read in the Reader with everything it offers: margin notes, the glossary, the formula list,
+the map and teach-back. With `study: true` in its frontmatter it is also studied: each `##` section is a card, and the
+exercises in it reach Study, Today and the mock exam, with a link back to the section. The panel lists it once, as a file,
+with its reviews on its own row.
+
+```markdown
+---
+id: tides-why
+level: beginner
+lang: en
+goals:
+  - Explain what causes two tides a day
+study: true
+---
+
+# Why tides happen
+
+Tides look like the sea breathing. They come from gravity.
+
+## Two bulges {#two-bulges}
+
+The Moon pulls the near side of the ocean harder than the far side, so the water stretches into two bulges.
+
+:::quiz
+Why are there two high tides a day and not one?
+- [x] The ocean stretches into two bulges, on opposite sides.
+  > Right: the Earth turns under both of them.
+- [ ] The Moon goes round the Earth twice each day.
+  > The Moon takes about a month to go round.
+- [ ] The Sun and the Moon take turns pulling the water.
+  > They act together, which gives spring and neap tides.
+:::
+```
+
+How it differs from a `.learn.md` lesson:
+
+- A note can be as long as it needs: W601, W602 and W603 don't apply.
+- It needs at least one exercise, or there is nothing to study (W611).
+- From 300 words on, it should mostly explain (W613) and have something to look at (W614).
+- W610 counts marked words, not marks: a mark of at most 12 words, on no more than a sixth of a section.
+- Progress belongs to the section's id. `{#id}` keeps it through a new title, and the Reader doesn't show it.
 
 ---
 
@@ -971,7 +1031,11 @@ Format of the compact report (one line per diagnostic, designed for an agent to 
 | I607 | info | `time-drift` | Declared `time` differs >50% from the compiler estimate (the player shows the estimate). |
 | W608 | warning | `heading-promoted` | No `##` cards; `###` headings promoted to cards. |
 | W609 | warning | `widget-in-intro` | Widgets belong in cards; a widget before the first `##` is locked. |
-| W610 | warning | `too-much-marked` | A card with more than three `<mark>`s, or with over a sixth of its words marked: mark the key term, not the sentence. |
+| W610 | warning | `too-much-marked` | A card with more than three `<mark>`s (in a note, a mark over 12 words), or with over a sixth of its words marked: mark the key term, not the sentence. |
+| W611 | warning | `note-without-practice` | A note with `study: true` has no exercise, so there is nothing to study. |
+| W612 | warning | `mark-tone-unknown` | A `<mark>` with a `data-tone` that does not exist: use key, definition, example, trap or rule. |
+| W613 | warning | `note-mostly-exercises` | Over 30% of the words of this note are exercises: a note should mostly explain. |
+| W614 | warning | `note-without-visual` | This long note has nothing to look at: add a diagram, a plot, an animation or a picture where it shows what words can't. A table does not count. |
 
 **Math**
 

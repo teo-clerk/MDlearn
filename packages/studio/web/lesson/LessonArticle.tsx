@@ -6,6 +6,7 @@ import type { DocBlock } from '@mdlearn/core'
 import type { LessonResponse } from '../../shared/types'
 import { DocBlocks, type BlockEnv } from '../reader/DocBlocks'
 import { Inline } from '../prose/Prose'
+import { MarkLegend } from '../prose/MarkLegend'
 import { docRoute } from '../lib/paths'
 import { levelName, prettyTitle } from '../lib/title'
 import { t, tp } from '../i18n'
@@ -23,6 +24,7 @@ export function LessonArticle({ ws, lesson: l, source, env, compact }: { ws: str
       {l.goals.length > 0 && <ul className="mt-4 list-disc pl-5 text-[14px] text-text/85">{l.goals.map((g, i) => <li key={i}>{g}</li>)}</ul>}
     </header>
     <div className="read">
+      <MarkLegend blocks={[l.intro, l.cards]} />
       {env && <DocBlocks blocks={l.intro.map((b) => ({ ...b, line: 0 })) as DocBlock[]} env={env} />}
       {l.cards.map((c) => {
         const reads = c.blocks.flatMap((b) => (b.type === 'read' ? b.refs : []))

@@ -2,7 +2,7 @@
 // other programs — an editor, the CLI, or an AI job writing lessons.
 import { watch, type FSWatcher } from 'chokidar'
 import { relative, sep } from 'node:path'
-import { IGNORED_DIRS } from '@mdlearn/core/node'
+import { IGNORED_DIRS, isStudyFile } from '@mdlearn/core/node'
 import type { EventBus } from './bus.js'
 import type { Handle } from './workspaces.js'
 import type { ServerEvent } from '../shared/types.js'
@@ -35,7 +35,7 @@ export function watchWorkspace(h: Handle, bus: EventBus, debounceMs = 150): FSWa
       const kind = kindOf(rel)
       if (kind === 'other') return
       pending.set(rel, { path: rel.split(sep).join('/'), kind, change })
-      if (change !== 'change' || kind === 'lesson') structure = true // titles, cards and diagnostics live in the tree
+      if (change !== 'change' || kind === 'lesson' || (kind === 'doc' && isStudyFile(abs))) structure = true // titles, cards and diagnostics live in the tree
     }
     clearTimeout(timer)
     timer = setTimeout(flush, debounceMs)

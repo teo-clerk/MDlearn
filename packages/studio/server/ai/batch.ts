@@ -4,7 +4,7 @@
 import { randomUUID } from 'node:crypto'
 import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
-import { findDoc, loadDoc, scaffoldLessons } from '@mdlearn/core/node'
+import { findDoc, lessonOfDoc, lessonPaths, loadDoc, scaffoldLessons } from '@mdlearn/core/node'
 import type { Handle } from '../workspaces.js'
 import { UserError } from '../workspaces.js'
 import type { AiEngine } from './engine.js'
@@ -25,9 +25,11 @@ export class BatchRunner {
   /** Documents that still lack lessons, with what building them would involve. */
   candidates(h: Handle, docPaths: string[]): BatchCandidate[] {
     const out: BatchCandidate[] = []
+    const notes = lessonPaths(h.ws).filter((p) => !p.endsWith('.learn.md'))
     for (const rel of docPaths) {
       const abs = findDoc(h.ws, rel)
       if (!abs || rel.startsWith(`${INBOX_DIR}/`)) continue // captures are not a subject to study
+      if (notes.some((n) => lessonOfDoc(h.ws, abs, n))) continue // notes are studied as they are
       const plan = scaffoldLessons(h.ws, abs)
       const fresh = plan.filter((p) => p.content !== null).length
       if (!fresh) continue

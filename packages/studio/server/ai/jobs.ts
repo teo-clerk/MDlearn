@@ -3,7 +3,7 @@
 import { randomUUID } from 'node:crypto'
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, relative, sep } from 'node:path'
-import { compileFile } from '@mdlearn/core/node'
+import { compileFile, isStudyFile } from '@mdlearn/core/node'
 import { writeAllowed, Snapshots } from './guard.js'
 import type { AiEngine, JobEvent, JobSpec, JobStatus } from './engine.js'
 import type { JobSummary } from '../../shared/types.js'
@@ -119,9 +119,9 @@ export class JobManager {
   /** Check every lesson the job touched with the compiler, whatever the AI claimed. */
   private lintTouched(job: Job, emit: (e: JobEvent) => void) {
     job.lint = []
-    for (const f of job.files.filter((x) => x.path.endsWith('.learn.md'))) {
+    for (const f of job.files) {
       const abs = join(job.handle.root, f.path)
-      if (!existsSync(abs)) continue
+      if (!existsSync(abs) || !isStudyFile(abs)) continue
       const d = compileFile(abs).diagnostics
       const row = { path: f.path, errors: d.filter((x) => x.code.startsWith('E')).length, warnings: d.filter((x) => x.code.startsWith('W')).length }
       job.lint.push(row)

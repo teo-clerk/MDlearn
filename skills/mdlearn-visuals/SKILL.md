@@ -5,7 +5,7 @@ description: Add interactive visuals to MDlearn lessons and notes — slider plo
 
 # MDlearn visual blocks
 
-Five blocks, all plain Markdown, all checked by the compiler (`lint_lesson`). They explain; they are never
+Five blocks for notes and lessons, all plain Markdown, all checked by the compiler (`lint_lesson`). They explain; they are never
 graded. Full rules: DSL_SPECIFICATION.md §8.11 and §8.14 (in the mdlearn-course skill). For practice with
 motion (matching, sorting, a true/false round) use the graded games `match`, `sort`, `speed` (§8.12) instead.
 
@@ -23,8 +23,10 @@ motion (matching, sorting, a true/false round) use the graded games `match`, `so
 - **html** — a small interactive that none of the above can express (a band picker, a drag-the-satellite
   geometry toy, a CSS animation). Your own HTML/CSS/JS in a sandbox; it is practice only (scores are shown,
   never recorded). Prefer a plot, a sim or a graded game whenever one fits.
-- Never decorate: a visual must carry an idea the text cannot. At most one or two per lesson card; never
-  inside a question (`:::quiz` etc.).
+- Never decorate: a visual must carry an idea the text cannot. A note uses as many as its sections need, a
+  short lesson one or two. Never inside a question (`:::quiz` etc.).
+- A structure or a flow is often clearer as a ` ```mermaid ` diagram or a table. A subject without formulas
+  has plenty to show: a funnel as stages in `animate`, a budget to split in `html`, a margin in `plot`.
 
 ## Syntax
 
