@@ -27,8 +27,8 @@ and only addresses a search returned. What it searches for leaves your computer.
 in the wrong folder, so every AI job failed as soon as it started. It only ever worked from a copy of the source code.
 The desktop tests now check for them on all three systems.
 
-**Claude Code on Windows.** Claude now gets what Windows programs need to find their login and reach the network, and
-a Claude Code installed with npm is found. A real install is now tested on Windows, without a login.
+**Claude Code on Windows.** A Claude Code installed with npm is now found, and Claude keeps the variables that say where
+your user folders are, which is where it looks for its login. A real npm install is now tested on Windows, without a login.
 
 **It says what went wrong.** If Claude Code isn't logged in, the job tells you what to do, in your language. *Settings →
 Local AI* shows where Claude Code was found, why it didn't start, and has *Check again*. Class files say why Claude can't

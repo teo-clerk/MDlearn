@@ -15,7 +15,7 @@ const require = createRequire(import.meta.url)
 /** In the desktop app this Node is Electron's: it runs the MCP server as Node only when told to. */
 const AS_NODE: Record<string, string> = process.versions.electron ? { ELECTRON_RUN_AS_NODE: '1' } : {}
 const ENV_KEEP = ['ANTHROPIC_API_KEY', 'CLAUDE_CONFIG_DIR', 'HOME', 'PATH', 'USER', 'LANG', 'LC_ALL', 'TERM', 'XDG_CONFIG_HOME', 'XDG_DATA_HOME', 'XDG_RUNTIME_DIR', 'TMPDIR']
-/** Where Windows keeps the user's folders and its own: without them a program can't find its login, or even reach the network. */
+/** Where Windows keeps the user's folders and its own, which is where a program looks for its login. */
 const ENV_KEEP_WINDOWS = ['USERPROFILE', 'HOMEDRIVE', 'HOMEPATH', 'USERNAME', 'APPDATA', 'LOCALAPPDATA', 'ProgramData', 'ProgramFiles', 'ProgramFiles(x86)', 'ProgramW6432',
   'SystemRoot', 'SystemDrive', 'windir', 'ComSpec', 'PATHEXT', 'TEMP', 'TMP', 'OS', 'PROCESSOR_ARCHITECTURE', 'NUMBER_OF_PROCESSORS']
 /** npm leaves a launcher, `claude.cmd`, in the PATH; the program itself is beside it. */
