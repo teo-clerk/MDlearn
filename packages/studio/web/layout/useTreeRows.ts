@@ -1,13 +1,14 @@
 // Which rows of the file tree are open, and which files have just arrived. A course and the folders around it start open
 // and what you close stays closed, until something new lands in it: an AI writing from a terminal never told anyone.
 import { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { Tree } from '../../shared/types'
+import type { Tree, TreeDoc } from '../../shared/types'
 
 const KEY = 'mdl-tree'
 const load = (): Set<string> => { try { return new Set(JSON.parse(sessionStorage.getItem(KEY) ?? '[]') as string[]) } catch { return new Set() } }
 const save = (s: Set<string>) => { try { sessionStorage.setItem(KEY, JSON.stringify([...s])) } catch { /* ignore */ } }
 const folders = (path: string) => path.split('/').slice(0, -1).map((_, i, all) => all.slice(0, i + 1).join('/'))
 export const isCourse = (path: string) => path.split('/').pop()!.toLowerCase() === 'course.md'
+export const isNote = (d: TreeDoc) => d.notes > 0 && !isCourse(d.path)
 /** Class files you gave are not news; what the AI makes from them is. */
 const isSource = (path: string) => /(^|\/)sources\//.test(path)
 

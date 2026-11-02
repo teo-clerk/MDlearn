@@ -50,6 +50,9 @@ test('a note reads as a document, with highlights that say what they are', async
     await expect(legend.getByText('Definition')).toBeVisible()
     await expect(legend.getByText('Common mistake')).toBeVisible()
     await expect(page.getByRole('link', { name: '01 precio' })).toHaveCount(1) // listed once
+    await expect(page.getByRole('button', { name: 'Make a course' })).toHaveCount(0)
+    await page.getByRole('button', { name: 'Study', exact: true }).click()
+    await expect(page.getByText('¿Qué fija el techo de un precio?')).toBeVisible({ timeout: 10_000 })
   } finally { rmSync(dir, { recursive: true, force: true }) }
 })
 

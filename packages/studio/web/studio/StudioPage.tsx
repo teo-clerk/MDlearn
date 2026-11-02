@@ -8,6 +8,7 @@ import { TopLeft } from '../layout/Shell'
 import { JobView, StatusChip } from './JobView'
 import { BatchView, FolderCourse } from './BatchView'
 import { useEngineInfo } from './engine'
+import { isNote } from '../layout/useTreeRows'
 import { WebSearchField } from '../start/WebSearchField'
 import { LANGS, currentLang, t, tp, locale } from '../i18n'
 
@@ -76,7 +77,7 @@ function NewJob({ ws, onStarted, onBatch, params }: { ws: string; onStarted: (id
   const [error, setError] = useState<unknown>(null)
   const docs = useMemo(() => [...(tree.data?.docs ?? [])].sort((a, b) => a.path.localeCompare(b.path)), [tree.data])
   const lessons = useMemo(() => [
-    ...docs.filter((d) => d.study).map((d) => ({ path: d.path, title: d.title || d.path, errors: 0, doc: t('Notes') })),
+    ...docs.filter(isNote).map((d) => ({ path: d.path, title: d.title || d.path, errors: 0, doc: t('Notes') })),
     ...docs.flatMap((d) => d.lessons.map((l) => ({ ...l, doc: d.title || d.path }))),
   ], [docs])
   const req: JobRequest | null = kind === 'course' && source === 'topic'

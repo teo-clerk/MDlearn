@@ -90,13 +90,13 @@ export class Workspaces {
       const { outline } = loadDoc(abs, h.root)
       const mine = lessonFiles.filter((l) => lessonOfDoc(h.ws, abs, l.path))
       mine.forEach((l) => used.add(l.path))
-      const studied = [...mine, ...loaded.filter((l) => l.path === abs)]
-      const stats = studied.map((l) => (l.lesson ? perLesson.get(l.lesson.id) : undefined)).filter((r) => !!r)
+      const notes = loaded.filter((l) => !l.path.endsWith('.learn.md') && lessonOfDoc(h.ws, abs, l.path))
+      const stats = [...mine, ...notes].map((l) => (l.lesson ? perLesson.get(l.lesson.id) : undefined)).filter((r) => !!r)
       const seen = stats.reduce((n, r) => n + r.seen, 0)
       const recalls = stats.filter((r) => r.predictedRecall !== null)
       return {
         path: posix(relative(h.root, abs)), title: outline.title, kind: outline.kind, words: outline.words, ...(outline.timeMin ? { timeMin: outline.timeMin } : {}),
-        lessons: mine.map(lessonRow), study: studied.length > mine.length, cards: stats.reduce((n, r) => n + r.cards, 0), seen, due: stats.reduce((n, r) => n + r.due, 0),
+        lessons: mine.map(lessonRow), notes: notes.length, cards: stats.reduce((n, r) => n + r.cards, 0), seen, due: stats.reduce((n, r) => n + r.due, 0),
         memory: recalls.length ? Math.round((recalls.reduce((n, r) => n + r.predictedRecall! * r.seen, 0) / Math.max(1, seen)) * 100) / 100 : null,
       }
     })

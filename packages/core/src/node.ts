@@ -103,13 +103,14 @@ export function loadCourse(learnDir: string): LoadedLesson[] {
   if (!existsSync(learnDir)) return []
   return walk(learnDir, (f) => f.endsWith('.learn.md'), false).map(loadLesson)
 }
+const FRONTMATTER_BYTES = 8192
 /** A file whose questions are studied: a lesson, or a note that asks for it in its frontmatter. */
 export function isStudyFile(path: string): boolean {
   if (path.endsWith('.learn.md')) return true
   if (!path.endsWith('.md')) return false
   try {
     const fd = openSync(path, 'r')
-    try { const head = Buffer.alloc(2048); return isStudyNote(head.toString('utf8', 0, readSync(fd, head, 0, 2048, 0))) } finally { closeSync(fd) }
+    try { const head = Buffer.alloc(FRONTMATTER_BYTES); return isStudyNote(head.toString('utf8', 0, readSync(fd, head, 0, FRONTMATTER_BYTES, 0))) } finally { closeSync(fd) }
   } catch { return false }
 }
 /** Every file studied in a folder: companions in learn/, courses an assistant wrote anywhere else in it, and notes that ask to be. */
@@ -134,7 +135,7 @@ export function lessonDirFor(ws: Workspace, docAbs: string): string {
 }
 /** A lesson belongs to a document as a companion in learn/<doc>/, or by sitting beside a course.md overview. */
 export function lessonOfDoc(ws: Workspace, docAbs: string, lessonAbs: string): boolean {
-  if (lessonAbs.startsWith(lessonDirFor(ws, docAbs) + sep)) return true
+  if (lessonAbs === docAbs || lessonAbs.startsWith(lessonDirFor(ws, docAbs) + sep)) return true
   return basename(docAbs).toLowerCase() === 'course.md' && dirname(lessonAbs) === dirname(docAbs)
 }
 /** Resolve a document reference: a path relative to the root, or a unique file-name fragment. */

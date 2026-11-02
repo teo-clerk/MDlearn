@@ -17,7 +17,7 @@ import {
   isStudyNote,
 } from '@mdlearn/core'
 import {
-  workspace, relativePosix, curriculumStatus, findDoc, loadDoc, planFor, loadLessons, loadProgress, loadGoals, appendProgress, compileSource, compileFile, searchCurriculum, inRoot as insideRoot,
+  isStudyFile, workspace, relativePosix, curriculumStatus, findDoc, loadDoc, planFor, loadLessons, loadProgress, loadGoals, appendProgress, compileSource, compileFile, searchCurriculum, inRoot as insideRoot,
 } from '@mdlearn/core/node'
 
 // a plugin's .mcp.json may pass an unexpanded "${…}" when the host does not know the variable
@@ -150,6 +150,7 @@ if (!readOnly) server.registerTool('save_lesson', {
   if (!lesson && !overview) return error('Only notes with `study: true` in their frontmatter, lesson files (*.learn.md) and course.md overviews can be saved.')
   const abs = inRoot(path)
   if (!abs) return error('Path must be inside this folder.')
+  if (lesson && existsSync(abs) && !isStudyFile(abs)) return error(`${path} is the user's own document, and it stays as it is. Save the note under a new name.`)
   if (existsSync(abs) && (!overwrite || overview)) return error(overview ? `${path} already exists; edit it instead (an overview is never replaced, it may be the user's own file).` : `${path} already exists; pass overwrite: true to replace it.`)
   let summary = 'saved'
   if (lesson) {

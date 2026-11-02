@@ -5,7 +5,8 @@ import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { settingsStore } from '../server/settings'
 import { Workspaces } from '../server/workspaces'
-import { course, item, plan } from '../server/study'
+import { course, item, lessonsOfDoc, plan } from '../server/study'
+import { BatchRunner } from '../server/ai/batch'
 import { courseInfo } from '../server/course'
 import { classCourse, improveLesson, topicCourse } from '../server/ai/recipes'
 import { toolsFor } from '../server/ai/claude'
@@ -54,11 +55,21 @@ describe('a studied note in the file tree', () => {
     expect(tree.orphanLessons).toEqual([])
     expect(tree.docs.find((d) => d.path === 'marketing/course.md')!.lessons).toEqual([])
   })
+  it('counts in its course, whose overview is not a note', () => {
+    const { h, workspaces } = setup()
+    expect(workspaces.tree(h).docs.find((d) => d.path === 'marketing/course.md')).toMatchObject({ cards: 2, notes: 2, lessons: [] })
+  })
+  it('is not offered for a course of its own', async () => {
+    const { h } = setup()
+    writeFileSync(join(h.root, 'long.md'), `# Long\n\n## One\n\n${'word '.repeat(400)}\n`)
+    const docs = ['marketing/01-precio.md', 'marketing/course.md', 'long.md']
+    expect(new BatchRunner({} as never).candidates(h, docs).map((c) => c.path)).toEqual(['long.md'])
+  })
   it('shows its own cards on its row', () => {
     const { h, workspaces } = setup()
     const docs = workspaces.tree(h).docs
-    expect(docs.find((d) => d.path === 'marketing/01-precio.md')).toMatchObject({ cards: 1, study: true })
-    expect(docs.find((d) => d.path === 'plain.md')).toMatchObject({ cards: 0, study: false })
+    expect(docs.find((d) => d.path === 'marketing/01-precio.md')).toMatchObject({ cards: 1, notes: 1 })
+    expect(docs.find((d) => d.path === 'plain.md')).toMatchObject({ cards: 0, notes: 0 })
   })
 })
 
@@ -73,6 +84,12 @@ describe('a studied note in Study', () => {
     const widgetId = plan(h, {}).items[0].widgetId
     expect(item(h, widgetId)).toMatchObject({ noteSection: 'el-precio-y-el-valor' })
     expect(item(h, widgetId).lessonPath).toMatch(/^marketing\/0\d-.*\.md$/)
+  })
+  it('can be studied alone, or with its course', () => {
+    const { h } = setup()
+    expect([...lessonsOfDoc(h, 'marketing/01-precio.md')]).toEqual(['marketing-precio'])
+    expect(lessonsOfDoc(h, 'marketing/course.md').size).toBe(2)
+    expect(lessonsOfDoc(h, 'plain.md').size).toBe(0)
   })
   it('keeps its id when the file moves', () => {
     const { h } = setup()

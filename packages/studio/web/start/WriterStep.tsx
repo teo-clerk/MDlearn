@@ -9,6 +9,7 @@ import { Button, ErrorNote, Spinner } from '../ui/primitives'
 import { Command, CopyButton } from '../settings/Command'
 import { promptFor } from '../settings/prompt'
 import { goTo, plainWords } from '../lib/shell'
+import { isNote } from '../layout/useTreeRows'
 import { LanguageField } from './LanguageField'
 import { WebSearchField } from './WebSearchField'
 import { t, tp } from '../i18n'
@@ -113,7 +114,7 @@ function InAChat({ ws, language }: { ws: string; language: string }) {
 function Arriving({ ws }: { ws: string }) {
   useLiveEvents(ws)
   const tree = useTree(ws)
-  const notes = (tree.data?.docs ?? []).filter((d) => d.study)
+  const notes = (tree.data?.docs ?? []).filter(isNote)
   const lessons = [...(tree.data?.docs ?? []).flatMap((d) => d.lessons), ...(tree.data?.orphanLessons ?? [])]
   if (!notes.length && !lessons.length) return <p className="text-[13px] text-muted">{t('The course appears here as it is written.')}</p>
   const cards = lessons.reduce((n, l) => n + l.cards, 0), errors = lessons.reduce((n, l) => n + l.errors, 0)
