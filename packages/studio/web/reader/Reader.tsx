@@ -166,7 +166,7 @@ export default function Reader({ ws }: { ws: string }) {
               {doc.data.outline.timeMin && <span>{duration(doc.data.outline.timeMin)}</span>}
               {doc.data.outline.level && <span className="capitalize">{doc.data.outline.level}</span>}
               <span>{tp(doc.data.outline.words, '{n} word', '{n} words')}</span>
-              {!!entry?.notes && !entry.lessons.length && <span>{tp(entry.cards, '{n} exercise', '{n} exercises')}</span>}
+              {!!entry?.notes && !entry.lessons.length && <span>{tp(entry.cards, '{n} card', '{n} cards')}</span>}
               {!!entry?.lessons.length && <span>{tp(entry.lessons.length, '{n} lesson', '{n} lessons')} · {tp(entry.cards, '{n} card', '{n} cards')}</span>}
               {doc.data.diagnostics.some((d) => d.code.startsWith('E')) && <span title={doc.data.diagnostics.filter((d) => d.code.startsWith('E')).map((d) => `${t('line {n}', { n: d.line })}: ${d.code} ${d.message ?? ''}`).join('\n')}>{tp(errorCount, '{n} formatting problem', '{n} formatting problems')}</span>}
             </p>

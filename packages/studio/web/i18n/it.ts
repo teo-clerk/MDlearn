@@ -1400,7 +1400,6 @@ export default {
   'Which note or lesson?': 'Quale appunto o lezione?',
   'Choose one…': 'Scegli…',
   '{n} note|{n} notes': { one: '{n} appunto', other: '{n} appunti' },
-  '{n} exercise|{n} exercises': { one: '{n} esercizio', other: '{n} esercizi' },
   'Turn your files, or just a topic, into better notes, and study them a few minutes a day.': 'Trasforma i tuoi file, o solo un argomento, in appunti migliori, e studiali pochi minuti al giorno.',
   'Say what you want to learn': 'Di\' cosa vuoi imparare',
   'An AI writes better notes': 'Un\'IA scrive appunti migliori',

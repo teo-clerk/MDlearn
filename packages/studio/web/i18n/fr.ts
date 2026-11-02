@@ -1400,7 +1400,6 @@ export default {
   'Which note or lesson?': 'Quelle note ou leçon ?',
   'Choose one…': 'Choisissez…',
   '{n} note|{n} notes': { one: '{n} note', other: '{n} notes' },
-  '{n} exercise|{n} exercises': { one: '{n} exercice', other: '{n} exercices' },
   'Turn your files, or just a topic, into better notes, and study them a few minutes a day.': 'Transformez vos fichiers, ou juste un sujet, en de meilleures notes, et étudiez-les quelques minutes par jour.',
   'Say what you want to learn': 'Dites ce que vous voulez apprendre',
   'An AI writes better notes': 'Une IA écrit de meilleures notes',

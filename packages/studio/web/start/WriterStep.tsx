@@ -117,11 +117,11 @@ function Arriving({ ws }: { ws: string }) {
   const notes = (tree.data?.docs ?? []).filter(isNote)
   const lessons = [...(tree.data?.docs ?? []).flatMap((d) => d.lessons), ...(tree.data?.orphanLessons ?? [])]
   if (!notes.length && !lessons.length) return <p className="text-[13px] text-muted">{t('The course appears here as it is written.')}</p>
-  const cards = lessons.reduce((n, l) => n + l.cards, 0), errors = lessons.reduce((n, l) => n + l.errors, 0)
-  const exercises = notes.reduce((n, d) => n + d.cards, 0)
+  const cards = [...notes, ...lessons].reduce((n, l) => n + l.cards, 0), errors = lessons.reduce((n, l) => n + l.errors, 0)
   const parts = [
-    ...(notes.length ? [tp(notes.length, '{n} note', '{n} notes'), tp(exercises, '{n} exercise', '{n} exercises')] : []),
-    ...(lessons.length ? [tp(lessons.length, '{n} lesson', '{n} lessons'), tp(cards, '{n} card', '{n} cards')] : []),
+    ...(notes.length ? [tp(notes.length, '{n} note', '{n} notes')] : []),
+    ...(lessons.length ? [tp(lessons.length, '{n} lesson', '{n} lessons')] : []),
+    tp(cards, '{n} card', '{n} cards'),
     ...(errors ? [tp(errors, '{n} error', '{n} errors')] : []),
   ]
   return (
