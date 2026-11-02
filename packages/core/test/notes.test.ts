@@ -3,7 +3,7 @@ import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { cleanAttrs, compile, isStudyNote, parseDocument, parseTag, safeBundlePath, splitBundle } from '../src/index.js'
-import { isStudyFile, lessonPaths, loadLessons, sourceDocs, workspace } from '../src/node.js'
+import { isStudyFile, lessonPaths, loadLessons, sourceDocs, workspace, relativePosix } from '../src/node.js'
 
 const words = (n: number) => Array.from({ length: n }, (_, i) => `palabra${i}`).join(' ')
 const quiz = ':::quiz\n¿Cuál?\n\n- [x] Esta\n  > Sí.\n- [ ] Otra\n  > Confunde causa y efecto.\n:::\n'
@@ -58,7 +58,7 @@ describe('notes in a folder', () => {
   }
   it('are found with the lessons, and stay documents', () => {
     const ws = folder()
-    expect(lessonPaths(ws).map((p) => p.slice(ws.root.length + 1)).sort()).toEqual(['marketing/01-precio.md', 'marketing/02-corta.learn.md'])
+    expect(lessonPaths(ws).map((p) => relativePosix(ws.root, p)).sort()).toEqual(['marketing/01-precio.md', 'marketing/02-corta.learn.md'])
     expect(sourceDocs(ws).some((p) => p.endsWith('01-precio.md'))).toBe(true)
     expect(loadLessons(ws).map((l) => l.lesson?.title).sort()).toEqual(['Corta', 'Precio'])
   })

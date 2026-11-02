@@ -832,7 +832,7 @@ export function createApp(deps: Deps): Hono {
     const oneFile = prev.recipe === 'lesson.improve' || prev.recipe === 'leech.fix' // a note can sit at the top of the folder: its folder is not its scope
     const scope = prev.files.length ? [...new Set(prev.files.map((f) => (oneFile ? f.path : f.path.split('/').slice(0, -1).join('/'))))] : ['learn']
     const r = customJob(h, request, scope[0])
-    return c.json(jm.start(h, engine, { ...r.spec, recipe: 'followup', title: request.slice(0, 80), writeScope: scope.map((s) => `${h.root}/${s}`), keepOut: keptOut(h.root), resume: prev.sessionId }, { parent: prev.id }))
+    return c.json(jm.start(h, engine, { ...r.spec, recipe: 'followup', title: request.slice(0, 80), writeScope: scope.map((s) => join(h.root, s)), keepOut: keptOut(h.root), resume: prev.sessionId }, { parent: prev.id }))
   })
 
   // ---- simulation sandbox (its own strict policy: scripts only from here, workers from blobs, no network)
