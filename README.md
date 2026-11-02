@@ -1,10 +1,11 @@
 # MDlearn
 
-**Turn your class files into short lessons, and study them a few minutes a day.**
+**Turn your files, or just a topic, into better notes, and study them a few minutes a day.**
 
-Give MDlearn your PDFs, slides and Word files. An AI you already use writes the lessons, a strict compiler checks
-them, and spaced repetition brings each idea back just before you would forget it. It runs on your computer, needs
-no account, and your lessons are plain files you keep.
+Say what you want to learn and give MDlearn any PDFs, slides and Word files you have. An AI you already use writes
+better notes from them, with worked examples, animations, formulas, diagrams and exercises. A strict compiler checks
+them, and spaced repetition brings each idea back just before you would forget it. It runs on your computer, needs no
+account, and your notes are plain Markdown files you keep.
 
 [![CI](https://github.com/teo-clerk/MDlearn/actions/workflows/ci.yml/badge.svg)](https://github.com/teo-clerk/MDlearn/actions/workflows/ci.yml)
 [![Latest release](https://img.shields.io/github/v/release/teo-clerk/MDlearn)](https://github.com/teo-clerk/MDlearn/releases/latest)
@@ -37,13 +38,14 @@ need `sudo`.
 
 ## Your first course
 
-1. **Add your files.** Open MDlearn, choose *Make a course from my class files*, and drop in your PDFs, PowerPoint
-   or Word files and pictures. MDlearn tells you what it could read from each one.
-2. **Choose who writes the lessons.**
+1. **Say what you want to learn.** Open MDlearn, choose *Make a course*, and add any PDFs, PowerPoint or Word files and
+   pictures you have. MDlearn tells you what it could read from each one. Files are optional.
+2. **Choose who writes the course.**
    - *Claude, from here:* runs Claude Code on your computer, and you watch it work.
    - *Your coding assistant:* Claude Code, Codex, OpenCode or Pi, with one command to paste in a terminal.
    - *A chat:* ChatGPT, Claude or Gemini. MDlearn gives you the prompt, and you paste the answer back.
-3. **Study.** *Today* gives you a short daily session: the cards that are due, then a few new ones.
+3. **Read and study.** You get one `.md` file per topic. *Today* gives you a short daily session: the exercises that are
+   due, then a few new ones, each with a link back to its section.
 
 Your course can change with you. After a week you can move or pause lessons, add class files, or ask for changes,
 and cards you have already studied keep their schedule.
@@ -55,7 +57,10 @@ to try.
 
 ## What you get
 
-- **Lessons that check you.** Quizzes, fill-in-the-gaps, ordering, written answers, worked steps, code, and games.
+- **Notes that teach.** Full explanations, worked examples, formulas, plots with sliders, animations, diagrams, videos,
+  code that runs, and highlights whose colour says what they mark. Nothing from your files is lost, and what the AI adds
+  beyond them is in a note you can see. If your notes are already complete, MDlearn can add only the exercises.
+- **Exercises that check you.** Quizzes, fill-in-the-gaps, ordering, written answers, worked steps, code, and games.
   You say whether you were sure before you see the answer, and what you miss comes back sooner.
 - **A schedule that fits your memory**, using the [FSRS](https://github.com/open-spaced-repetition) algorithm.
 - **Reading that keeps up with technical notes:** math, tables, diagrams, code you can run, and notes beside the text.
@@ -131,8 +136,8 @@ have a single lesson. Your notes are never modified unless you use the editor or
 
 Pick whichever fits:
 
-- **Let Claude write them in Studio.** *AI Studio* → *Create a course* (one document), *Whole folder*
-  (every document without lessons, one after another), *Improve a lesson*, or *Something else*. Each
+- **Let Claude write them in Studio.** *AI Studio* → *Create a course* (on a topic, or better notes from one document),
+  *Whole folder* (every document without lessons, one after another), *Improve*, or *Something else*. Each
   job streams live, can only write Markdown inside its allowed folder (`learn/` by default), is
   linted, and can be undone. It runs Claude Code on your computer, under your own login.
 - **Ask Claude Code in a terminal.** Set up the skills once (see [Claude Code](#use-with-claude-code)),
@@ -211,9 +216,9 @@ document you're reading this week, rather than converting everything up front.
 
 ## Use with any AI: Claude Code, Codex, OpenCode, Pi, Claude.ai, ChatGPT
 
-Ask any assistant for a course on a topic, with or without your notes; it writes MDlearn lessons with
-the same method Studio uses (retrieval every few cards, misconception feedback, worked examples that
-fade, a free-recall recap), and you study them in Studio. `mdlearn setup` prints these steps with the
+Ask any assistant for a course on a topic, with or without your notes; it writes MDlearn notes with
+the same method Studio uses (explanations and worked examples, exercises in every section with feedback on
+each mistake, a mixed practice at the end), and you study them in Studio. `mdlearn setup` prints these steps with the
 real paths; Studio shows them under **Settings → Use MDlearn in other apps**.
 
 | Where | How |

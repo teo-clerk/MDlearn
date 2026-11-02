@@ -153,8 +153,8 @@ export type JobRequest =
   | { recipe: 'custom'; request: string; scope?: string }
   | { recipe: 'course.change'; doc: string; request: string }
   | { recipe: 'course.translate'; doc: string; language: string }
-  | { recipe: 'course.class'; name: string; level?: 'beginner' | 'intermediate' | 'advanced'; language?: string; request?: string }
-  | { recipe: 'course.topic'; topic: string; level?: 'beginner' | 'intermediate' | 'advanced'; language?: string; minutes?: number; notes?: string }
+  | { recipe: 'course.class'; name: string; level?: 'beginner' | 'intermediate' | 'advanced'; language?: string; request?: string; web?: boolean }
+  | { recipe: 'course.topic'; topic: string; level?: 'beginner' | 'intermediate' | 'advanced'; language?: string; minutes?: number; notes?: string; web?: boolean }
 export const jobsApi = {
   start: (ws: string, req: JobRequest) => api.post<JobSummary>(`/api/w/${ws}/ai/jobs`, req),
   cancel: (ws: string, id: string) => api.post<{ stopped: boolean }>(`/api/w/${ws}/ai/jobs/${id}/cancel`, {}),

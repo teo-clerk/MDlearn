@@ -16,6 +16,8 @@ export interface BrowseResult { path: string; parent: string | null; entries: Br
 export interface TreeDoc {
   path: string; title: string; kind: DocOutline['kind']; words: number; timeMin?: number
   lessons: { path: string; id: string; title: string; cards: number; errors: number; warnings: number }[]
+  /** A note with `study: true`: its exercises are its own, and reach Study. */
+  study: boolean
   cards: number; seen: number; due: number
   /** Mean predicted recall of seen cards (FSRS), null when nothing has been studied. */
   memory: number | null

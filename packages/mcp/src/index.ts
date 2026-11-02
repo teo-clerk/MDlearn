@@ -117,7 +117,7 @@ server.registerTool('lint_lesson', {
 
 server.registerTool('authoring_guide', {
   title: 'Authoring guide',
-  description: 'How to write MDlearn lessons (.learn.md). Read part "method" before writing any lesson: steps, level blueprints, card and item rules, syntax with a full example, and the self-check list. Part "spec" lists the DSL specification sections; pass `section` (e.g. "8.12") to read one. Other parts: "visuals" (plots, formulas, animations, sims), "tutor" (running a study session), "curriculum" (converting many documents).',
+  description: 'How to write MDlearn courses: rich notes (.md with `study: true`) and short lessons (.learn.md). Read part "method" before writing: the shape of a note, everything MDlearn can show (formulas, plots, animations, diagrams, videos, code, coloured highlights, exercises), syntax with full examples, and the self-check list. Part "spec" lists the DSL specification sections; pass `section` (e.g. "8.12") to read one. Other parts: "visuals" (plots, formulas, animations, sims), "tutor" (running a study session), "curriculum" (converting many documents).',
   inputSchema: {
     part: z.enum(['method', 'spec', 'visuals', 'tutor', 'curriculum']).optional().describe('Default "method"'),
     section: z.string().optional().describe('With part "spec": a section number such as "8.3", or "all" for the whole specification'),
@@ -137,9 +137,9 @@ server.registerTool('authoring_guide', {
 
 if (!readOnly) server.registerTool('save_lesson', {
   title: 'Save lesson',
-  description: 'Lint a lesson and save it in this folder. `path` ends in .learn.md (or is a course.md overview); folders are created. Refuses files with lint errors (fix every E line it returns and save again) and existing files unless overwrite is true. When replacing a lesson, keep every `{#id}` on its headings: it ties the card to the student\'s progress, and the result reports any studied card that went missing. Never writes source documents.',
+  description: 'Lint a note or lesson and save it in this folder. `path` is a .md note with `study: true` in its frontmatter, a .learn.md lesson or a course.md overview; folders are created. Refuses files with lint errors (fix every E line it returns and save again) and existing files unless overwrite is true. When replacing a file, keep every `{#id}` on its headings: it ties that part to the student\'s progress, and the result reports any studied card that went missing. Never writes source documents.',
   inputSchema: {
-    path: z.string().describe('Folder-relative path, e.g. "tides/01-why-tides.learn.md" or "tides/course.md"'),
+    path: z.string().describe('Folder-relative path, e.g. "tides/01-why-tides.md" or "tides/course.md"'),
     content: z.string().max(400_000),
     overwrite: z.boolean().optional().describe('Replace an existing lesson file'),
   },
@@ -271,8 +271,8 @@ server.registerPrompt('create_course', {
   argsSchema: {
     topic: z.string().describe('What to learn, e.g. "orbital mechanics for ML engineers"'),
     level: z.string().optional().describe('beginner, intermediate or advanced'),
-    language: z.string().optional().describe('Language of the lessons'),
-    minutes: z.string().optional().describe('Total study time in minutes (default 45)'),
+    language: z.string().optional().describe('Language of the notes'),
+    minutes: z.string().optional().describe('Total study time in minutes (default: as long as the subject needs)'),
     notes: z.string().optional().describe('A notes file or folder to build from (leave empty for none)'),
   },
 }, ({ topic, level, language, minutes, notes }) => ask(coursePrompt({

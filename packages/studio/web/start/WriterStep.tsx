@@ -1,4 +1,4 @@
-// Second step: who writes the lessons. Claude from here, a coding assistant in the folder, or any chat.
+// Second step: who writes the course. Claude from here, a coding assistant in the folder, or any chat.
 import { useState } from 'react'
 import { Link, useLocation } from 'wouter'
 import { BookOpenCheck, FolderCheck, MessageSquareText, Sparkles, TerminalSquare, type LucideIcon } from 'lucide-react'
@@ -10,12 +10,15 @@ import { Command, CopyButton } from '../settings/Command'
 import { promptFor } from '../settings/prompt'
 import { goTo, plainWords } from '../lib/shell'
 import { LanguageField } from './LanguageField'
+import { WebSearchField } from './WebSearchField'
 import { t, tp } from '../i18n'
 import type { PreparedFolder } from '../../shared/types'
 
 type Writer = 'claude' | 'assistant' | 'chat'
-const REQUEST = 'Make the MDlearn course from the files in sources/, following AGENTS.md.'
-const request = (language: string) => (plainWords(language) ? `${REQUEST} Write it in ${plainWords(language)}.` : REQUEST)
+const request = (name: string, language: string) => {
+  const ask = `Make the MDlearn course on ${plainWords(name) || 'this topic'}, following AGENTS.md.`
+  return plainWords(language) ? `${ask} Write it in ${plainWords(language)}.` : ask
+}
 const TOOLS: { id: string; name: string; run: (ask: string) => string }[] = [
   { id: 'claude', name: 'Claude Code', run: (ask) => `claude "${ask}"` },
   { id: 'codex', name: 'Codex', run: (ask) => `codex "${ask}"` },
@@ -37,12 +40,13 @@ function Option({ icon: Icon, title, hint, chosen, onChoose }: { icon: LucideIco
 function FromHere({ ws, name, language }: { ws: string; name: string; language: string }) {
   const [, navigate] = useLocation()
   const [wishes, setWishes] = useState('')
+  const [web, setWeb] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<unknown>(null)
   const start = async () => {
     setBusy(true); setError(null)
     try {
-      const job = await jobsApi.start(ws, { recipe: 'course.class', name, language: language.trim() || undefined, ...(wishes.trim() ? { request: wishes.trim() } : {}) })
+      const job = await jobsApi.start(ws, { recipe: 'course.class', name, language: language.trim() || undefined, web, ...(wishes.trim() ? { request: wishes.trim() } : {}) })
       navigate(`/w/${ws}/studio?job=${job.id}`)
     } catch (e) { setError(e); setBusy(false) }
   }
@@ -52,14 +56,15 @@ function FromHere({ ws, name, language }: { ws: string; name: string; language: 
         <textarea value={wishes} onChange={(e) => setWishes(e.target.value)} maxLength={2000} rows={2} placeholder={t('e.g. The exam covers chapters 1 to 4 and is mostly problems')}
           className="mt-1.5 w-full rounded-[6px] border border-border-strong bg-bg px-3 py-2 text-[14px] outline-none focus:border-accent" />
       </label>
+      <WebSearchField value={web} onChange={setWeb} />
       {!!error && <ErrorNote error={error} />}
-      <div><Button variant="primary" icon={Sparkles} busy={busy} onClick={() => void start()}>{t('Write the lessons')}</Button></div>
+      <div><Button variant="primary" icon={Sparkles} busy={busy} onClick={() => void start()}>{t('Write the course')}</Button></div>
       <p className="text-[12.5px] text-muted">{t('This runs Claude Code on this computer, under your own login. You can watch it, stop it and undo it.')}</p>
     </div>
   )
 }
 
-function WithAssistant({ ws, root, language }: { ws: string; root: string; language: string }) {
+function WithAssistant({ ws, name, root, language }: { ws: string; name: string; root: string; language: string }) {
   const [tool, setTool] = useState(TOOLS[0])
   const [ready, setReady] = useState<PreparedFolder | null>(null)
   const [busy, setBusy] = useState(false)
@@ -70,7 +75,7 @@ function WithAssistant({ ws, root, language }: { ws: string; root: string; langu
   }
   if (!ready) return (
     <div className="flex flex-col gap-2">
-      <p className="text-[13.5px] leading-relaxed">{t('MDlearn adds a short instruction file and its skills to this folder, so your assistant knows how to write lessons. Nothing else changes.')}</p>
+      <p className="text-[13.5px] leading-relaxed">{t('MDlearn adds a short instruction file and its skills to this folder, so your assistant knows how to write the course. Nothing else changes.')}</p>
       {!!error && <ErrorNote error={error} />}
       <div><Button variant="primary" icon={FolderCheck} busy={busy} onClick={() => void prepare()}>{t('Get the folder ready')}</Button></div>
     </div>
@@ -81,7 +86,7 @@ function WithAssistant({ ws, root, language }: { ws: string; root: string; langu
         {TOOLS.map((x) => <button key={x.id} role="tab" aria-selected={x.id === tool.id} onClick={() => setTool(x)} className={`rounded-[6px] px-2.5 py-1 text-[13px] cursor-pointer ${x.id === tool.id ? 'bg-hover font-medium' : 'text-muted hover:text-text'}`}>{x.name}</button>)}
       </div>
       <p className="text-[13.5px]">{t('Run this in a terminal:')}</p>
-      <Command text={`${goTo(root)}\n${tool.run(request(language))}`} />
+      <Command text={`${goTo(root)}\n${tool.run(request(name, language))}`} />
       {!!ready.kept.length && <p className="text-[13px] text-warn">{t('Your own {file} was kept. Add a line to it: follow .agents/skills/mdlearn-course/SKILL.md.', { file: ready.kept[0] })}</p>}
     </div>
   )
@@ -104,16 +109,23 @@ function InAChat({ ws, language }: { ws: string; language: string }) {
   )
 }
 
-/** Lessons appear as they are written, wherever they come from. */
+/** The course appears as it is written, wherever it comes from. */
 function Arriving({ ws }: { ws: string }) {
   useLiveEvents(ws)
   const tree = useTree(ws)
+  const notes = (tree.data?.docs ?? []).filter((d) => d.study)
   const lessons = [...(tree.data?.docs ?? []).flatMap((d) => d.lessons), ...(tree.data?.orphanLessons ?? [])]
-  if (!lessons.length) return <p className="text-[13px] text-muted">{t('Lessons appear here as they are written.')}</p>
+  if (!notes.length && !lessons.length) return <p className="text-[13px] text-muted">{t('The course appears here as it is written.')}</p>
   const cards = lessons.reduce((n, l) => n + l.cards, 0), errors = lessons.reduce((n, l) => n + l.errors, 0)
+  const exercises = notes.reduce((n, d) => n + d.cards, 0)
+  const parts = [
+    ...(notes.length ? [tp(notes.length, '{n} note', '{n} notes'), tp(exercises, '{n} exercise', '{n} exercises')] : []),
+    ...(lessons.length ? [tp(lessons.length, '{n} lesson', '{n} lessons'), tp(cards, '{n} card', '{n} cards')] : []),
+    ...(errors ? [tp(errors, '{n} error', '{n} errors')] : []),
+  ]
   return (
     <div role="status" className="flex flex-wrap items-center gap-3">
-      <p className="text-[14px]"><span className="font-medium">{tp(lessons.length, '{n} lesson', '{n} lessons')}</span> · {tp(cards, '{n} card', '{n} cards')}{errors ? ` · ${tp(errors, '{n} error', '{n} errors')}` : ''}</p>
+      <p className="text-[14px]">{parts.join(' · ')}</p>
       <Link href={`/w/${ws}/study`} className="inline-flex h-8 items-center gap-1.5 rounded-[6px] bg-accent px-3 text-[13.5px] font-medium text-on-accent"><BookOpenCheck className="size-4" aria-hidden />{t('Start studying')}</Link>
     </div>
   )
@@ -129,7 +141,7 @@ export function WriterStep({ ws }: { ws: string }) {
   if (!tree.data) return <div className="mt-6"><Spinner /></div>
   return (
     <section aria-labelledby="writer" className="mt-8">
-      <h2 id="writer" className="text-[16px] font-semibold">{t('Who writes the lessons?')}</h2>
+      <h2 id="writer" className="text-[16px] font-semibold">{t('Who writes the course?')}</h2>
       <div role="radiogroup" aria-labelledby="writer" className={`mt-3 grid gap-2 ${claude ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
         {claude && <Option icon={Sparkles} title={t('Claude, from here')} hint={t('Starts now, and you watch it work')} chosen={writer === 'claude'} onChoose={() => setPicked('claude')} />}
         <Option icon={TerminalSquare} title={t('My coding assistant')} hint={t('Claude Code, Codex, OpenCode or Pi')} chosen={writer === 'assistant'} onChoose={() => setPicked('assistant')} />
@@ -141,7 +153,7 @@ export function WriterStep({ ws }: { ws: string }) {
       <div className="mt-4"><LanguageField value={language} onChange={setLanguage} label={t('Language of the course')} placeholder={t('Same as my files')} /></div>
       <div className="mt-4">
         {writer === 'claude' && <FromHere ws={ws} name={tree.data.name} language={language} />}
-        {writer === 'assistant' && <WithAssistant ws={ws} root={tree.data.root} language={language} />}
+        {writer === 'assistant' && <WithAssistant ws={ws} name={tree.data.name} root={tree.data.root} language={language} />}
         {writer === 'chat' && <InAChat ws={ws} language={language} />}
       </div>
       <div className="mt-6 border-t border-border pt-4"><Arriving ws={ws} /></div>

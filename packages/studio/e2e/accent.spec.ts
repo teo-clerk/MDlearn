@@ -40,6 +40,6 @@ test('the main button on the start page wears the accent', async ({ page }) => {
   await page.goto('/')
   await page.evaluate(() => { localStorage.setItem('mdl-accent', '#b95568'); localStorage.setItem('mdl-accent-vars', JSON.stringify({ '--accent-l': '#b95568', '--accent-d': '#e27a8c', '--on-accent-l': '#ffffff', '--on-accent-d': '#191919' })) })
   await page.reload()
-  const start = page.getByRole('link', { name: /Make a course from my class files/ })
+  const start = page.getByRole('link', { name: /Make a course/ })
   await expect.poll(() => css(start, 'background-color').then(isRose)).toBe(true)
 })

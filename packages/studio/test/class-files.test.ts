@@ -136,4 +136,10 @@ describe('a course from class files', () => {
     expect(writeAllowed(join(root, 'sources/text/lecture-3.md'), scope, keepOut)).toMatch(/not change/)
     expect(writeAllowed(join(root, 'AGENTS.md'), scope, keepOut)).toMatch(/not change/)
   })
+  it('makes a course from a name alone, but adding nothing to a folder is a mistake', async () => {
+    const { send } = setup()
+    const r = await (await send('/api/courses?name=Marketing', [])).json() as ClassUpload
+    expect(r).toMatchObject({ name: 'Marketing', files: [] })
+    expect((await send(`/api/w/${r.id}/sources`, [])).status).toBe(400)
+  })
 })

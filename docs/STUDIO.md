@@ -107,12 +107,12 @@ downloader. The model in use and the search model cannot be removed.
 | auth | whatever the person's own Claude Code is signed in with; `env` is an allowlist that keeps `ANTHROPIC_API_KEY` | Studio never sees or stores a login, and a key set where Studio starts applies as it does in a terminal |
 | `settingSources` | `[]` + a local plugin (`dist/plugin`: the four MDlearn skills) | your user skills, hooks and MCP servers stay out |
 | MCP | `mdlearn` server only (`strictMcpConfig`) | outlines, sections, `lint_lesson` |
-| tools | Read, Glob, Grep, Write, Edit, MultiEdit, Skill, TodoWrite; no Bash, web or subagents | |
+| tools | Read, Glob, Grep, Write, Edit, MultiEdit, Skill, TodoWrite; no Bash, subagents or WebFetch. WebSearch only for a course whose *Let Claude search the web* box was ticked, off by default | |
 | permissions | `dontAsk` + PreToolUse hooks | every write goes through `beforeWrite` (scope check + undo snapshot); reads limited to the folder |
 
-Recipes: **create a course** (the server scaffolds lesson files from the document's outline, Claude fills
-them following the mdlearn-curriculum / mdlearn-course / mdlearn-visuals skills, then lints until clean),
-**improve a lesson** (one file), **something else** (free request, `learn/` by default), and **follow-up**
+Recipes: **create a course** on a topic or as better notes from one document (§13); *Only add exercises* keeps the
+document as it is (the server scaffolds lesson files from its outline, Claude fills them following the
+mdlearn-curriculum / mdlearn-course / mdlearn-visuals skills, then lints until clean); **improve** (one note or lesson), **something else** (free request, `learn/` by default), and **follow-up**
 (resumes the job's Claude session). One job runs at a time (they share one Claude Code login; usage
 warnings are shown in the log). After a job the server re-lints every lesson it touched. **Undo** restores
 every file to its state before the job and deletes the files it created — except files you edited since.
@@ -437,13 +437,15 @@ The trouble is how the errors look. A wrong formula still renders (51 of 52 pass
 ## 13. A course for the whole folder, or on any topic
 
 AI Studio → *Create a course* → **Any topic**: a topic, level, study time, language and optional notes. The job
-(`course.topic`) writes a `course.md` overview and the lessons into a new folder named after the topic, with
-the same fixed prompt the MCP server's `create_course` uses (`coursePrompt` in core): from the notes when
-given (read, never edited), otherwise from well-established knowledge with doubtful claims flagged
-`<!-- added: verify … -->` and sources listed. Its write scope is that new folder only.
+(`course.topic`) writes a `course.md` overview and one note per topic (`01-slug.md` with `study: true`, DSL §8.16) into a
+new folder named after the topic, with the same fixed prompt the MCP server's `create_course` uses (`coursePrompt` in
+core): from the notes when given (read, never edited), otherwise from well-established knowledge, saying what is uncertain
+and listing sources. Its write scope is that new folder only. *One of my documents* → *Better notes* is the same job with
+that document as its notes. `web` on either recipe adds `WebSearch` and tells Claude to use only addresses a search
+returned; the query leaves the computer, and the box says so. `WebFetch` stays out, because an address can carry text out.
 
-**From class files.** The first page's *Make a course from my class files* opens `/start`: name the course, drop the files,
-choose who writes the lessons. `POST /api/courses?name=` (local only) makes a library folder and `POST /api/w/:ws/sources` adds
+**From a topic and class files.** The first page's *Make a course* opens `/start`: say what you want to learn, add any files,
+choose who writes it. With no files, `course.class` writes from the topic at the top of the same folder. `POST /api/courses?name=` (local only) makes a library folder, with or without files, and `POST /api/w/:ws/sources` adds
 to one (100 MB a file, 400 MB at a time, 100 files). Originals go to `sources/`. `server/import/office.ts` turns `.pptx` (slide
 order, titles, bullets, tables, speaker notes, pictures; `fflate` + `linkedom`) and `.docx` (mammoth, then Turndown) into
 `sources/text/<name>.md` with pictures in `sources/media/<name>/`; a PDF goes through the quick reader.

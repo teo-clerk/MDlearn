@@ -5,6 +5,9 @@ description: Convert a whole curriculum folder (e.g. a course's notes, a project
 
 # MDlearn curriculum conversion
 
+This skill keeps the user's documents as they are and adds short lessons beside them, for notes that are
+already complete. To turn files into better notes instead, use the `mdlearn-course` skill.
+
 You run a **batch**: many source documents → companion lessons under `learn/`, mirroring the source
 tree. Each lesson is written with the `mdlearn-course` skill (read it once; its "Companion lessons"
 section governs every card). This skill decides *what* to convert, in which order, and when it is done.

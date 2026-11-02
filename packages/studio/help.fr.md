@@ -10,11 +10,11 @@ Vos notes restent de simples fichiers Markdown. Les **leçons** (`learn/*.learn.
 **Réviser** vous remontre chaque fiche juste avant que vous ne l'oubliiez. Cinq à dix minutes par jour sur
 **Aujourd'hui** : c'est l'habitude qui paie.
 
-## Comment naissent les leçons
+## Comment naissent les cours
 
-Commencez sur la première page avec **Créer un cours à partir de mes fichiers**. Donnez-lui vos PDF, PowerPoint, Word et
-images. Les originaux restent dans `sources/`, et ce qui peut être lu devient du texte et des images utilisables par
-n'importe quelle IA. Choisissez ensuite qui écrit les leçons :
+Commencez sur la première page avec **Créer un cours**. Dites ce que vous voulez apprendre et ajoutez les PDF, PowerPoint,
+Word et images que vous avez. Les originaux restent dans `sources/`, et ce qui peut être lu devient du texte et des images
+utilisables par n'importe quelle IA. Choisissez ensuite qui écrit le cours :
 
 | Qui | Comment |
 |---|---|
@@ -22,7 +22,9 @@ n'importe quelle IA. Choisissez ensuite qui écrit les leçons :
 | **Votre assistant de code** | Claude Code, Codex, OpenCode ou Pi : MDlearn prépare le dossier et vous donne une seule commande. |
 | **Un chat** | ChatGPT, Claude.ai ou Gemini : joignez vos fichiers, collez le prompt MDlearn et rapportez la réponse avec **Importer → Depuis un chat**. |
 
-Les leçons apparaissent au fur et à mesure. Dans l'éditeur, collez ou déposez une capture pour ajouter une image. Cliquez sur une image pour l'agrandir. Une image du web attend que vous autorisiez son site, car un document pourrait s’en servir pour faire sortir des informations.
+Le résultat, ce sont de meilleures notes que celles que vous aviez : un fichier `.md` par thème, avec des explications complètes, des exemples résolus et des exercices dans chaque section, et des formules, animations, schémas, images et vidéos là où ils aident. Rien de vos fichiers ne se perd, et ce que l'IA ajoute reste dans une note visible. Leurs exercices reviennent dans **Aujourd'hui** et **Étudier**, où **Lire ceci dans vos notes** vous ramène à la section. Claude peut aussi chercher sur le web si vous cochez la case, et ce qu'il cherche quitte votre ordinateur. Si vos notes sont déjà complètes, AI Studio peut **Ajouter seulement des exercices** et laisser votre texte tel quel.
+
+Les notes apparaissent au fur et à mesure. Dans l'éditeur, collez ou déposez une capture pour ajouter une image. Cliquez sur une image pour l'agrandir. Une image du web attend que vous autorisiez son site, car un document pourrait s’en servir pour faire sortir des informations.
 
 Pour changer un cours déjà commencé, ouvrez sa page de présentation. Vous pouvez déplacer ou mettre en pause une leçon, ajouter des fichiers ou demander un changement. Les cartes gardent leur calendrier, même avec de nouveaux titres. Pour passer un cours dans une autre langue, utilisez *Traduire ce cours* : chaque carte garde son calendrier.
 
@@ -31,6 +33,8 @@ Pour changer un cours déjà commencé, ouvrez sa page de présentation. Vous po
 Ici, la couleur a un rôle : le type d'encadré, un terme d'une formule et son explication, le mot clé d'une carte. Sélectionnez un passage pour le
 surligner comme **Important**, **Pas clair** ou **Pour l'examen**, sans rien écrire. Les passages pas clairs vous attendent sur **Aujourd'hui**, et
 ceux de l'examen proposent **Créer une carte**. **Réglages → Apparence → Couleur dans les notes** la désactive.
+
+Les surlignages d'un cours disent ce qu'ils marquent, et la page l'explique : ambre pour l'idée clé, bleu pour une définition, vert pour un exemple, rose pour une erreur fréquente et violet pour une règle.
 
 ## Les pages
 

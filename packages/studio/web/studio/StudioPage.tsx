@@ -8,6 +8,7 @@ import { TopLeft } from '../layout/Shell'
 import { JobView, StatusChip } from './JobView'
 import { BatchView, FolderCourse } from './BatchView'
 import { useEngineInfo } from './engine'
+import { WebSearchField } from '../start/WebSearchField'
 import { LANGS, currentLang, t, tp, locale } from '../i18n'
 
 type Kind = 'course' | 'folder' | 'improve' | 'custom'
@@ -26,7 +27,7 @@ export default function StudioPage({ ws }: { ws: string }) {
       {batchId ? <BatchView ws={ws} id={batchId} onBack={() => navigate(`/w/${ws}/studio`)} /> : jobId ? <JobView ws={ws} id={jobId} onBack={() => navigate(`/w/${ws}/studio`)} /> : (
         <>
           <h1 className="text-[26px] font-semibold tracking-[-0.02em]">{t('AI Studio')}</h1>
-          <p className="mt-1 max-w-[60ch] text-[14px] text-muted">{t('Claude Code writes lessons into your')} <code className="font-mono text-[12.5px]">learn/</code> {t('folder using the MDlearn skills. It never edits your notes, every change is checked by the compiler, and any job can be undone.')}</p>
+          <p className="mt-1 max-w-[60ch] text-[14px] text-muted">{t('Claude Code writes notes and lessons into your')} <code className="font-mono text-[12.5px]">learn/</code> {t('folder using the MDlearn skills. It never edits your notes, every change is checked by the compiler, and any job can be undone.')}</p>
           <EngineLine />
           <NewJob ws={ws} onStarted={(id) => navigate(`/w/${ws}/studio?job=${id}`)} onBatch={(id) => navigate(`/w/${ws}/studio?batch=${id}`)} params={params} />
           <h2 className="mt-12 text-[13px] font-medium text-muted">{t('Recent jobs')}</h2>
@@ -64,6 +65,8 @@ function NewJob({ ws, onStarted, onBatch, params }: { ws: string; onStarted: (id
   const [kind, setKind] = useState<Kind>((params.get('kind') as Kind) ?? 'course')
   const [doc, setDoc] = useState(params.get('doc') ?? '')
   const [source, setSource] = useState<'topic' | 'doc'>(params.get('doc') ? 'doc' : 'topic')
+  const [docWay, setDocWay] = useState<'notes' | 'exercises'>('notes')
+  const [web, setWeb] = useState(false)
   // the course language starts as the interface language (English means: the language of the topic)
   const [topic, setTopic] = useState({ topic: '', level: 'beginner' as 'beginner' | 'intermediate' | 'advanced', language: currentLang() === 'en' ? '' : LANGS.find((l) => l.code === currentLang())!.english, minutes: 45, notes: '' })
   const [lesson, setLesson] = useState(params.get('lesson') ?? '')
@@ -72,10 +75,13 @@ function NewJob({ ws, onStarted, onBatch, params }: { ws: string; onStarted: (id
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<unknown>(null)
   const docs = useMemo(() => [...(tree.data?.docs ?? [])].sort((a, b) => a.path.localeCompare(b.path)), [tree.data])
-  const lessons = useMemo(() => docs.flatMap((d) => d.lessons.map((l) => ({ ...l, doc: d.title || d.path }))), [docs])
+  const lessons = useMemo(() => [
+    ...docs.filter((d) => d.study).map((d) => ({ path: d.path, title: d.title || d.path, errors: 0, doc: t('Notes') })),
+    ...docs.flatMap((d) => d.lessons.map((l) => ({ ...l, doc: d.title || d.path }))),
+  ], [docs])
   const req: JobRequest | null = kind === 'course' && source === 'topic'
-    ? (topic.topic.trim().length > 1 ? { recipe: 'course.topic', topic: topic.topic.trim(), level: topic.level, minutes: topic.minutes, ...(topic.language.trim() ? { language: topic.language.trim() } : {}), ...(topic.notes ? { notes: topic.notes } : {}) } : null)
-    : kind === 'course' ? (doc ? { recipe: 'course.create', doc } : null)
+    ? (topic.topic.trim().length > 1 ? { recipe: 'course.topic', topic: topic.topic.trim(), level: topic.level, minutes: topic.minutes, web, ...(topic.language.trim() ? { language: topic.language.trim() } : {}), ...(topic.notes ? { notes: topic.notes } : {}) } : null)
+    : kind === 'course' ? (!doc ? null : docWay === 'exercises' ? { recipe: 'course.create', doc } : { recipe: 'course.topic', topic: (docs.find((d) => d.path === doc)?.title || doc).slice(0, 300), level: topic.level, notes: doc, web })
     : kind === 'improve' ? (lesson ? { recipe: 'lesson.improve', lesson, focus, note: text } : null)
       : text.trim().length > 2 ? { recipe: 'custom', request: text.trim() } : null
   const start = async () => {
@@ -98,7 +104,7 @@ function NewJob({ ws, onStarted, onBatch, params }: { ws: string; onStarted: (id
       <div role="tablist" className="flex flex-wrap gap-1">
         {tab('course', GraduationCap, t('Create a course'))}
         {tab('folder', Layers, t('Whole folder'))}
-        {tab('improve', PencilLine, t('Improve a lesson'))}
+        {tab('improve', PencilLine, t('Improve'))}
         {tab('custom', Wand2, t('Something else'))}
       </div>
       <div className="mt-4">
@@ -137,25 +143,41 @@ function NewJob({ ws, onStarted, onBatch, params }: { ws: string; onStarted: (id
                 <option value="">{t('None: from general knowledge, with sources to check')}</option>
                 {docs.map((d) => <option key={d.path} value={d.path}>{d.title || d.path}</option>)}
               </select>
-              <span className="mt-1.5 block text-[12.5px] font-normal text-muted">{t('The course goes into a new folder named after the topic. Without notes, Claude flags claims worth checking and lists sources.')}</span>
+              <span className="mt-1.5 block text-[12.5px] font-normal text-muted">{t('The course goes into a new folder named after the topic. Without notes, Claude says what is uncertain and lists sources.')}</span>
             </label>
+            <WebSearchField value={web} onChange={setWeb} />
           </div>
         )}
         {kind === 'course' && source === 'doc' && (
+          <div className="flex flex-col gap-3">
           <label className="block text-[13px] font-medium">{t('From which document?')}
             <select value={doc} onChange={(e) => setDoc(e.target.value)} className={`mt-1.5 ${select}`}>
               <option value="">{t('Choose a document…')}</option>
               {docs.map((d) => <option key={d.path} value={d.path}>{d.title || d.path}{d.lessons.length ? ` (${d.lessons.length} lessons already)` : ''}</option>)}
             </select>
-            <span className="mt-1.5 block text-[12.5px] font-normal text-muted">{t('Splits the document into lessons of about 2,500 words, one card per subsection, each linked to its section and ending with a question.')}</span>
           </label>
+          <fieldset><legend className="text-[13px] font-medium">{t('What should it make?')}</legend>
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {(['notes', 'exercises'] as const).map((w) => (
+                <label key={w} className={`cursor-pointer rounded-[6px] border px-2.5 py-1 text-[13px] ${docWay === w ? 'border-accent bg-accent-soft' : 'border-border hover:bg-hover'}`}>
+                  <input type="radio" name="doc-way" value={w} checked={docWay === w} onChange={() => setDocWay(w)} className="sr-only" />
+                  {w === 'notes' ? t('Better notes') : t('Only add exercises')}
+                </label>
+              ))}
+            </div>
+            <p className="mt-1.5 text-[12.5px] text-muted">{docWay === 'notes'
+              ? t('Writes fuller notes with examples, visuals and exercises, in a new folder. Your document stays as it is.')
+              : t('For notes that are already complete: your text stays as it is, with short lessons beside it, linked to each section.')}</p>
+          </fieldset>
+          {docWay === 'notes' && <WebSearchField value={web} onChange={setWeb} />}
+          </div>
         )}
         {kind === 'folder' && <FolderCourse ws={ws} onStarted={onBatch} />}
         {kind === 'improve' && (
           <div className="flex flex-col gap-3">
-            <label className="block text-[13px] font-medium">{t('Which lesson?')}
+            <label className="block text-[13px] font-medium">{t('Which note or lesson?')}
               <select value={lesson} onChange={(e) => setLesson(e.target.value)} className={`mt-1.5 ${select}`}>
-                <option value="">{t('Choose a lesson…')}</option>
+                <option value="">{t('Choose one…')}</option>
                 {lessons.map((l) => <option key={l.path} value={l.path}>{l.title} — {l.doc}{l.errors ? ` · ${l.errors} errors` : ''}</option>)}
               </select>
             </label>

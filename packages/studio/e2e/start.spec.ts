@@ -27,9 +27,9 @@ What limits an engine's efficiency?
 const fresh = () => `Course ${Date.now().toString(36)}`
 async function bringFiles(page: import('@playwright/test').Page, name: string) {
   await page.goto('/')
-  await page.getByRole('link', { name: /Make a course from my class files/ }).click()
-  await expect(page.getByRole('heading', { name: 'Make a course from your class files' })).toBeVisible()
-  await page.getByLabel('What is the course called?').fill(name)
+  await page.getByRole('link', { name: /Make a course/ }).click()
+  await expect(page.getByRole('heading', { name: 'Make a course' })).toBeVisible()
+  await page.getByLabel('What do you want to learn?').fill(name)
   await page.getByLabel('Choose files').setInputFiles([fixture('Lecture 3.pptx'), fixture('Handout 2.docx')])
   await page.getByRole('button', { name: 'Continue' }).click()
   const read = page.getByRole('list', { name: 'What was read' })
@@ -42,7 +42,7 @@ test('a first-time user gets a course from a coding assistant, and studies it', 
   await page.getByRole('radio', { name: /My coding assistant/ }).click()
   await page.getByRole('button', { name: 'Get the folder ready' }).click()
   await page.getByRole('tab', { name: 'Codex' }).click()
-  const command = page.getByText(/codex "Make the MDlearn course from the files in sources\/, following AGENTS\.md\."/)
+  const command = page.getByText(/codex "Make the MDlearn course on .+, following AGENTS\.md\."/)
   await expect(command).toBeVisible()
   await page.getByRole('tab', { name: 'Pi' }).click()
   await expect(page.getByText(/pi "Make the MDlearn course/)).toBeVisible()
@@ -52,7 +52,7 @@ test('a first-time user gets a course from a coding assistant, and studies it', 
   const root = /cd "([^"]+)"/.exec(await page.locator('code').first().innerText())![1]
 
   // the assistant works in the folder: what it wrote there shows up by itself
-  await expect(page.getByText('Lessons appear here as they are written.')).toBeVisible()
+  await expect(page.getByText('The course appears here as it is written.')).toBeVisible()
   expect(readFileSync(join(root, 'AGENTS.md'), 'utf8')).toContain('MDlearn course folder')
   writeFileSync(join(root, 'course.md'), '# Heat engines\n\nWhat limits an engine.\n')
   writeFileSync(join(root, '01-heat-engines.learn.md'), LESSON)
@@ -65,7 +65,7 @@ test('Claude can write the course from here', async ({ page }) => {
   await bringFiles(page, fresh())
   await page.getByRole('radio', { name: /Claude, from here/ }).click()
   await page.getByLabel('Anything it should know? (optional)').fill('The exam covers chapter 3')
-  await page.getByRole('button', { name: 'Write the lessons' }).click()
+  await page.getByRole('button', { name: 'Write the course' }).click()
   await expect(page).toHaveURL(/studio\?job=/)
 })
 
@@ -84,14 +84,14 @@ test('class files dropped on the first page go straight to making a course', asy
     data.items.add(new File([new Uint8Array(bytes)], 'Lecture 3.pptx'))
     el.dispatchEvent(new DragEvent('drop', { dataTransfer: data, bubbles: true, cancelable: true }))
   }, [...readFileSync(fixture('Lecture 3.pptx'))])
-  await expect(page.getByRole('heading', { name: 'Make a course from your class files' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Make a course' })).toBeVisible()
   await expect(page.getByText('Lecture 3.pptx')).toBeVisible()
-  await expect(page.getByLabel('What is the course called?')).toHaveValue('Lecture 3')
+  await expect(page.getByLabel('What do you want to learn?')).toHaveValue('Lecture 3')
 })
 
 test('an old PowerPoint is kept and the person is told what to do', async ({ page }) => {
   await page.goto('/start')
-  await page.getByLabel('What is the course called?').fill(fresh())
+  await page.getByLabel('What do you want to learn?').fill(fresh())
   await page.getByLabel('Choose files').setInputFiles({ name: 'week1.ppt', mimeType: 'application/vnd.ms-powerpoint', buffer: Buffer.from('old') })
   await page.getByRole('button', { name: 'Continue' }).click()
   await expect(page.getByText(/Save it as \.pptx or \.docx/)).toBeVisible()
@@ -100,7 +100,7 @@ test('an old PowerPoint is kept and the person is told what to do', async ({ pag
 test('a week in: change the course, reorder it, and keep what you studied', async ({ page, request }) => {
   await page.goto('/start')
   const name = fresh()
-  await page.getByLabel('What is the course called?').fill(name)
+  await page.getByLabel('What do you want to learn?').fill(name)
   await page.getByLabel('Choose files').setInputFiles(fixture('Lecture 3.pptx'))
   await page.getByRole('button', { name: 'Continue' }).click()
   await page.getByRole('radio', { name: /My coding assistant/ }).click()
@@ -197,28 +197,28 @@ A warning.
 test('the first page explains itself to someone who has nothing yet, and steps aside later', async ({ page }) => {
   await page.route('**/api/workspaces', (route) => route.fulfill({ json: [] }))
   await page.goto('/')
-  await expect(page.getByText('Add the files from your class')).toBeVisible()
-  await expect(page.getByText('An AI writes the lessons')).toBeVisible()
-  await expect(page.getByRole('link', { name: /Make a course from my class files/ })).toBeVisible()
+  await expect(page.getByText('Say what you want to learn')).toBeVisible()
+  await expect(page.getByText('An AI writes better notes')).toBeVisible()
+  await expect(page.getByRole('link', { name: /Make a course/ })).toBeVisible()
   await expect(page.getByRole('button', { name: /Open the tutorial/ })).toBeVisible()
   await expect(page.getByText('Recent')).toHaveCount(0)
 
   await page.unroute('**/api/workspaces')
   await page.reload()
   await expect(page.getByRole('heading', { name: 'Recent' })).toBeVisible()
-  await expect(page.getByText('Add the files from your class')).toHaveCount(0)
+  await expect(page.getByText('Say what you want to learn')).toHaveCount(0)
 })
 
 test('a folder with no lessons says so and leads to making them', async ({ page }) => {
   await bringFiles(page, 'Lecture 3.pptx')
-  await expect(page.getByRole('heading', { name: 'Who writes the lessons?' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Who writes the course?' })).toBeVisible()
   const ws = new URL(page.url()).searchParams.get('ws')
 
   await page.goto(`/w/${ws}/study`)
   await expect(page.getByRole('heading', { name: 'No lessons yet' })).toBeVisible()
   await expect(page.getByText('You are all caught up')).toHaveCount(0)
   await page.getByRole('link', { name: 'Make lessons with an AI' }).click()
-  await expect(page.getByRole('heading', { name: 'Who writes the lessons?' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Who writes the course?' })).toBeVisible()
 
   for (const screen of ['exam', 'progress']) {
     await page.goto(`/w/${ws}/${screen}`)
@@ -228,5 +228,31 @@ test('a folder with no lessons says so and leads to making them', async ({ page 
 
   await page.goto(`/w/${ws}`)
   await page.getByRole('link', { name: 'Make lessons with an AI' }).click()
-  await expect(page.getByRole('heading', { name: 'Who writes the lessons?' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Who writes the course?' })).toBeVisible()
+})
+
+test('a topic is enough: no files, and Claude writes it from what it knows', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('link', { name: /Make a course/ }).click()
+  const go = page.getByRole('button', { name: 'Continue' })
+  await expect(go).toBeDisabled()
+  await page.getByLabel('What do you want to learn?').fill(fresh())
+  await go.click()
+  await expect(page.getByRole('heading', { name: 'Who writes the course?' })).toBeVisible()
+  await expect(page.getByRole('list', { name: 'What was read' })).toHaveCount(0)
+  await page.getByRole('radio', { name: /Claude, from here/ }).click()
+  await page.getByRole('button', { name: 'Write the course' }).click()
+  await expect(page).toHaveURL(/studio\?job=/)
+})
+
+test('searching the web is off until you say so, and says what leaves the computer', async ({ page }) => {
+  await bringFiles(page, fresh())
+  await page.getByRole('radio', { name: /Claude, from here/ }).click()
+  const web = page.getByRole('checkbox', { name: /Let Claude search the web/ })
+  await expect(web).not.toBeChecked()
+  await expect(page.getByText('What it searches for leaves this computer.')).toBeVisible()
+  const sent = page.waitForRequest((r) => r.url().endsWith('/jobs') && r.method() === 'POST')
+  await web.check()
+  await page.getByRole('button', { name: 'Write the course' }).click()
+  expect((await sent).postDataJSON()).toMatchObject({ recipe: 'course.class', web: true })
 })

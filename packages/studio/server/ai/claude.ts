@@ -103,6 +103,12 @@ export function skillsPlugin(from = import.meta.dirname): string | null {
 
 // The mdlearn tools a job may call: reading the folder and checking lessons. Not the tutor's check_answer or
 // record_review, which write study history (notes in the folder must not be able to forge it).
+const JOB_TOOLS = ['Read', 'Glob', 'Grep', 'Write', 'Edit', 'MultiEdit', 'Skill', 'TodoWrite']
+/** What a job may use. WebFetch never: the address of a page can carry the student's notes out. */
+export const toolsFor = (webSearch?: boolean) => {
+  const web = webSearch ? ['WebSearch'] : []
+  return { tools: [...JOB_TOOLS, ...web], allowedTools: [...JOB_TOOLS, ...web, ...MDLEARN_TOOLS.map((t) => `mcp__mdlearn__${t}`)], disallowedTools: ['Bash', 'WebFetch', ...(webSearch ? [] : ['WebSearch']), 'Task', 'NotebookEdit'] }
+}
 const MDLEARN_TOOLS = ['curriculum_status', 'doc_outline', 'get_section', 'search_curriculum', 'plan_lessons', 'lint_lesson', 'read_lesson', 'authoring_guide']
 export class ClaudeEngine implements AiEngine {
   name = 'Claude Code'
@@ -138,9 +144,7 @@ export class ClaudeEngine implements AiEngine {
         mcpServers: { mdlearn: { type: 'stdio', command: process.execPath, args: [mcpEntry], env: { MDLEARN_ROOT: job.root, MDLEARN_READONLY: '1', ...AS_NODE } } },
         strictMcpConfig: true,
         systemPrompt: { type: 'preset', preset: 'claude_code', append: APPEND },
-        tools: ['Read', 'Glob', 'Grep', 'Write', 'Edit', 'MultiEdit', 'Skill', 'TodoWrite'],
-        allowedTools: ['Read', 'Glob', 'Grep', 'Write', 'Edit', 'MultiEdit', 'Skill', 'TodoWrite', ...MDLEARN_TOOLS.map((t) => `mcp__mdlearn__${t}`)],
-        disallowedTools: ['Bash', 'WebFetch', 'WebSearch', 'Task', 'NotebookEdit'],
+        ...toolsFor(job.webSearch),
         permissionMode: 'dontAsk',
         hooks: { PreToolUse: [{ matcher: 'Write|Edit|MultiEdit', hooks: [writeGuard] }, { matcher: 'Read|Glob|Grep', hooks: [readGuard] }] },
         includePartialMessages: false,

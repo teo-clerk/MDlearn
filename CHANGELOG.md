@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.7.0 — Unreleased
+
+**A course is now better notes, not a deck of cards.** Say what you want to learn and add any files you have. The AI
+writes one `.md` file per topic, with full explanations, worked examples and exercises in every section, and it now knows
+everything MDlearn can show: formulas, plots, animations, simulations, your own HTML, diagrams, tables, pictures, videos,
+code and coloured highlights. Nothing from your files is lost, and what it adds beyond them is in a note you can see. The
+shape of a note comes from the research, cited in `docs/PEDAGOGICAL_SPEC.md` §6.1. Assistants in a terminal, chats and the
+app all follow the same instructions. Courses of `.learn.md` lessons keep working, and your progress in them is untouched.
+
+**Notes that are also studied.** A `.md` file with `study: true` reads as a document, with margin notes, the glossary and
+everything else, and its exercises reach *Study*, *Today* and the mock exam, with a link back to the section.
+
+**Highlights that mean something.** `<mark data-tone="definition">` and four more tones, each with one colour and one
+meaning. A word appears when you rest on one, and a page that uses two or more explains them under its title.
+
+**A topic is enough.** Files are now optional when you make a course. In AI Studio, *One of my documents* writes better
+notes in a new folder, and *Only add exercises* leaves your text as it is, for notes that are already complete.
+
+**Claude can search the web, if you say so.** A box on each course, off by default. Only searches, never opening a page,
+and only addresses a search returned. What it searches for leaves your computer.
+
 ## 1.6.1 — 2026-11-02
 
 **Courses from the app work in an installed copy.** The desktop app and the npm packages looked for the MDlearn skills

@@ -96,7 +96,7 @@ export class Workspaces {
       const recalls = stats.filter((r) => r.predictedRecall !== null)
       return {
         path: posix(relative(h.root, abs)), title: outline.title, kind: outline.kind, words: outline.words, ...(outline.timeMin ? { timeMin: outline.timeMin } : {}),
-        lessons: mine.map(lessonRow), cards: stats.reduce((n, r) => n + r.cards, 0), seen, due: stats.reduce((n, r) => n + r.due, 0),
+        lessons: mine.map(lessonRow), study: studied.length > mine.length, cards: stats.reduce((n, r) => n + r.cards, 0), seen, due: stats.reduce((n, r) => n + r.due, 0),
         memory: recalls.length ? Math.round((recalls.reduce((n, r) => n + r.predictedRecall! * r.seen, 0) / Math.max(1, seen)) * 100) / 100 : null,
       }
     })

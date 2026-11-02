@@ -242,6 +242,29 @@ Krathwohl, 2001).
 Lesson-level budgets **[H]**: 8–15 cards; 10–15 minutes; never more than 3 cards without a widget; 3 options per
 quiz; 1–4 blanks per cloze; 2–5 idea units per `explain`; 3–6 steps per `steps`.
 
+### 6.1 Notes
+
+Since 1.7 a course is made of notes by default: documents that explain at full length, with exercises inside, which reach
+spaced repetition with `study: true`. Cards stay for `.learn.md` lessons. People wanted something to read and keep, and a
+course of 150-word cards split what they had into pieces. The same evidence gives a note its shape:
+
+| Decision | Why | Evidence |
+|---|---|---|
+| Exercises in every section, and a final mixed practice | Being tested does more for retention than rereading, and mixing kinds of problem helps most with confusable ones | Adesope et al., 2017; Agarwal et al., 2021; Brunmair & Richter, 2019 |
+| A question before the explanation | Guessing first helps you learn what the question asked about (g = 0.54), with little effect on the rest, so the question goes on what matters most | St. Hilaire et al., 2024 |
+| Sections and subsections, read at your own pace | Segmenting has small to medium effects on retention and transfer | Rey et al., 2019 |
+| Each section ends in a worked example, and they fade | Worked examples help novices, and fade as they gain expertise | Atkinson et al., 2003; Kalyuga et al., 2003 |
+| `explain`: say it in your own words | Self-explanation has a mean effect of g = 0.55 across 64 reports | Bisra et al., 2018 |
+| Talk to the student | A conversational style helps retention (d = 0.30) and transfer (d = 0.54), though the effect fades in studies over 35 minutes | Ginns et al., 2013 |
+| Highlights that mark what matters | Cues improve retention and transfer | Schneider et al., 2018 |
+| Words with pictures and diagrams | Multimedia design principles hold across 29 reviews of 1,189 studies | Clark & Paivio, 1991; Noetel et al., 2022 |
+| Animation when motion is the idea | Animations beat static pictures overall, by d = 0.37 | Höffler & Leutner, 2007 |
+| Never decorate | Interesting details that teach nothing lower learning (g = −0.33) | Harp & Mayer, 1998; Sundararajan & Adesope, 2020 |
+
+Heuristics **[H]**: about three quarters of a note explains; one or two exercises per section; a note of 10–25 minutes; a
+mark of at most 12 words on no more than a sixth of a section. The five tones are our own extension: the research supports
+cues that direct attention, not five colours in particular, which is why each has one meaning and the page explains them.
+
 ---
 
 ## 7. Primitive → mechanism matrix
@@ -431,11 +454,15 @@ Gigerenzer, G., & Hoffrage, U. (1995). How to improve Bayesian reasoning without
 
 Ginns, P. (2006). Integrating information: A meta-analysis of the spatial contiguity and temporal contiguity effects. *Learning and Instruction, 16*(6), 511–525. https://doi.org/10.1016/j.learninstruc.2006.10.001
 
+Ginns, P., Martin, A. J., & Marsh, H. W. (2013). Designing instructional text in a conversational style: A meta-analysis. *Educational Psychology Review, 25*(4), 445–472.
+
 Haladyna, T. M., Downing, S. M., & Rodriguez, M. C. (2002). A review of multiple-choice item-writing guidelines for classroom assessment. *Applied Measurement in Education, 15*(3), 309–333. https://doi.org/10.1207/S15324818AME1503_5
 
 Harp, S. F., & Mayer, R. E. (1998). How seductive details do their damage: A theory of cognitive interest in science learning. *Journal of Educational Psychology, 90*(3), 414–434. https://doi.org/10.1037/0022-0663.90.3.414
 
 Hattie, J., & Timperley, H. (2007). The power of feedback. *Review of Educational Research, 77*(1), 81–112. https://doi.org/10.3102/003465430298487
+
+Höffler, T. N., & Leutner, D. (2007). Instructional animation versus static pictures: A meta-analysis. *Learning and Instruction, 17*(6), 722–738.
 
 Kalyuga, S., Ayres, P., Chandler, P., & Sweller, J. (2003). The expertise reversal effect. *Educational Psychologist, 38*(1), 23–31. https://doi.org/10.1207/S15326985EP3801_4
 
@@ -491,6 +518,8 @@ Moore, S., Nguyen, H. A., Chen, T., & Stamper, J. (2023). Assessing the quality 
 
 Nestojko, J. F., Bui, D. C., Kornell, N., & Bjork, E. L. (2014). Expecting to teach enhances learning and organization of knowledge in free recall of text passages. *Memory & Cognition, 42*(7), 1038–1048. https://doi.org/10.3758/s13421-014-0416-z
 
+Noetel, M., Griffith, S., Delaney, O., Harris, N. R., Sanders, T., Parker, P., del Pozo Cruz, B., & Lonsdale, C. (2022). Multimedia design for learning: An overview of reviews with meta-meta-analysis. *Review of Educational Research, 92*(3), 413–454. https://doi.org/10.3102/00346543211052329
+
 Paivio, A. (1986). *Mental representations: A dual coding approach*. Oxford University Press.
 
 Pan, S. C., & Rickard, T. C. (2018). Transfer of test-enhanced learning: Meta-analytic review and synthesis. *Psychological Bulletin, 144*(7), 710–756. https://doi.org/10.1037/bul0000151
@@ -540,6 +569,8 @@ Shute, V. J. (2008). Focus on formative feedback. *Review of Educational Researc
 Slamecka, N. J., & Graf, P. (1978). The generation effect: Delineation of a phenomenon. *Journal of Experimental Psychology: Human Learning and Memory, 4*(6), 592–604. https://doi.org/10.1037/0278-7393.4.6.592
 
 Soderstrom, N. C., & Bjork, R. A. (2015). Learning versus performance: An integrative review. *Perspectives on Psychological Science, 10*(2), 176–199. https://doi.org/10.1177/1745691615569000
+
+St. Hilaire, K. J., Chan, J. C. K., & Ahn, D. (2024). Guessing as a learning intervention: A meta-analytic review of the prequestion effect. *Psychonomic Bulletin & Review, 31*(2), 411–441. https://doi.org/10.3758/s13423-023-02353-8
 
 Sundararajan, N., & Adesope, O. (2020). Keep it coherent: A meta-analysis of the seductive details effect. *Educational Psychology Review, 32*(3), 707–734. https://doi.org/10.1007/s10648-020-09522-4
 
