@@ -763,6 +763,7 @@ How it differs from a `.learn.md` lesson:
 
 - A note can be as long as it needs: W601, W602 and W603 don't apply.
 - It needs at least one exercise, or there is nothing to study (W611).
+- From 300 words on, it should mostly explain (W613) and have something to look at (W614).
 - W610 counts marked words, not marks: a mark of at most 12 words, on no more than a sixth of a section.
 - Progress belongs to the section's id. `{#id}` keeps it through a new title, and the Reader doesn't show it.
 
@@ -1033,6 +1034,8 @@ Format of the compact report (one line per diagnostic, designed for an agent to 
 | W610 | warning | `too-much-marked` | A card with more than three `<mark>`s (in a note, a mark over 12 words), or with over a sixth of its words marked: mark the key term, not the sentence. |
 | W611 | warning | `note-without-practice` | A note with `study: true` has no exercise, so there is nothing to study. |
 | W612 | warning | `mark-tone-unknown` | A `<mark>` with a `data-tone` that does not exist: use key, definition, example, trap or rule. |
+| W613 | warning | `note-mostly-exercises` | Over 30% of the words of this note are exercises: a note should mostly explain. |
+| W614 | warning | `note-without-visual` | This long note has nothing to look at: add a diagram, a plot, an animation or a picture where it shows what words can't. A table does not count. |
 
 **Math**
 

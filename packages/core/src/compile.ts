@@ -6,9 +6,9 @@ import type { Root, RootContent, Nodes } from 'mdast'
 import { stage0, type Stage0Result } from './stage0.js'
 import { CARD_ID } from './importer.js'
 import { blockBuilder, safeUrl, type SourceResolver } from './blocks.js'
-import { VISUAL_MINUTES } from './visuals.js'
+import { VISUAL_MINUTES, VISUAL_TYPES } from './visuals.js'
 import { type Code, type Diagnostic } from './registry.js'
-import { FrontmatterSchema, FRONTMATTER_SYNONYMS, LessonSchema, type Block, type Card, type Lesson, isWidget } from './ast.js'
+import { FrontmatterSchema, FRONTMATTER_SYNONYMS, LessonSchema, WIDGET_TYPES, type Block, type Card, type Lesson, isWidget } from './ast.js'
 
 import { processor } from './parser.js'
 export { processor, remarkBlockDirectives } from './parser.js'
@@ -102,8 +102,12 @@ export function compile(source: string, opts: CompileOptions = {}): CompileResul
   }
   // retrieval gap & lesson length (heuristics): a note explains as long as it needs, and only must have something to practise
   const practised = (c: Card) => c.blocks.some((b) => isWidget(b))
-  if (notes) { if (!cards.some(practised)) diag('W611', 1) }
-  else {
+  if (notes) {
+    if (!cards.some(practised)) diag('W611', 1)
+    const all = wordsIn(tree), asked = tree.children.reduce((n, c) => n + (isExercise(c) ? wordsIn(c) : 0), 0)
+    if (all >= MIN_NOTE_WORDS && asked / all > MAX_EXERCISE_SHARE) diag('W613', 1, `${Math.round((100 * asked) / all)}% of ${all} words`)
+    if (all >= MIN_NOTE_WORDS && !showsSomething(tree)) diag('W614', 1, `${all} words`)
+  } else {
     let gap = 0
     for (const [ci, c] of cards.entries()) {
       gap = practised(c) ? 0 : gap + 1
@@ -149,6 +153,18 @@ function blockMinutes(b: Block): number {
 }
 
 const MAX_MARKS = 3, MIN_MARKED_WORDS = 6, MAX_MARK_WORDS = 12
+const MIN_NOTE_WORDS = 300, MAX_EXERCISE_SHARE = 0.3
+type Tree = RootContent | Root
+const wordsIn = (n: Tree) => toString(n).split(/\s+/).filter(Boolean).length
+const isDirective = (n: Tree): n is Extract<RootContent, { name: string }> => n.type === 'containerDirective' || n.type === 'leafDirective'
+const isExercise = (n: Tree) => isDirective(n) && (WIDGET_TYPES as readonly string[]).includes(n.name)
+/** A picture, a diagram or anything that moves, anywhere in a note. A table is still text. */
+function showsSomething(n: Tree): boolean {
+  if (n.type === 'image' || (n.type === 'code' && n.lang === 'mermaid')) return true
+  if (n.type === 'html' && /<(img|svg)\b/i.test(n.value)) return true
+  if (isDirective(n) && ((VISUAL_TYPES as readonly string[]).includes(n.name) || n.name === 'video')) return true
+  return 'children' in n && (n.children as RootContent[]).some(showsSomething)
+}
 /** Whether a `.md` file asks to be studied: `study: true` in its frontmatter. A cheap look, for files that may never be compiled. */
 export function isStudyNote(source: string): boolean {
   const lines = source.replace(/^\uFEFF/, '').split(/\r?\n/, 60)

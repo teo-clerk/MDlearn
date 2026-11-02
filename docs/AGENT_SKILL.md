@@ -31,7 +31,8 @@ split, and write as much as the subject needs: a note is usually 10–25 minutes
 
 ## The shape of a note
 
-Most of a note is explanation. About three quarters of what the student reads should teach and the rest should ask.
+Most of a note is explanation. About three quarters of what the student reads should teach and the rest should ask: the
+check warns when exercises pass 30% of a note's words (W613), so write more teaching, not fewer good questions.
 
 1. **Why it matters.** A few lines: what this is for, what they will be able to do, what they need to know first.
 2. **A question before the answer.** The first section opens with a prediction (`quiz` or `explain`) about something
@@ -42,9 +43,10 @@ Most of a note is explanation. About three quarters of what the student reads sh
    - a fully worked example, step by step: real numbers, a real decision, a real case;
    - a visual, when it shows what words can't (see below);
    - the usual mistake, in a `:::warning`;
-   - one or two short exercises that make them use the idea.
+   - one short exercise that makes them use the idea, two at most. A section that only introduces needs none.
 4. **At the end,** with headings in the language of the note: *In short* (what to remember, with a free-recall `explain`)
-   and *Practice* (mixed problems, harder than the ones in the sections, reaching back to earlier notes). Then the sources.
+   and *Practice* (3–5 mixed problems, harder than the ones in the sections, reaching back to earlier notes). Then the
+   sources.
 
 Vary the kind of exercise. For an expert audience use fewer worked examples and more problems: what helps a beginner
 slows an expert down.
@@ -68,6 +70,10 @@ Use all of it. Ask of every section: *what would make this clearer than a paragr
 | code | a fence with its language (Python runs on the page), `:::code` to practise | an A/B test in a few lines |
 | a side note, a tip, the takeaway, a trap | `:::note`, `:::tip` (`{fold}` hides depth), `:::important`, `:::warning` | |
 | something to look up later | `<details>` | a long proof |
+
+Every note of some length has at least one thing to look at or try (W614; a table doesn't count), and a course uses the
+whole range. Before you finish, look at what you used: if it is all tables and plots, find what could animate, step by step,
+and what the student could try with their own hands. The example below shows some of them; choose what your subject needs.
 
 Formulas are for subjects that have them: a marketing course needs funnels, matrices, maps and cases more than equations.
 Never decorate: a picture or an animation must carry an idea. Interesting extras that teach nothing make people learn less.
@@ -132,6 +138,32 @@ flowchart LR
   A["Unit cost: the floor"] --> B["Your price"] --> C["Perceived value: the ceiling"]
 ```
 
+### Where you stand
+
+A positioning map shows where customers place you, on two things they care about.
+
+:::html[Your bakery on the map]
+Drag the dot to where you would put your bakery.
+```html
+<style>
+  #map { position: relative; height: 200px; border: 1px solid var(--border); border-radius: 8px; touch-action: none; }
+  #dot { position: absolute; left: 50%; top: 50%; width: 18px; height: 18px; margin: -9px; border-radius: 50%; background: var(--good); }
+  p { color: var(--text); font-family: var(--font-read); }
+</style>
+<div id="map"><span id="dot"></span></div>
+<p id="say">Up is quality, right is price.</p>
+<script>
+  const map = document.getElementById('map'), dot = document.getElementById('dot'), say = document.getElementById('say')
+  map.addEventListener('pointermove', (e) => {
+    if (!e.buttons) return
+    const r = map.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height
+    dot.style.left = `${x * 100}%`; dot.style.top = `${y * 100}%`
+    say.textContent = `${y < 0.5 ? 'High' : 'Low'} quality, ${x < 0.5 ? 'low' : 'high'} price.`
+  })
+</script>
+```
+:::
+
 ### Worked example: what is left from each loaf
 
 The <mark data-tone="rule">contribution margin</mark> is what each sale leaves to pay for everything else:
@@ -164,6 +196,13 @@ Your notes stop at the margin. Research on pricing also looks at how a price anc
 ## What a discount really costs
 
 A 25% discount on the loaf at 4 feels like a quarter off. It is much more than that off what you keep.
+
+:::animate[What a discount does to a day]{replace}
+1. **Before.** 180 loaves at a margin of 2.50 leave 450 a day.
+2. **The discount.** Each loaf now leaves 1.50, so a full day would leave 270.
+3. **The extra sales.** 40 more loaves bring back 60.
+4. **The result.** 220 loaves at 1.50 leave 330 a day: more work, and 120 less.
+:::
 
 :::steps
 The loaf costs 1.50 and sells at 4. How many must you sell at a 25% discount to earn the same?
@@ -360,7 +399,8 @@ Callouts: `note` (side detail), `tip` (intuition; `[label]{fold}` = optional dep
 ## Checklist (when the CLI is unavailable)
 
 - [ ] Frontmatter: `id`, `level`, `lang`, `goals`, `study: true`; a `# Title`; YAML TeX only in single quotes.
-- [ ] Most of the note explains; every `##` section has what it teaches, and the note has a final `## Practice`.
+- [ ] Exercises are under 30% of the words; every `##` section teaches something, and the note ends with mixed practice.
+- [ ] A long note has a diagram, plot, animation, picture or something to try, not only tables.
 - [ ] No `---` lines in the body; HTML only where Markdown cannot say it (`<sub>`, `<kbd>`, `<mark>`, `<details>`), never
       `<script>`/`<style>`/handlers (E107). Sandboxed code goes in `:::sim` and `:::html`.
 - [ ] Every widget closed by `:::`, none nested, and none before the first `##`.

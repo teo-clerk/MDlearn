@@ -124,3 +124,34 @@ describe('notes in an answer from a chat', () => {
     expect(splitBundle(note(`## Una\n\n${quiz}`)).map((f) => f.path)).toEqual(['precio.md'])
   })
 })
+
+describe('what a long note is made of', () => {
+  const head = '---\nid: n\nstudy: true\n---\n\n# N\n\n## One\n\n'
+  const words = (n: number) => `${'word '.repeat(n)}\n\n`
+  const quiz = (n: number) => `:::explain\nExplain it.\n> - ${'idea '.repeat(n)}\n:::\n\n`
+  const PLOT = ':::plot\nA line.\n$$y = x$$\n- $x$ in [0, 1] — x\n:::\n\n'
+  const codes = (source: string) => compile(source).diagnostics.map((d) => d.code)
+
+  it('should mostly explain', () => {
+    expect(codes(`${head}${words(200)}${PLOT}${quiz(200)}`)).toContain('W613')
+    expect(codes(`${head}${words(400)}${PLOT}${quiz(100)}`)).not.toContain('W613')
+  })
+  it('has something to look at', () => {
+    const plain = `${head}${words(400)}${quiz(20)}`
+    expect(codes(plain)).toContain('W614')
+    expect(codes(`${head}| a | b |\n|---|---|\n| 1 | 2 |\n\n${words(400)}${quiz(20)}`)).toContain('W614') // a table is still text
+    for (const shown of [PLOT, '```mermaid\nflowchart LR\n  A --> B\n```\n\n', '![A map of the town](map.png)\n\n', ':::animate[Steps]{replace}\n1. One.\n2. Two.\n:::\n\n', '::video[https://youtu.be/dQw4w9WgXcQ]\n\n'])
+      expect(codes(`${head}${shown}${words(400)}${quiz(20)}`)).not.toContain('W614')
+  })
+  it('leaves a short note alone', () => {
+    const short = `${head}${words(50)}${quiz(100)}`
+    expect(codes(short)).not.toContain('W613')
+    expect(codes(short)).not.toContain('W614')
+  })
+  it('asks nothing of a lesson', () => {
+    const lesson = `---\ntitle: L\n---\n\n## One\n\n${words(120)}${quiz(400)}`
+    expect(codes(lesson)).not.toContain('W613')
+    expect(codes(lesson)).not.toContain('W614')
+  })
+})
+
